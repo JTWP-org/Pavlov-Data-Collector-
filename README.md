@@ -8,6 +8,8 @@ you need 2 api keys and 2 webhooks to use this tool
 
 -get a proxycheck api key free at https://proxycheck.io/dashboard/
 
+To get a Discord webhook, open Discord on your desktop, navigate to a specific channel, click Integrations, and select Create Webhook
+
 
 ---
 

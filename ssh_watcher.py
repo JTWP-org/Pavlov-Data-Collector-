@@ -118,6 +118,11 @@ class SSHWatcher:
         self.units = [str(x) for x in units]
         self.enrich_ips = bool(sw.get("enrich_ips", True))
         self.include_invalid_user_events = bool(sw.get("include_invalid_user_events", False))
+        self.webhook_url = os.getenv("JTWP_SSH_WEBHOOK_URL", "").strip() or os.getenv("JTWP_SECURITY_WEBHOOK_URL", "").strip()
+        self.webhook_timeout = int(sw.get("webhook_timeout_seconds", 8))
+        self.webhook_retries = int(sw.get("webhook_retries", 2))
+        self.http = requests.Session()
+        self.http.headers.update({"User-Agent": "JTWP-SSH-Watcher/1.1"})
 
     def save(self):
         atomic_write_json(self.failed_hosts_path, self.failed_hosts)
@@ -158,6 +163,7 @@ class SSHWatcher:
                 "confidence": None,
             }
 
+            player_matches = self.playerdb.players_for_ip_hash(ip_hash)
             event = {
                 "timestamp": ts,
                 "type": event_type,
@@ -165,6 +171,7 @@ class SSHWatcher:
                 "source_port": port,
                 "username": username,
                 "background": background,
+                "player_matches": player_matches,
             }
             append_jsonl(self.events_path, event)
 
@@ -175,11 +182,13 @@ class SSHWatcher:
                 "usernames": {},
                 "source_ports": [],
                 "background": background,
+                "players_seen_on_ip": [],
             })
             host["first_seen"] = min(host.get("first_seen") or ts, ts)
             host["last_seen"] = max(host.get("last_seen") or ts, ts)
             host["failed_attempts"] = int(host.get("failed_attempts", 0)) + 1
             host["background"] = background
+            host["players_seen_on_ip"] = player_matches
 
             users = host.setdefault("usernames", {})
             users[username] = int(users.get(username, 0)) + 1
@@ -218,7 +227,58 @@ class SSHWatcher:
                 f"[{ts}] {event_type}: {username} "
                 f"from {ip_hash[:16]}…:{port}"
             )
+            self.send_webhook(event, host)
             return
+
+    @staticmethod
+    def _yn(v):
+        return "Yes" if v is True else "No" if v is False else "Unknown"
+
+    def send_webhook(self, event: dict, host: dict):
+        if not self.webhook_url:
+            return
+        bg = event.get("background") or {}
+        matches = event.get("player_matches") or []
+        match_text = "None" if not matches else "\n".join(
+            f"• {x.get('player_name') or 'Unknown'} (`{x.get('product_id')}`)"
+            for x in matches[:10]
+        )
+        payload = {
+            "username": "JTWP Security",
+            "embeds": [{
+                "title": "SSH Authentication Failed",
+                "description": "A failed SSH authentication attempt was detected.",
+                "fields": [
+                    {"name": "Attempt", "value":
+                        f"Type: `{event.get('type')}`\nUsername: `{event.get('username')}`\n"
+                        f"Source Port: `{event.get('source_port')}`\nAttempts From Host: `{host.get('failed_attempts', 0)}`",
+                     "inline": False},
+                    {"name": "IP Hash", "value": f"`{event.get('ip_hash')}`", "inline": False},
+                    {"name": "Network", "value":
+                        f"Organisation: `{bg.get('organisation') or 'Unknown'}`\n"
+                        f"Country: `{bg.get('country_code') or 'Unknown'}`\n"
+                        f"Type: `{bg.get('network_type') or 'Unknown'}`\n"
+                        f"Proxy: `{self._yn(bg.get('proxy'))}` | VPN: `{self._yn(bg.get('vpn'))}` | "
+                        f"Hosting: `{self._yn(bg.get('hosting'))}` | Tor: `{self._yn(bg.get('tor'))}`",
+                     "inline": False},
+                    {"name": "Players Seen On Same IP", "value": match_text, "inline": False},
+                ],
+                "footer": {"text": f"JTWP • {event.get('timestamp')}"}
+            }]
+        }
+        last = None
+        for attempt in range(self.webhook_retries + 1):
+            try:
+                r = self.http.post(self.webhook_url, json=payload, timeout=self.webhook_timeout)
+                if 200 <= r.status_code < 300:
+                    return
+                last = f"HTTP {r.status_code}: {r.text[:200]}"
+            except requests.RequestException as e:
+                last = str(e)
+            if attempt < self.webhook_retries:
+                import time
+                time.sleep(attempt + 1)
+        print(f"SSH webhook failed: {last}", file=sys.stderr)
 
     def run(self):
         # journalctl accepts multiple -u arguments.

@@ -419,9 +419,11 @@ class PlayerDB:
         self.by_name_path = self.index_dir / "by_name.json"
         self.by_uid_path = self.index_dir / "by_unique_id.json"
         self.by_pid_path = self.index_dir / "by_product_id.json"
+        self.by_ip_hash_path = self.index_dir / "by_ip_hash.json"
         self.by_name = load_json(self.by_name_path, {})
         self.by_uid = load_json(self.by_uid_path, {})
         self.by_pid = load_json(self.by_pid_path, {})
+        self.by_ip_hash = load_json(self.by_ip_hash_path, {})
 
         self.private_ips_path = self.private_dir / "player_ips.json"
         self.private_ips = load_json(self.private_ips_path, {})
@@ -434,6 +436,7 @@ class PlayerDB:
         atomic_write_json(self.by_name_path, self.by_name)
         atomic_write_json(self.by_uid_path, self.by_uid)
         atomic_write_json(self.by_pid_path, self.by_pid)
+        atomic_write_json(self.by_ip_hash_path, self.by_ip_hash)
         atomic_write_json(self.private_ips_path, self.private_ips)
         try:
             os.chmod(self.private_ips_path, 0o600)
@@ -597,6 +600,10 @@ class PlayerDB:
         safe["current_ip_hash"] = ih
         atomic_write_json(safe_path, safe)
 
+        # Fast global correlation index: IP hash -> productIds.
+        ip_players = self.by_ip_hash.setdefault(ih, [])
+        unique_append(ip_players, product_id)
+
         # Private raw IP storage, keyed by productId.
         ppriv = self.private_ips.setdefault(product_id, {})
         ipent = ppriv.setdefault(ip, {"hash": ih, "first_seen": ts, "last_seen": ts, "connections": 0})
@@ -622,6 +629,20 @@ class PlayerDB:
         net["current_background"] = background
         atomic_write_json(player_path, player)
         return ih, background
+
+    def players_for_ip_hash(self, ip_hash: str) -> list[dict[str, Any]]:
+        """Return known player identities that have used this stable IP hash."""
+        out: list[dict[str, Any]] = []
+        for product_id in self.by_ip_hash.get(ip_hash, []):
+            p = load_json(self.player_dir(product_id) / "player.json", {})
+            out.append({
+                "product_id": product_id,
+                "unique_id": p.get("unique_id"),
+                "player_name": p.get("current_name"),
+                "admin": bool(p.get("admin", False)),
+                "banned": bool(p.get("banned", False)),
+            })
+        return out
 
     def increment_connection(self, product_id: str):
         self._inc_activity(product_id, "times_connected", 1)
@@ -869,11 +890,7 @@ class Collector:
         self.players = PlayerDB(self.data_root, secret, self.enricher)
         self.state = ProcessingState(self.data_root)
         self.servers = [ServerCfg.from_dict(x) for x in cfg["servers"]]
-        # Base Pavlov item names live in items.json next to collector.py,
-        # keeping the main config focused on server/runtime settings.
-        items_path = Path(__file__).resolve().parent / "items.json"
-        items_data = load_json(items_path, {"items": []})
-        self.base_items = set(items_data.get("items", []))
+        self.base_items = set(cfg.get("base_items", []))
         self.global_admins: set[str] = set()
         self.platforms: dict[str, str] = {}
 
@@ -1094,6 +1111,61 @@ class Collector:
         out = self.data_root / "servers" / server.server_id / "game_ini.json"
         old = load_json(out, {})
         atomic_write_json(out, new)
+
+        map_catalog = {
+            "server_id": server.server_id,
+            "updated_at": now_iso(),
+            "maps": {}
+        }
+        for rec in rotations:
+            map_id = rec.get("map_id")
+            if not map_id:
+                continue
+            ent = map_catalog["maps"].setdefault(map_id, {
+                "configured": True,
+                "game_modes": [],
+                "modio_id": rec.get("modio_id"),
+                "modio": rec.get("modio")
+            })
+            gm = rec.get("game_mode")
+            if gm and gm not in ent["game_modes"]:
+                ent["game_modes"].append(gm)
+        atomic_write_json(
+            self.data_root / "servers" / server.server_id / "server" / "maps.json",
+            map_catalog
+        )
+
+        mods_path = self.data_root / "servers" / server.server_id / "server" / "mods.json"
+        mod_catalog = load_json(mods_path, {})
+        observed = now_iso()
+        configured_ids = set()
+        for rec in mods:
+            ugc_id = rec.get("ugc_id")
+            if not ugc_id:
+                continue
+            configured_ids.add(ugc_id)
+            ent = mod_catalog.setdefault(ugc_id, {
+                "first_seen": None,
+                "last_seen": None,
+                "times_loaded": 0,
+                "initializer_paths": [],
+                "initializers": [],
+                "configured": False,
+                "sources": [],
+                "modio": None
+            })
+            ent["configured"] = True
+            if "Game.ini AdditionalMods" not in ent.setdefault("sources", []):
+                ent["sources"].append("Game.ini AdditionalMods")
+            ent["config_last_seen"] = observed
+            if rec.get("modio") is not None:
+                ent["modio"] = rec.get("modio")
+
+        for ugc_id, ent in mod_catalog.items():
+            if "Game.ini AdditionalMods" in ent.get("sources", []):
+                ent["configured"] = ugc_id in configured_ids
+        atomic_write_json(mods_path, mod_catalog)
+
         # Config change history.
         if old:
             for key in ("server_name", "verbose_logging", "tick_rate", "map_rotation", "additional_mods"):
@@ -1340,9 +1412,14 @@ class Collector:
         if mf:
             ip, port = mf.group(1), int(mf.group(2))
             ih = self.players.ip_hash(ip)
+            matches = self.players.players_for_ip_hash(ih)
             self.rcon_event(server.server_id, ts, {
-                "type": "rcon_authentication_failed", "ip_hash": ih, "port": port
-            }, f"RCON authentication failed / IP Hash: {ih} / Port: {port}")
+                "type": "rcon_authentication_failed",
+                "ip_hash": ih,
+                "port": port,
+                "player_matches": matches
+            }, f"RCON authentication failed / IP Hash: {ih} / Port: {port}"
+               + (f" / Player Matches: {len(matches)}" if matches else ""))
             self.update_rcon_host(server.server_id, ih, ts, success=False)
             return True
 
@@ -1457,6 +1534,10 @@ class Collector:
                 if not sess.unique_id:
                     sess.unique_id = name
                 sess.product_id = self.players.resolve(name=name, unique_id=sess.unique_id)
+                if not sess.product_id and sess.network_user_id:
+                    pm = re.search(r"(?:NULL:)?([0-9a-fA-F]{32})$", sess.network_user_id)
+                    if pm:
+                        sess.product_id = pm.group(1).lower()
                 if sess.product_id and not sess.counted_join:
                     sess.counted_join = True
                     self.players.increment_connection(sess.product_id)
@@ -1893,8 +1974,13 @@ class Collector:
         d = load_json(p, {})
         e = d.setdefault(ugc, {
             "first_seen": ts, "last_seen": ts, "times_loaded": 0,
-            "initializer_paths": [], "initializers": [], "modio": None
+            "initializer_paths": [], "initializers": [],
+            "configured": False,
+            "sources": [],
+            "modio": None
         })
+        if "ModInitializer" not in e.setdefault("sources", []):
+            e["sources"].append("ModInitializer")
         e["first_seen"] = min(e.get("first_seen") or ts, ts)
         e["last_seen"] = max(e.get("last_seen") or ts, ts)
         if loaded: e["times_loaded"] += 1
@@ -1932,6 +2018,15 @@ class Collector:
             "successful_connections": 0, "failed_attempts": 0,
             "players_seen_on_ip": []
         })
+        # Correlation only: shared IP does not prove the player made the RCON attempt.
+        for rec in self.players.players_for_ip_hash(ih):
+            simple = {
+                "product_id": rec.get("product_id"),
+                "unique_id": rec.get("unique_id"),
+                "player_name": rec.get("player_name")
+            }
+            if simple not in e["players_seen_on_ip"]:
+                e["players_seen_on_ip"].append(simple)
         e["first_seen"] = min(e.get("first_seen") or ts, ts)
         e["last_seen"] = max(e.get("last_seen") or ts, ts)
         if success: e["successful_connections"] += 1

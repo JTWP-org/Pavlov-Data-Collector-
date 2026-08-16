@@ -869,7 +869,11 @@ class Collector:
         self.players = PlayerDB(self.data_root, secret, self.enricher)
         self.state = ProcessingState(self.data_root)
         self.servers = [ServerCfg.from_dict(x) for x in cfg["servers"]]
-        self.base_items = set(cfg.get("base_items", []))
+        # Base Pavlov item names live in items.json next to collector.py,
+        # keeping the main config focused on server/runtime settings.
+        items_path = Path(__file__).resolve().parent / "items.json"
+        items_data = load_json(items_path, {"items": []})
+        self.base_items = set(items_data.get("items", []))
         self.global_admins: set[str] = set()
         self.platforms: dict[str, str] = {}
 

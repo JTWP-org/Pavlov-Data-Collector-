@@ -111,3 +111,22 @@ data/
     ├── http/
     └── server/
 ```
+
+## Item list
+
+The built-in Pavlov item list is stored separately in `items.json` next to
+`collector.py`. The main `config.json` no longer needs a `base_items` section.
+
+To add or remove a known base item, edit `items.json`:
+
+```json
+{
+  "items": [
+    "ak47",
+    "m16",
+    "mp5"
+  ]
+}
+```
+
+Items observed through `PavlovLog: Added Gun ...` are still detected as custom guns.

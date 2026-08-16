@@ -1,6 +1,22 @@
-# JTWP Pavlov Data Collector
+# 🎮 JTWP Pavlov Data Collector
 
 > A Pavlov VR server data collector for building long-term server, player, RCON, connection, security, map, mod, and statistics records from Pavlov server logs.
+
+---
+
+## 🧭 Quick Navigation
+
+- 📦 **Install** — Python, virtual environment, requirements, and project paths
+- ⚙️ **Configure** — `config.json`, `items.json`, `.env`, server paths, and platform detection
+- 🔐 **Secure** — HMAC IP hashing, API keys, SSH/RCON monitoring, and private raw-IP storage
+- 📊 **Collect** — historical Pavlov logs, Stats logs, players, matches, weapons, maps, and mods
+- 👀 **Watch Live** — player connections, failed RCON authentication, and failed SSH attempts
+- 🔔 **Alert** — Discord webhooks for connections and security events
+- ⚡ **Automate** — systemd watchers plus the nightly 3:00 AM Eastern collector timer
+- 🛠️ **Troubleshoot** — service status, journal logs, JSON validation, and common errors
+
+> [!NOTE]
+> The examples in this README use `/home/steam/jtwp-collector/Pavlov-Data-Collector-` as the project directory and `/home/steam/jtwp-collector/venv/bin/python3` as the Python interpreter.
 
 ---
 
@@ -78,7 +94,7 @@ Mod.io results are cached so the same UGC ID does not need to be requested repea
 
 ---
 
-# 1. Requirements
+# 📋 1. Requirements
 
 Recommended environment:
 
@@ -97,7 +113,7 @@ sudo apt install python3 python3-venv python3-pip openssl -y
 
 ---
 
-# 2. Installation
+# 📦 2. Installation
 
 This README assumes the project is installed here:
 
@@ -139,7 +155,7 @@ pip install -r requirements.txt
 
 ---
 
-# 3. Configuration
+# ⚙️ 3. Configuration
 
 Copy the example configuration:
 
@@ -262,7 +278,7 @@ or:
 
 ---
 
-# 4. Item List
+# 🔫 4. Item List
 
 The known Pavlov item list is stored separately in:
 
@@ -296,20 +312,106 @@ Unknown/custom items can be recorded separately from the built-in item list.
 
 ---
 
-# 5. Secrets and API Keys
+# 🔐 5. Secrets, API Keys & External Services
 
-Do **not** place API keys or webhook URLs in generated player/server JSON files.
+The collector uses a local hashing secret plus external services for IP enrichment and Pavlov UGC metadata.
 
-Create:
+| Variable | Purpose | Required |
+|---|---|---:|
+| `JTWP_IP_HASH_SECRET` | Stable HMAC-SHA256 hashing of player/RCON/SSH IPs | ✅ Yes |
+| `PROXYCHECK_API_KEY` | Primary IP/network/proxy/VPN lookup | ⭐ Recommended |
+| `IPAPI_API_KEY` | Backup IP lookup provider, when your endpoint/account requires it | Optional |
+| `MODIO_API_KEY` | Pavlov map/mod metadata | ⭐ Recommended |
+| `JTWP_CONNECTION_WEBHOOK_URL` | Player connection Discord alerts | Optional |
+| `JTWP_SECURITY_WEBHOOK_URL` | Shared SSH + failed-RCON Discord alerts | Optional |
+| `JTWP_SSH_WEBHOOK_URL` | Dedicated SSH alert webhook | Optional |
+| `JTWP_RCON_WEBHOOK_URL` | Dedicated failed-RCON alert webhook | Optional |
 
-```text
-/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+## 🔑 Generate the IP hashing secret
+
+This value is generated locally; it does **not** come from a website.
+
+```bash
+openssl rand -hex 32
 ```
 
-You can start from the example:
+Add the complete output to `.env`:
+
+```bash
+JTWP_IP_HASH_SECRET=PASTE_THE_GENERATED_VALUE_HERE
+```
+
+> [!CAUTION]
+> **Do not change this secret after collecting data.** The same secret must be used to produce the same IP hashes. Changing it breaks correlation with historical player, RCON, and SSH records.
+
+## 🌐 Get a ProxyCheck API key
+
+1. Create/sign into a ProxyCheck account.
+2. Open the account/dashboard API section.
+3. Create or copy your API key.
+4. Add it to `.env`:
+
+```bash
+PROXYCHECK_API_KEY=YOUR_PROXYCHECK_API_KEY
+```
+
+ProxyCheck is the primary IP enrichment provider.
+
+## 🧩 Get a mod.io API key
+
+1. Sign into your mod.io account.
+2. Open your account/API access area.
+3. Create/copy an API key suitable for read-only REST requests.
+4. Add it to `.env`:
+
+```bash
+MODIO_API_KEY=YOUR_MODIO_API_KEY
+```
+
+The collector uses Pavlov's configured mod.io game ID:
+
+```json
+"modio_game_id": 3959
+```
+
+## 🌎 Optional ipapi key
+
+ipapi is the backup IP provider. If the endpoint/account you use requires authentication:
+
+```bash
+IPAPI_API_KEY=YOUR_IPAPI_API_KEY
+```
+
+If your configured fallback endpoint does not require a key, leave this unset.
+
+## 🔔 Discord webhook variables
+
+Player connections:
+
+```bash
+JTWP_CONNECTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+Shared SSH + RCON security alerts:
+
+```bash
+JTWP_SECURITY_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+Optional dedicated security webhooks:
+
+```bash
+JTWP_SSH_WEBHOOK_URL=https://discord.com/api/webhooks/...
+JTWP_RCON_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+## 📝 Create `.env`
+
+From the project directory:
 
 ```bash
 cp .env.example .env
+chmod 600 .env
 nano .env
 ```
 
@@ -319,48 +421,32 @@ Example:
 JTWP_IP_HASH_SECRET=YOUR_LONG_RANDOM_SECRET
 
 PROXYCHECK_API_KEY=YOUR_PROXYCHECK_KEY
+# IPAPI_API_KEY=YOUR_IPAPI_KEY
 MODIO_API_KEY=YOUR_MODIO_KEY
 
 JTWP_CONNECTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
-
 JTWP_SECURITY_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
-# Optional separate security webhooks:
+# Optional overrides:
 # JTWP_SSH_WEBHOOK_URL=https://discord.com/api/webhooks/...
 # JTWP_RCON_WEBHOOK_URL=https://discord.com/api/webhooks/...
-
-# Optional ipapi key:
-# IPAPI_API_KEY=YOUR_IPAPI_KEY
 ```
 
-## Generate the IP hashing secret
+> [!WARNING]
+> Never commit the real `.env` file. Commit `.env.example` instead.
 
-Generate a strong secret:
+Make sure `.gitignore` contains:
 
-```bash
-openssl rand -hex 32
+```gitignore
+.env
+venv/
+__pycache__/
+*.pyc
+config.json
 ```
 
-Put the result in:
 
-```bash
-JTWP_IP_HASH_SECRET=PASTE_RESULT_HERE
-```
-
-> [!CAUTION]
-> **Do not change `JTWP_IP_HASH_SECRET` after collecting data.**
->
-> The same secret is required to generate the same IP hash. Changing it will break correlation between historical player, RCON, and SSH records.
-
-Protect the `.env` file:
-
-```bash
-chmod 600 /home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
-```
-
----
-
-# 6. IP Privacy and Enrichment
+# 🌐 6. IP Privacy & Enrichment
 
 Raw player IP addresses are not stored in normal player/server records.
 
@@ -394,7 +480,7 @@ The raw provider responses are normalized so the rest of the collector does not 
 
 ---
 
-# 7. Initial Collector Run
+# ▶️ 7. Initial Collector Run
 
 Load the environment:
 
@@ -422,7 +508,7 @@ The first run can process all configured historical logs.
 
 ---
 
-# 8. Log Archiving
+# 🗄️ 8. Log Archiving
 
 For each configured server, the collector handles Pavlov logs and Stats logs.
 
@@ -467,7 +553,7 @@ A processing index prevents the same archived content from being processed repea
 
 ---
 
-# 9. Stats Parsing
+# 📊 9. Stats Parsing
 
 Pavlov Stats logs contain timestamp-prefixed JSON objects rather than one normal JSON document.
 
@@ -516,7 +602,7 @@ Round `allStats` records are also saved separately so individual matches can be 
 
 ---
 
-# 10. Player Identity
+# 🪪 10. Player Identity
 
 The primary player key is:
 
@@ -547,7 +633,7 @@ This allows a player who changes names to remain connected to the same permanent
 
 ---
 
-# 11. Player Statistics
+# 🎯 11. Player Statistics
 
 The player statistics system can maintain:
 
@@ -588,7 +674,7 @@ if you only want kills where the collector can verify the killer and victim were
 
 ---
 
-# 12. Player Connection Data
+# 🔌 12. Player Connection Data
 
 The collector can correlate connection lines such as:
 
@@ -616,7 +702,7 @@ When a value changes, the player's change history can record the previous and ne
 
 ---
 
-# 13. Admin Detection
+# 🛡️ 13. Admin Detection
 
 Admin IDs are loaded globally from the configured Pavlov servers.
 
@@ -654,7 +740,7 @@ or:
 
 ---
 
-# 14. Ban Collection
+# 🚫 14. Ban Collection
 
 Each server's blacklist is read from:
 
@@ -668,7 +754,7 @@ Current bans and ban changes are kept separately so the collector can track addi
 
 ---
 
-# 15. RCON Collection
+# 🖥️ 15. RCON Collection
 
 The collector recognizes successful authentication:
 
@@ -702,7 +788,7 @@ Raw RCON IPs are not exposed in normal logs; the stable HMAC IP hash is used.
 
 ---
 
-# 16. RCON ↔ Player Correlation
+# 🔗 16. RCON ↔ Player Correlation
 
 When a player connection is observed, its IP is hashed using the same secret used for RCON hosts.
 
@@ -735,7 +821,7 @@ Again, this is a **correlation**, not proof of who made the RCON request.
 
 ---
 
-# 17. Live Connection and RCON Watcher
+# 👀 17. Live Connection & RCON Watcher
 
 `connection_watcher.py` follows each configured live:
 
@@ -780,7 +866,7 @@ set +a
 
 ---
 
-# 18. Connection Watcher systemd Service
+# ⚡ 18. Connection Watcher systemd Service
 
 An example service is included:
 
@@ -816,7 +902,7 @@ ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector
 
 ---
 
-# 19. SSH Failed-Login Watcher
+# 🔒 19. SSH Failed-Login Watcher
 
 `ssh_watcher.py` watches the OpenSSH systemd journal for failed authentication.
 
@@ -867,7 +953,7 @@ Failed-host information can include:
 
 ---
 
-# 20. Allow the Watcher to Read SSH Logs
+# 🔑 20. Allow the Watcher to Read SSH Logs
 
 The `steam` account must be able to read the systemd journal.
 
@@ -889,7 +975,7 @@ Depending on the Ubuntu/OpenSSH configuration, the service may be named `ssh.ser
 
 ---
 
-# 21. SSH Watcher systemd Service
+# ⚡ 21. SSH Watcher systemd Service
 
 The SSH watcher should run continuously in the background. `systemd` will start it automatically when the server boots and restart it if the watcher exits unexpectedly.
 
@@ -1104,7 +1190,7 @@ sudo rm /etc/systemd/system/jtwp-ssh-watcher.service
 sudo systemctl daemon-reload
 ```
 
-# 22. Discord Webhooks
+# 🔔 22. Discord Webhooks
 
 ## Player connections
 
@@ -1139,7 +1225,7 @@ If a dedicated URL exists, it is used for that alert type.
 
 ---
 
-# 23. Mod.io Maps
+# 🗺️ 23. Mod.io Maps
 
 Active `MapRotation` entries from `Game.ini` are collected.
 
@@ -1185,7 +1271,7 @@ A map can contain:
 
 ---
 
-# 24. Mod.io Additional Mods
+# 🧩 24. Mod.io Additional Mods
 
 `Game.ini` entries such as:
 
@@ -1222,7 +1308,7 @@ global/modio/mods.json
 
 ---
 
-# 25. Custom Guns and Loot
+# 🔫 25. Custom Guns & Loot
 
 Custom guns can be detected from:
 
@@ -1257,7 +1343,7 @@ UGC3395365
 
 ---
 
-# 26. HTTP Events
+# 🌍 26. HTTP Events
 
 HTTP/network problems can be collected separately from the normal server event stream.
 
@@ -1276,7 +1362,7 @@ These events make it possible to build structured HTTP/network reliability histo
 
 ---
 
-# 27. Output Structure
+# 📁 27. Output Structure
 
 The exact contents grow as data is discovered, but the main layout is:
 
@@ -1351,7 +1437,7 @@ The exact contents grow as data is discovered, but the main layout is:
 
 ---
 
-# 28. Useful Commands
+# 🧰 28. Useful Commands
 
 ## Validate the config
 
@@ -1421,7 +1507,7 @@ python3 -m json.tool /home/steam/jtwp-collector-data/servers/pavlovserver/server
 
 ---
 
-# 29. Troubleshooting
+# 🛠️ 29. Troubleshooting
 
 ## `JTWP_IP_HASH_SECRET is required`
 
@@ -1582,7 +1668,80 @@ Built-in Pavlov maps do not have a Mod.io UGC ID to query.
 
 ---
 
-# 30. Recommended Services
+## 🌙 Nightly 3:00 AM Eastern Collector
+
+`collector.py` is a batch process, so it can be scheduled with a systemd timer while the connection and SSH watchers continue running continuously.
+
+### Create the collector service
+
+```bash
+sudo nano /etc/systemd/system/jtwp-collector.service
+```
+
+Paste:
+
+```ini
+[Unit]
+Description=JTWP Pavlov Data Collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
+```
+
+### Create the timer
+
+```bash
+sudo nano /etc/systemd/system/jtwp-collector.timer
+```
+
+Paste:
+
+```ini
+[Unit]
+Description=Run JTWP Pavlov Data Collector every night at 3 AM Eastern
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/New_York
+Persistent=true
+Unit=jtwp-collector.service
+
+[Install]
+WantedBy=timers.target
+```
+
+The server can remain configured for UTC. `America/New_York` makes systemd run the collector at **3:00 AM Eastern** and automatically handles EST/EDT daylight-saving changes.
+
+Enable the timer:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now jtwp-collector.timer
+```
+
+Check the next scheduled run:
+
+```bash
+systemctl list-timers jtwp-collector.timer
+```
+
+Test the collector immediately:
+
+```bash
+sudo systemctl start jtwp-collector.service
+sudo journalctl -u jtwp-collector.service -n 100 --no-pager
+```
+
+Because the service is `Type=oneshot`, it exits after a successful collection run. That is expected.
+
+---
+
+# 🚀 30. Recommended Services
 
 For normal operation, the system can be thought of as three pieces:
 
@@ -1598,7 +1757,7 @@ The historical collector can be run whenever you want to process/archive accumul
 
 ---
 
-# 31. Privacy Notes
+# 🔐 31. Privacy Notes
 
 The collector intentionally separates raw network identifiers from normal records.
 
@@ -1627,7 +1786,7 @@ Security and connection webhooks should contain only the hashed IP and normalize
 
 ---
 
-# 32. Backup Recommendations
+# 💾 32. Backup Recommendations
 
 The most important data to back up is:
 
@@ -1643,6 +1802,6 @@ Store backups of `.env` securely.
 
 ---
 
-# JTWP
+# ❤️ JTWP
 
 Built for long-term Pavlov server logging, statistics, player history, administration, and security monitoring.

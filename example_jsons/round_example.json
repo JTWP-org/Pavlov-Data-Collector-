@@ -1,0 +1,35 @@
+{
+  "server_id": "pavlovserver",
+  "timestamp": "2026.08.15-04.58.13",
+  "map": {
+    "label": "UGC2815354"
+  },
+  "game_mode": "TDM",
+  "match_duration": 3590,
+  "player_count": 19,
+  "teams_enabled": true,
+  "teams": {
+    "0": {
+      "score": 1608
+    },
+    "1": {
+      "score": 1448
+    }
+  },
+  "players": [
+    {
+      "unique_id": "spicyapple028",
+      "product_id": "00024a4843dc40b8950029db3cd7b111",
+      "player_name": "spicyapple028",
+      "team_id": 0,
+      "stats": {
+        "Death": 16,
+        "Kill": 112,
+        "BotKill": 109,
+        "Assist": 18,
+        "Headshot": 38,
+        "Experience": 12030
+      }
+    }
+  ]
+}

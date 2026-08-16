@@ -1,0 +1,9 @@
+{
+  "server_id": "pavlovserver",
+  "updated_at": "2026-08-16T19:42:11Z",
+  "banned_ids": [
+    "BadPlayer123",
+    "76561198210003277"
+  ],
+  "total_bans": 2
+}

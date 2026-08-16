@@ -1,0 +1,20 @@
+{
+  "product_id": "0002955012464183890448e567280576",
+  "combat": {
+    "kills": 1842,
+    "deaths": 931,
+    "headshots": 612,
+    "suicides": 27,
+    "teamkills": 14,
+    "bot_kills": 438,
+    "kills_unverified_team_relation": 53
+  },
+  "activity": {
+    "times_connected": 327,
+    "matches": 146
+  },
+  "weapons": {
+    "favorite": "ak47",
+    "favorite_kills": 418
+  }
+}

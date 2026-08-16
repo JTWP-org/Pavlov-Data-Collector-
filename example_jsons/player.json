@@ -1,0 +1,40 @@
+{
+  "product_id": "0002955012464183890448e567280576",
+  "platform": "SHACK",
+  "unique_id": "oneSALTycrack3r",
+  "current_name": "oneSALTycrack3r",
+  "admin": true,
+  "banned": false,
+  "banned_servers": [],
+  "first_seen": "2026.08.02-10.15.22",
+  "last_seen": "2026.08.16-18.42.11",
+  "servers_seen": [
+    "pavlovserver",
+    "pavlovserver0",
+    "pavlovserver1"
+  ],
+  "preferences": {
+    "player_height": 160.0,
+    "right_handed": true,
+    "vstock": false,
+    "client_platform": "oculus"
+  },
+  "network": {
+    "current_ip_hash": "73c727a33c17b3c65d27bfa8...",
+    "known_ip_count": 2,
+    "current_background": {
+      "lookup_status": "success",
+      "source": "proxycheck",
+      "fallback": false,
+      "organisation": "Example ISP",
+      "country_code": "US",
+      "network_type": "Residential",
+      "hosting": false,
+      "proxy": false,
+      "vpn": false,
+      "tor": false,
+      "risk": 0,
+      "confidence": 100
+    }
+  }
+}

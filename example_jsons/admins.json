@@ -1,0 +1,13 @@
+{
+  "oneSALTycrack3r": {
+    "sources": [
+      "pavlovserver/mods.txt",
+      "pavlovserver1/RconPlus/MenuAccesscfg.txt"
+    ]
+  },
+  "76561198210003277": {
+    "sources": [
+      "pavlovserver0/mods.txt"
+    ]
+  }
+}

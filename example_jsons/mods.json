@@ -1,0 +1,23 @@
+{
+  "UGC3395365": {
+    "first_seen": "2026.08.02-11.43.58:604",
+    "last_seen": "2026.08.16-12.33.19:511",
+    "times_loaded": 7,
+    "initializer_paths": [
+      "/UGC3395365/Initialiser/Initialiser_ModernWeapons.Initialiser_ModernWeapons_C"
+    ],
+    "initializers": [
+      "Initialiser_ModernWeapons_C"
+    ],
+    "modio": {
+      "id": 3395365,
+      "ugc_id": "UGC3395365",
+      "name": "Example Mod",
+      "thumb_320x180": "https://example.invalid/thumb.jpg",
+      "downloads_today": 42,
+      "downloads_total": 15231,
+      "summary": "Example summary",
+      "last_updated": "2026-08-16T19:42:11Z"
+    }
+  }
+}

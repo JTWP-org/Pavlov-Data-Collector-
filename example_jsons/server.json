@@ -1,0 +1,43 @@
+{
+  "server_id": "pavlovserver",
+  "platform": "SHACK",
+  "game_port": 7777,
+  "debug_port": 9444,
+  "game_class": "CustomGameMode_C",
+  "match_state": "InProgress",
+  "current_world": {
+    "ugc": "UGC3480960",
+    "name": "JBR_Shack",
+    "path": "/UGC3480960/Level/NewLevel/Shackified/JBR_Shack.JBR_Shack",
+    "max_tick_rate": 90
+  },
+  "runtime": {
+    "cpu": {
+      "physical_cores": 6,
+      "logical_cores": 6
+    },
+    "memory": {
+      "physical_ram_gb": 8,
+      "physical_ram_mb": 7423,
+      "physical_ram_kb": 7601508,
+      "physical_ram_bytes": 7783944192
+    },
+    "unreal": {
+      "build": "++UE5+Release-5.1-CL-23901901",
+      "engine_version": "5.1.1-23901901+++UE5+Release-5.1",
+      "branch": "++UE5+Release-5.1"
+    },
+    "startup": {
+      "command_line": "-PORT=11000",
+      "configured_port": 11000
+    },
+    "pavlov": {
+      "version": "1.0.0",
+      "net_cl": 23058290,
+      "engine_net_version": 30,
+      "game_net_version": 0,
+      "network_checksum": 450825497
+    }
+  },
+  "updated_at": "2026-08-16T19:42:11Z"
+}

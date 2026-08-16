@@ -2,15 +2,6 @@
 
 > A Pavlov VR server data collector for building long-term server, player, RCON, connection, security, map, mod, and statistics records from Pavlov server logs.
 
-you need 2 api keys and 2 webhooks to use this tool 
-
--get a mod.io api key get it free at https://mod.io/me/access#api
-
--get a proxycheck api key free at https://proxycheck.io/dashboard/
-
-To get a Discord webhook, open Discord on your desktop, navigate to a specific channel, click Integrations, and select Create Webhook
-
-
 ---
 
 ## Features
@@ -900,33 +891,218 @@ Depending on the Ubuntu/OpenSSH configuration, the service may be named `ssh.ser
 
 # 21. SSH Watcher systemd Service
 
-Install:
+The SSH watcher should run continuously in the background. `systemd` will start it automatically when the server boots and restart it if the watcher exits unexpectedly.
+
+## Create the service
+
+Create the service file:
 
 ```bash
-sudo cp jtwp-ssh-watcher.service /etc/systemd/system/
+sudo nano /etc/systemd/system/jtwp-ssh-watcher.service
+```
+
+Paste:
+
+```ini
+[Unit]
+Description=JTWP SSH Failed Login Watcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/ssh_watcher.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save in Nano with:
+
+```text
+Ctrl+O
+Enter
+Ctrl+X
+```
+
+## Allow `steam` to read the SSH journal
+
+The watcher reads OpenSSH authentication events from the systemd journal.
+
+Add `steam` to the `systemd-journal` group:
+
+```bash
+sudo usermod -aG systemd-journal steam
+```
+
+Check the account's groups:
+
+```bash
+id steam
+```
+
+You should see `systemd-journal` in the output.
+
+Test journal access:
+
+```bash
+sudo -u steam journalctl -u ssh.service -n 20 --no-pager
+```
+
+If your system uses `sshd.service`, test:
+
+```bash
+sudo -u steam journalctl -u sshd.service -n 20 --no-pager
+```
+
+If you just added the group and access still fails, log out and back in or restart the service/session so the new group membership is applied.
+
+## Configure the service environment
+
+The service loads:
+
+```text
+/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+```
+
+Create it from the example if you have not already:
+
+```bash
+cd /home/steam/jtwp-collector/Pavlov-Data-Collector-
+cp .env.example .env
+chmod 600 .env
+nano .env
+```
+
+At minimum, the watcher requires the same IP hashing secret used by the rest of the collector:
+
+```bash
+JTWP_IP_HASH_SECRET=YOUR_EXISTING_HASH_SECRET
+```
+
+For IP enrichment:
+
+```bash
+PROXYCHECK_API_KEY=YOUR_PROXYCHECK_API_KEY
+```
+
+For a shared SSH/RCON Discord security webhook:
+
+```bash
+JTWP_SECURITY_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+Or use a dedicated SSH webhook:
+
+```bash
+JTWP_SSH_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+If `JTWP_SSH_WEBHOOK_URL` is not set, the watcher falls back to `JTWP_SECURITY_WEBHOOK_URL`.
+
+> [!IMPORTANT]
+> Keep using the same `JTWP_IP_HASH_SECRET` as the Pavlov collector. Changing the secret prevents new SSH IP hashes from matching historical player and RCON IP hashes.
+
+## Load and start the service
+
+Tell systemd to reload its service definitions:
+
+```bash
 sudo systemctl daemon-reload
+```
+
+Enable the watcher at boot and start it immediately:
+
+```bash
 sudo systemctl enable --now jtwp-ssh-watcher
 ```
 
-Check it:
+## Check the service
 
 ```bash
-sudo systemctl status jtwp-ssh-watcher
+sudo systemctl status jtwp-ssh-watcher --no-pager
 ```
 
-Follow its output:
+You want to see:
+
+```text
+Active: active (running)
+```
+
+Verify the Python process:
+
+```bash
+ps aux | grep '[s]sh_watcher.py'
+```
+
+## Follow the watcher live
 
 ```bash
 sudo journalctl -u jtwp-ssh-watcher -f
 ```
 
-The service should use the actual Python virtual environment:
+Press `Ctrl+C` to stop following the output. This does not stop the service.
+
+## Restart after updating the script or `.env`
+
+```bash
+sudo systemctl restart jtwp-ssh-watcher
+```
+
+Then verify:
+
+```bash
+sudo systemctl status jtwp-ssh-watcher --no-pager
+```
+
+## View recent errors
+
+```bash
+sudo journalctl -u jtwp-ssh-watcher -n 100 --no-pager
+```
+
+## Verify the installed service
+
+```bash
+sudo systemctl cat jtwp-ssh-watcher
+```
+
+The important paths should be:
 
 ```ini
+User=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
 ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/ssh_watcher.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
 ```
 
----
+## Stop the watcher
+
+```bash
+sudo systemctl stop jtwp-ssh-watcher
+```
+
+## Disable automatic startup
+
+```bash
+sudo systemctl disable jtwp-ssh-watcher
+```
+
+## Remove the service
+
+```bash
+sudo systemctl disable --now jtwp-ssh-watcher
+sudo rm /etc/systemd/system/jtwp-ssh-watcher.service
+sudo systemctl daemon-reload
+```
 
 # 22. Discord Webhooks
 

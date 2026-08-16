@@ -1777,6 +1777,8 @@ Raw IPs are isolated under:
 data/private/
 ```
 
+ips are still stored and only exposed to the person managing the server as they always have been we store them to be able to IP ban connections 
+
 Do not expose this directory through a public web server, Discord bot, or public API.
 
 ### Discord

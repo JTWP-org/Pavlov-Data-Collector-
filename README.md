@@ -320,7 +320,6 @@ The collector uses a local hashing secret plus external services for IP enrichme
 |---|---|---:|
 | `JTWP_IP_HASH_SECRET` | Stable HMAC-SHA256 hashing of player/RCON/SSH IPs | ✅ Yes |
 | `PROXYCHECK_API_KEY` | Primary IP/network/proxy/VPN lookup | ⭐ Recommended |
-| `IPAPI_API_KEY` | Backup IP lookup provider, when your endpoint/account requires it | Optional |
 | `MODIO_API_KEY` | Pavlov map/mod metadata | ⭐ Recommended |
 | `JTWP_CONNECTION_WEBHOOK_URL` | Player connection Discord alerts | Optional |
 | `JTWP_SECURITY_WEBHOOK_URL` | Shared SSH + failed-RCON Discord alerts | Optional |

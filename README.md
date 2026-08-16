@@ -409,7 +409,7 @@ JTWP_RCON_WEBHOOK_URL=https://discord.com/api/webhooks/...
 From the project directory:
 
 ```bash
-cp .env.example .env
+cp env.example .env
 chmod 600 .env
 nano .env
 ```

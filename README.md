@@ -1,5 +1,8 @@
 # JTWP Pavlov Collector
 
+this is a tool to collect all the data related to players or the server and put it all in one place this is to be used with mods or other programs to display data 
+
+
 ## Install
 
 ```bash

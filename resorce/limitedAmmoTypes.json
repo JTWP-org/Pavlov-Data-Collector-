@@ -1,0 +1,46 @@
+{
+  "limitedAmmoTypes": [
+    {
+      "ammoType": 0,
+      "name": "Unlimited",
+      "description": "Players have unlimited ammo, carry no ammo boxes, and do not display an ammo count on the wrist."
+    },
+    {
+      "ammoType": 1,
+      "name": "Limited Generic",
+      "description": "Players carry ammo boxes with a limited amount of ammo.",
+      "details": [
+        "One box for each weapon class: Pistol, Submachine Gun, Rifles/MGs, Shotgun, and Sniper.",
+        "Mags and ammo boxes can be put on the chest of the player to consolidate the ammo.",
+        "An ammo count is displayed on the wrist."
+      ]
+    },
+    {
+      "ammoType": 2,
+      "name": "Limited Specific",
+      "description": "Players carry ammo boxes with a limited amount of ammo.",
+      "details": [
+        "One box for each weapon.",
+        "Mags and ammo boxes can be put on the chest of the player to consolidate the ammo.",
+        "An ammo count is displayed on the wrist."
+      ]
+    },
+    {
+      "ammoType": 3,
+      "name": "Custom",
+      "description": "Allows for full control over ammo by the map."
+    },
+    {
+      "ammoType": 4,
+      "name": "Limited Special",
+      "description": "All weapons except special weapons are unlimited.",
+      "needsClarification": true
+    },
+    {
+      "ammoType": 5,
+      "name": "Boxless",
+      "description": "Like Limited Generic but without boxes.",
+      "needsClarification": true
+    }
+  ]
+}

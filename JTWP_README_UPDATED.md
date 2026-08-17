@@ -150,7 +150,7 @@ pip install -r requirements.txt
 If `.env.example` is included:
 
 ``` bash
-cp /home/steam/jtwp-collector/Pavlov-Data-Collector-/examples/env.example.env
+cp /home/steam/jtwp-collector/Pavlov-Data-Collector-/examples/env.example /home/steam/jtwp-collector/Pavlov-Data-Collector-/.env.env
 nano /home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
 ```
 

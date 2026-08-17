@@ -1,78 +1,224 @@
-# JTWP Pavlov Collector
+# 🎮 JTWP Pavlov Collector
 
-## Install
+A data collection, monitoring, enrichment, and automation system for **Pavlov VR dedicated servers**.
+
+The collector processes Pavlov logs and server configuration data into structured JSON/JSONL datasets while providing live connection monitoring, SSH/RCON security tracking, Mod.io metadata enrichment, IP intelligence, Discord notifications, and a file-based RCON bridge for Pavlov ModKit workflows.
+
+---
+
+## ✨ Features
+
+* 📊 Collects player, server, combat, connection, and round data
+* 👤 Maintains persistent player records using `productId`
+* 🔫 Tracks kills, deaths, weapons, and combat statistics
+* 🌐 Privately stores and enriches player IP information
+* 🔐 Uses HMAC-SHA256 hashes outside private datasets
+* 🛡️ Detects proxy, VPN, hosting, and other IP intelligence
+* 🗺️ Enriches maps and mods with Mod.io metadata
+* 🔌 Watches live Pavlov player connections
+* 🔑 Watches failed SSH authentication attempts
+* 🎛️ Provides a file-based RCON trigger bridge
+* 🚨 Correlates SSH/RCON source networks with known player networks
+* 💬 Supports Discord security and connection webhooks
+* 📦 Archives and deduplicates processed Pavlov logs
+* ⚙️ Includes systemd services for continuous operation
+
+---
+
+# 📦 Installation
+
+## 1. Install Python
 
 ```bash
 sudo apt update
 sudo apt install python3 python3-venv -y
+```
 
+## 2. Create the collector directory
+
+```bash
 mkdir -p /home/steam/jtwp-collector
 cd /home/steam/jtwp-collector
+```
 
+## 3. Create the virtual environment
+
+```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Copy `collector.py` and `config.example.json` into that directory:
+## 4. Create the configuration
+
+Copy `collector.py` and `config.example.json` into the collector directory, then:
 
 ```bash
 cp config.example.json config.json
 nano config.json
 ```
 
-## Secrets
+---
 
-Do **not** put API keys into generated JSON.
+# 🔐 Secrets & Environment Variables
+
+> ⚠️ **Never place API keys, RCON passwords, webhook URLs, or other secrets inside generated public JSON data.**
+
+Generate a stable secret for IP hashing:
 
 ```bash
 export JTWP_IP_HASH_SECRET="$(openssl rand -hex 32)"
+```
+
+Configure the external APIs:
+
+```bash
 export PROXYCHECK_API_KEY="YOUR_PROXYCHECK_KEY"
 export MODIO_API_KEY="YOUR_MODIO_KEY"
+```
 
-# Optional if you have a paid/authenticated ipapi.is key:
+Optionally configure an authenticated ipapi.is key:
+
+```bash
 export IPAPI_API_KEY="YOUR_IPAPI_KEY"
 ```
 
-Keep `JTWP_IP_HASH_SECRET` unchanged. Changing it changes every IP hash and breaks historical IP correlation.
+## ⚠️ Keep the IP hash secret
 
-For a systemd service, put secrets in a root-readable EnvironmentFile rather than directly in the unit.
+`JTWP_IP_HASH_SECRET` must remain unchanged.
 
-## Run
+Changing this value changes every generated IP hash and breaks historical correlation between:
+
+* players
+* RCON attempts
+* SSH attempts
+* previously collected network data
+
+For systemd services, store secrets in a root-readable `EnvironmentFile` rather than directly inside the service unit.
+
+---
+
+# ▶️ Running the Collector
+
+Activate the virtual environment:
 
 ```bash
 source /home/steam/jtwp-collector/venv/bin/activate
+```
+
+Run:
+
+```bash
 python3 collector.py -c config.json
 ```
 
-## Important behavior
+---
 
-- `Pavlov-backup-*.log` files are moved into the archive.
-- Active `Pavlov.log` is copied to the archive and then truncated.
-- `Stats-*.log` files are moved into the archive.
-- Active `Stats.log` is copied to the archive and then truncated.
-- A SHA-256 processing index prevents the same archived content from being processed twice.
-- Player folders use `productId`.
-- Raw player IP addresses only live in `private/player_ips.json` and `private/ip_lookup_cache.json`.
-- Everything else uses a HMAC-SHA256 IP hash.
-- ProxyCheck is primary; ipapi.is is fallback.
-- Mod.io responses are cached.
-- `#MapRotation` and other `#`/`;` commented Game.ini lines are ignored.
+# ⚙️ Collector Behavior
 
-## Kill classification note
+The collector handles Pavlov logs differently depending on whether they are archived or currently active.
 
-Older `KillData` can omit team IDs. Such player-vs-player events are marked
-`normal_unverified_team_relation`. By default they count toward kills so historical
-data is useful, while `kills_unverified_team_relation` shows how many could not be
-verified as enemy-vs-enemy. Set:
+### 📜 Pavlov Logs
 
-```json
-"count_unverified_player_kills": false
+* `Pavlov-backup-*.log` files are moved into the archive.
+* Active `Pavlov.log` is copied into the archive and then truncated.
+
+### 📊 Stats Logs
+
+* `Stats-*.log` files are moved into the archive.
+* Active `Stats.log` is copied into the archive and then truncated.
+
+### ♻️ Duplicate Protection
+
+A SHA-256 processing index prevents the same archived content from being processed more than once.
+
+### 👤 Player Identification
+
+Player directories use:
+
+```text
+productId
 ```
 
-if you only want kills with a provable non-team relationship counted.
+### 🌐 IP Privacy
 
-## Output overview
+Raw player IP addresses exist only inside:
+
+```text
+private/player_ips.json
+private/ip_lookup_cache.json
+```
+
+All other datasets use a stable:
+
+```text
+HMAC-SHA256 IP hash
+```
+
+### 🔎 IP Intelligence
+
+Lookup priority:
+
+```text
+ProxyCheck
+    ↓
+ipapi.is fallback
+```
+
+### 🗺️ Mod.io
+
+Mod.io API responses are cached to reduce unnecessary requests.
+
+### ⚙️ Game.ini
+
+Commented configuration lines beginning with:
+
+```text
+#
+;
+```
+
+are ignored.
+
+This includes entries such as:
+
+```text
+#MapRotation
+```
+
+---
+
+# 🔫 Kill Classification
+
+Older `KillData` entries can omit team IDs.
+
+When this happens, player-vs-player events are classified as:
+
+```text
+normal_unverified_team_relation
+```
+
+By default, these events count toward kills so historical data remains useful.
+
+The collector separately records:
+
+```text
+kills_unverified_team_relation
+```
+
+so you can determine how many kills could not be verified as enemy-vs-enemy.
+
+To only count kills with a provable non-team relationship:
+
+```json
+{
+  "count_unverified_player_kills": false
+}
+```
+
+---
+
+# 📂 Output Structure
 
 ```text
 data/
@@ -80,16 +226,21 @@ data/
 │   ├── admins.json
 │   ├── processing_state.json
 │   ├── stats_combat_state.json
-│   ├── modio/mods.json
-│   └── reference/unknown_items.json
+│   ├── modio/
+│   │   └── mods.json
+│   └── reference/
+│       └── unknown_items.json
+│
 ├── private/
 │   ├── player_ips.json
 │   └── ip_lookup_cache.json
+│
 ├── players/
 │   ├── index/
 │   │   ├── by_name.json
 │   │   ├── by_unique_id.json
 │   │   └── by_product_id.json
+│   │
 │   └── records/{productId}/
 │       ├── player.json
 │       ├── names.json
@@ -101,23 +252,39 @@ data/
 │       ├── deaths.jsonl
 │       ├── connections.jsonl
 │       └── changes.jsonl
+│
 └── servers/{serverID}/
     ├── server.json
     ├── game_ini.json
-    ├── rounds/*.json
-    ├── bans/current_bans.json
-    ├── bans/changes.jsonl
+    ├── rounds/
+    │   └── *.json
+    ├── bans/
+    │   ├── current_bans.json
+    │   └── changes.jsonl
     ├── rcon/
     ├── http/
     └── server/
 ```
 
-## Item list
+---
 
-The built-in Pavlov item list is stored separately in `items.json` next to
-`collector.py`. The main `config.json` no longer needs a `base_items` section.
+# 🔫 Pavlov Item Database
 
-To add or remove a known base item, edit `items.json`:
+The built-in Pavlov item list is stored separately in:
+
+```text
+items.json
+```
+
+This file should be located next to:
+
+```text
+collector.py
+```
+
+The main `config.json` no longer requires a `base_items` section.
+
+To add or remove known Pavlov items, edit `items.json`:
 
 ```json
 {
@@ -129,26 +296,62 @@ To add or remove a known base item, edit `items.json`:
 }
 ```
 
-Items observed through `PavlovLog: Added Gun ...` are still detected as custom guns.
+Custom guns observed through log entries such as:
 
+```text
+PavlovLog: Added Gun ...
+```
 
-## Live connection watcher
+are still automatically detected.
 
-`connection_watcher.py` tails each configured live `Pavlov.log`. It starts at the
-end of the file by default, so existing historical joins do not fire webhooks.
+---
 
-On each new successful join it:
-- correlates AddClientConnection/Login request/Join request/Join succeeded;
-- derives productId from `userId: NULL:<32 hex>` when available;
-- updates the productId player folder;
-- increments times connected;
-- updates height, handedness, VStock and client platform;
-- hashes and enriches the IP;
-- refreshes admin and ban status;
-- correlates the IP hash with known RCON hosts;
-- sends the webhook without exposing the raw IP.
+# 👁️ Live Connection Watcher
 
-Set these in `.env`:
+`connection_watcher.py` monitors each configured live:
+
+```text
+Pavlov.log
+```
+
+The watcher starts at the **end of the file by default**, preventing existing historical joins from triggering new webhook events.
+
+## 🔗 Join Correlation
+
+For every new successful connection, the watcher correlates:
+
+```text
+AddClientConnection
+        ↓
+Login request
+        ↓
+Join request
+        ↓
+Join succeeded
+```
+
+It then:
+
+* 👤 Derives `productId` from `userId: NULL:<32 hex>` when available
+* 📁 Updates the player's `productId` directory
+* 🔢 Increments connection count
+* 📏 Updates player height
+* ✋ Updates handedness
+* 🎮 Updates VStock
+* 💻 Updates client platform
+* 🔐 Hashes the source IP
+* 🌐 Enriches IP information
+* 👑 Refreshes admin status
+* 🚫 Refreshes ban status
+* 🎛️ Correlates the IP hash with known RCON hosts
+* 💬 Sends the configured webhook
+* 🛡️ Never exposes the raw IP through the webhook
+
+---
+
+## 🔑 Connection Watcher Environment
+
+Add to `.env`:
 
 ```bash
 JTWP_IP_HASH_SECRET=...
@@ -164,27 +367,63 @@ source venv/bin/activate
 set -a
 source .env
 set +a
+
 python3 connection_watcher.py -c config.json
 ```
 
-For systemd, copy `jtwp-connection-watcher.service` to `/etc/systemd/system/`,
-then:
+---
+
+# ⚙️ Connection Watcher — systemd
+
+Copy:
+
+```text
+jtwp-connection-watcher.service
+```
+
+to:
+
+```text
+/etc/systemd/system/
+```
+
+Then enable it:
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now jtwp-connection-watcher
+```
+
+Follow the logs:
+
+```bash
 sudo journalctl -u jtwp-connection-watcher -f
 ```
 
-`webhook_mode` can be `discord` (default Discord embed) or `generic` (raw JSON event).
+## 💬 Webhook Modes
 
+`webhook_mode` supports:
 
-## SSH failed-login watcher
+| Mode      | Behavior       |
+| --------- | -------------- |
+| `discord` | Discord embed  |
+| `generic` | Raw JSON event |
 
-`ssh_watcher.py` follows the OpenSSH systemd journal and records failed SSH
-authentication attempts.
+The default is:
 
-Normal data uses the same HMAC-SHA256 IP hash as player/RCON data:
+```text
+discord
+```
+
+---
+
+# 🔑 SSH Failed-Login Watcher
+
+`ssh_watcher.py` follows the OpenSSH systemd journal and records failed SSH authentication attempts.
+
+Normal datasets use the same stable HMAC-SHA256 IP hash used by player and RCON data.
+
+## 📂 SSH Data
 
 ```text
 data/global/ssh/
@@ -193,92 +432,203 @@ data/global/ssh/
 └── ssh.log
 ```
 
-Raw SSH source IPs are isolated to:
+Raw SSH source IPs are isolated inside:
 
 ```text
 data/private/ssh_ips.json
 ```
 
-Each failed host can accumulate:
-- first/last seen;
-- total failed attempts;
-- usernames attempted and counts;
-- recent source ports;
-- ISP/organisation;
-- country;
-- hosting/proxy/VPN/Tor status;
-- ProxyCheck/ipapi lookup source.
+---
 
-The `steam` user must be allowed to read the systemd journal. On Ubuntu:
+## 📊 Failed SSH Host Information
+
+Each failed host can accumulate:
+
+* 🕐 First seen
+* 🕐 Last seen
+* 🔢 Total failed attempts
+* 👤 Usernames attempted
+* 📊 Attempt counts per username
+* 🔌 Recent source ports
+* 🌐 ISP
+* 🏢 Organisation
+* 🌎 Country
+* 🖥️ Hosting detection
+* 🕵️ Proxy detection
+* 🔐 VPN detection
+* 🧅 Tor detection
+* 🔎 ProxyCheck/ipapi lookup source
+
+---
+
+## 🔓 Allow Journal Access
+
+The `steam` user must be allowed to read the systemd journal.
+
+On Ubuntu:
 
 ```bash
 sudo usermod -aG systemd-journal steam
 ```
 
-Then restart the service/session so the new group membership applies.
+Restart the service or login session afterward so the new group membership takes effect.
 
-Install the included service:
+---
+
+## ⚙️ Install SSH Watcher
 
 ```bash
 sudo cp jtwp-ssh-watcher.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now jtwp-ssh-watcher
+```
+
+Follow its logs:
+
+```bash
 sudo journalctl -u jtwp-ssh-watcher -f
 ```
 
-By default `Invalid user ...` lines are not counted separately because OpenSSH
-often emits one immediately before a corresponding `Failed password ...`, which
-would otherwise double-count a single authentication attempt. Set
-`include_invalid_user_events` to `true` if you want those as separate events.
+---
 
+## 👤 Invalid SSH Users
 
-## Security correlation and webhooks
+By default:
 
-The collector maintains `players/index/by_ip_hash.json`, mapping each stable
-HMAC-SHA256 IP hash to player product IDs seen on that network.
+```text
+Invalid user ...
+```
 
-SSH and failed-RCON events automatically check this index. A match means the
-same public IP was observed; it does not prove the player made the attempt.
+messages are **not counted separately**.
 
-Use one shared Discord security webhook:
+OpenSSH commonly emits an `Invalid user` message immediately before the corresponding:
+
+```text
+Failed password ...
+```
+
+Counting both would therefore double-count a single authentication attempt.
+
+To treat them as separate events, enable:
+
+```json
+{
+  "include_invalid_user_events": true
+}
+```
+
+---
+
+# 🛡️ Security Correlation
+
+The collector maintains:
+
+```text
+players/index/by_ip_hash.json
+```
+
+This index maps each stable HMAC-SHA256 IP hash to player product IDs previously observed using that public IP.
+
+SSH and failed-RCON events automatically check this index.
+
+> ⚠️ **Important:** An IP hash match only means the same public IP address was observed. It does **not** prove that a particular Pavlov player performed the SSH or RCON attempt.
+
+This distinction is especially important for:
+
+* shared households
+* carrier-grade NAT
+* VPN services
+* hosting providers
+* university/business networks
+* other shared public IPs
+
+---
+
+# 🚨 Security Webhooks
+
+You can use one shared Discord webhook for security events:
 
 ```bash
 JTWP_SECURITY_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-or separate URLs:
+Or configure separate RCON and SSH webhooks:
 
 ```bash
 JTWP_SSH_WEBHOOK_URL=https://discord.com/api/webhooks/...
 JTWP_RCON_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-Raw IPs are never posted to Discord.
+> 🔒 Raw IP addresses are never posted to Discord.
 
-## Mod.io metadata for maps and mods
+---
 
-Active Game.ini map rotation entries are enriched and written to:
+# 🗺️ Mod.io Map & Mod Metadata
+
+Active `Game.ini` map rotation entries are enriched and written to:
 
 ```text
 servers/{serverID}/server/maps.json
 ```
 
-AdditionalMods entries are merged with log-discovered ModInitializer entries in:
+`AdditionalMods` entries are merged with log-discovered `ModInitializer` entries and written to:
 
 ```text
 servers/{serverID}/server/mods.json
 ```
 
-For UGC entries, Mod.io metadata includes name, `thumb_320x180`,
-`downloads_today`, `downloads_total`, and summary. Results reuse the global
-Mod.io cache.
+For UGC entries, Mod.io metadata includes:
 
+```text
+name
+thumb_320x180
+downloads_today
+downloads_total
+summary
+```
+
+Results reuse the global Mod.io cache to minimize API requests.
+
+---
 
 # 🎛️ RCON File Trigger Bridge
 
-The collector now includes a file-based RCON bridge for Pavlov ModKit workflows.
+The collector includes a file-based RCON bridge designed for **Pavlov ModKit workflows**.
 
-The ModKit can create JSON files inside each server's ModSave directory:
+Instead of requiring the ModKit to establish an RCON connection itself, the ModKit creates JSON request files.
+
+The Linux-side watcher detects those files, executes the appropriate RCON command, and writes the result back as JSON.
+
+## 🔄 Basic Flow
+
+```text
+Pavlov ModKit
+     │
+     ▼
+IN-command.json
+     │
+     ▼
+RCON Trigger Watcher
+     │
+     ├── Validate command
+     ├── Validate arguments
+     ├── Connect to RCON
+     └── Execute command
+     │
+     ▼
+OUT-command.json
+     │
+     ▼
+Pavlov ModKit
+```
+
+---
+
+# 📁 RCON Trigger Directories
+
+The ModKit can create JSON files inside each server's `ModSave` directory.
+
+Examples:
 
 ```text
 /home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon
@@ -286,11 +636,13 @@ The ModKit can create JSON files inside each server's ModSave directory:
 /home/steam/pavlovserver1/Pavlov/Saved/Config/ModSave/JTWP/Rcon
 ```
 
-The folder determines the target server.
+The directory determines which Pavlov server receives the RCON command.
 
-## Request/response naming
+---
 
-Create:
+# 📥 RCON Request / Response Naming
+
+Create a request such as:
 
 ```text
 IN-serverinfo.json
@@ -298,21 +650,23 @@ IN-serverinfo.json
 
 The watcher:
 
-1. detects the `IN-*.json` file;
-2. removes any stale matching `OUT-*.json`;
-3. validates the command against `rcon_commands.json`;
-4. validates required arguments;
-5. sends the RCON command;
-6. atomically writes the fresh `OUT-*.json`;
-7. removes the `IN-*.json`.
+1. 👁️ Detects the `IN-*.json` request
+2. 🧹 Removes any stale matching `OUT-*.json`
+3. ✅ Validates the command against `rcon_commands.json`
+4. 🔎 Validates required arguments
+5. 📡 Sends the RCON command
+6. 💾 Atomically writes a fresh `OUT-*.json`
+7. 🗑️ Removes the original `IN-*.json`
 
-Example output:
+The resulting file is:
 
 ```text
 OUT-serverinfo.json
 ```
 
-A successful response contains:
+---
+
+# ✅ Successful RCON Response
 
 ```json
 {
@@ -327,7 +681,11 @@ A successful response contains:
 }
 ```
 
-Errors are also returned through the matching OUT file:
+---
+
+# ❌ RCON Error Response
+
+Errors are returned through the corresponding `OUT-*.json` file:
 
 ```json
 {
@@ -336,9 +694,19 @@ Errors are also returned through the matching OUT file:
 }
 ```
 
-## Commands with arguments
+This allows the ModKit to handle both successful and failed requests using the same file workflow.
 
-`IN-setbotsenabled.json`:
+---
+
+# 🕹️ RCON Commands With Arguments
+
+## 🤖 Enable / Disable Bots
+
+Create:
+
+```text
+IN-setbotsenabled.json
+```
 
 ```json
 {
@@ -346,7 +714,15 @@ Errors are also returned through the matching OUT file:
 }
 ```
 
-`IN-setmaxplayers.json`:
+---
+
+## 👥 Set Maximum Players
+
+Create:
+
+```text
+IN-setmaxplayers.json
+```
 
 ```json
 {
@@ -354,7 +730,15 @@ Errors are also returned through the matching OUT file:
 }
 ```
 
-`IN-giveitem.json`:
+---
+
+## 🔫 Give Player an Item
+
+Create:
+
+```text
+IN-giveitem.json
+```
 
 ```json
 {
@@ -363,7 +747,15 @@ Errors are also returned through the matching OUT file:
 }
 ```
 
-`IN-switchmap.json`:
+---
+
+## 🗺️ Switch Map
+
+Create:
+
+```text
+IN-switchmap.json
+```
 
 ```json
 {
@@ -372,9 +764,11 @@ Errors are also returned through the matching OUT file:
 }
 ```
 
-## Reference files
+---
 
-The bridge uses:
+# 📚 RCON Reference Files
+
+The bridge uses the following reference files:
 
 ```text
 rcon_commands.json
@@ -383,11 +777,21 @@ default_maps.json
 limited_ammo_types.json
 ```
 
-All commands currently listed in `rcon_commands.json` are enabled.
+All commands currently listed inside:
 
-## RCON configuration
+```text
+rcon_commands.json
+```
 
-Each server in `config.json` needs an RCON block:
+are enabled.
+
+---
+
+# ⚙️ RCON Server Configuration
+
+Each server in `config.json` requires an RCON block.
+
+Example:
 
 ```json
 {
@@ -402,7 +806,15 @@ Each server in `config.json` needs an RCON block:
 }
 ```
 
-RCON passwords belong in `.env`:
+The password itself is **not stored in `config.json`**.
+
+Instead, `password_env` specifies which environment variable contains the password.
+
+---
+
+# 🔐 RCON Passwords
+
+Store passwords in `.env`:
 
 ```bash
 PAVLOVSERVER_RCON_PASSWORD=YOUR_PASSWORD
@@ -410,35 +822,150 @@ PAVLOVSERVER0_RCON_PASSWORD=YOUR_PASSWORD
 PAVLOVSERVER1_RCON_PASSWORD=YOUR_PASSWORD
 ```
 
-## Install dependencies
+> 🔒 Do not commit `.env` to a public repository.
+
+---
+
+# 📦 RCON Bridge Dependencies
+
+Activate the collector environment:
 
 ```bash
 source /home/steam/jtwp-collector/venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Install the systemd service
+---
+
+# ⚙️ Install the RCON Trigger Service
+
+Install the service:
 
 ```bash
 sudo install -m 644 jtwp-rcon-trigger-watcher.service /etc/systemd/system/jtwp-rcon-trigger-watcher.service
+```
+
+Reload systemd:
+
+```bash
 sudo systemctl daemon-reload
+```
+
+Enable and start the watcher:
+
+```bash
 sudo systemctl enable --now jtwp-rcon-trigger-watcher
 ```
 
-Check it:
+---
+
+## 🔎 Check RCON Watcher Status
 
 ```bash
 sudo systemctl status jtwp-rcon-trigger-watcher --no-pager
 ```
 
-Follow it:
+## 📜 Follow RCON Watcher Logs
 
 ```bash
 sudo journalctl -u jtwp-rcon-trigger-watcher -f
 ```
 
-Or use the included installer:
+---
+
+# 🚀 Automatic RCON Bridge Installation
+
+You can alternatively use the included installer:
 
 ```bash
 sudo ./scripts/install-rcon-bridge.sh
 ```
+
+---
+
+# 🔒 Privacy Model
+
+The collector intentionally separates raw network information from normal datasets.
+
+```text
+                   Raw IP
+                     │
+                     ▼
+              data/private/
+                     │
+                     ├── player_ips.json
+                     ├── ip_lookup_cache.json
+                     └── ssh_ips.json
+                     │
+                     ▼
+               HMAC-SHA256
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+     Players        RCON          SSH
+```
+
+Normal player, server, RCON, SSH, and security datasets use the stable IP hash instead of the raw address.
+
+This allows historical network correlation without unnecessarily duplicating raw IP addresses throughout the dataset.
+
+---
+
+# 🧰 Useful Service Commands
+
+Check running JTWP services:
+
+```bash
+systemctl --type=service | grep jtwp
+```
+
+Restart the connection watcher:
+
+```bash
+sudo systemctl restart jtwp-connection-watcher
+```
+
+Restart the SSH watcher:
+
+```bash
+sudo systemctl restart jtwp-ssh-watcher
+```
+
+Restart the RCON bridge:
+
+```bash
+sudo systemctl restart jtwp-rcon-trigger-watcher
+```
+
+Follow all JTWP-related journal messages:
+
+```bash
+sudo journalctl -f | grep -i jtwp
+```
+
+---
+
+# 🛡️ Security Notes
+
+* 🔑 Keep API keys and passwords in environment variables.
+* 🔒 Never expose the contents of `data/private/`.
+* 🧂 Keep `JTWP_IP_HASH_SECRET` stable and private.
+* 🚫 Do not commit `.env` to source control.
+* 🌐 Treat IP intelligence as informational rather than proof of identity.
+* 🔗 An IP correlation does not prove that two events came from the same individual.
+* 💬 Raw IP addresses should never be included in Discord webhook messages.
+* 👑 Restrict access to RCON configuration and passwords.
+* 📁 Protect collector output using appropriate Linux ownership and permissions.
+
+---
+
+# 🎮 JTWP Pavlov Collector
+
+**Collect. Correlate. Monitor. Automate.**
+
+Built for Pavlov dedicated server data collection and administration.

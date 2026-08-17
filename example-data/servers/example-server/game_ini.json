@@ -1,0 +1,21 @@
+{
+  "server_id": "example-server",
+  "source": "/example/path/Game.ini",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "server_name": "Example Server",
+  "verbose_logging": false,
+  "tick_rate": 90,
+  "map_rotation": [
+    {
+      "map_id": "sand",
+      "game_mode": "TDM"
+    }
+  ],
+  "additional_mods": [
+    {
+      "ugc_id": "UGC0000000",
+      "modio_id": 0,
+      "modio": null
+    }
+  ]
+}

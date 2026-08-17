@@ -1,0 +1,15 @@
+{
+  "example_ip_hash_000000000000000000000000000000000000000000000000000000000000": {
+    "first_seen": "2026-01-01T00:00:00Z",
+    "last_seen": "2026-01-01T00:00:00Z",
+    "successful_connections": 1,
+    "failed_attempts": 0,
+    "players_seen_on_ip": [
+      {
+        "product_id": "EXAMPLE_PRODUCT_ID",
+        "unique_id": "EXAMPLE_UNIQUE_ID",
+        "player_name": "ExamplePlayer"
+      }
+    ]
+  }
+}

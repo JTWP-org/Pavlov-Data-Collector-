@@ -1,0 +1,15 @@
+{
+  "UGC0000000": {
+    "first_seen": "2026-01-01T00:00:00Z",
+    "last_seen": "2026-01-01T00:00:00Z",
+    "times_loaded": 1,
+    "initializer_paths": [],
+    "initializers": [],
+    "configured": true,
+    "sources": [
+      "Game.ini AdditionalMods"
+    ],
+    "modio": null,
+    "config_last_seen": "2026-01-01T00:00:00Z"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "product_id": "EXAMPLE_PRODUCT_ID",
+  "platform": "SHACK",
+  "unique_id": "EXAMPLE_UNIQUE_ID",
+  "current_name": "ExamplePlayer",
+  "admin": false,
+  "banned": false,
+  "banned_servers": [],
+  "first_seen": "2026-01-01T00:00:00Z",
+  "last_seen": "2026-01-01T00:00:00Z",
+  "servers_seen": [
+    "example-server"
+  ],
+  "preferences": {
+    "player_height": 175.0,
+    "right_handed": true,
+    "vstock": false,
+    "client_platform": "SHACK"
+  },
+  "network": {
+    "current_ip_hash": "example_ip_hash_000000000000000000000000000000000000000000000000000000000000",
+    "known_ip_count": 1,
+    "current_background": {
+      "organisation": "Example ISP",
+      "country_code": "US",
+      "proxy": false,
+      "vpn": false,
+      "hosting": false,
+      "tor": false
+    }
+  }
+}

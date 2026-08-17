@@ -1,0 +1,14 @@
+{
+  "server_id": "example-server",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "maps": {
+    "sand": {
+      "configured": true,
+      "game_modes": [
+        "TDM"
+      ],
+      "modio_id": null,
+      "modio": null
+    }
+  }
+}

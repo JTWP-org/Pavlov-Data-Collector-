@@ -1,0 +1,8 @@
+{
+  "example_unknown_item": {
+    "times_seen": 1,
+    "servers": [
+      "example-server"
+    ]
+  }
+}

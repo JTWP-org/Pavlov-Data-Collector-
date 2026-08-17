@@ -1,0 +1,10 @@
+{
+  "example pavlov server": [
+    {
+      "name": "Example Pavlov Server",
+      "id": "example_server_record",
+      "ip": "203.0.113.10",
+      "port": 7777
+    }
+  ]
+}

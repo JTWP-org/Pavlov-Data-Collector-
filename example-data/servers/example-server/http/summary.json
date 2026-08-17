@@ -1,0 +1,8 @@
+{
+  "server_id": "example-server",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "total_events": 1,
+  "event_types": {
+    "request_failed": 1
+  }
+}

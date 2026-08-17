@@ -1,0 +1,27 @@
+{
+  "collected_at": "2026-01-01T00:00:00Z",
+  "total_servers": 1,
+  "total_players": 3,
+  "total_slots": 24,
+  "unique_hosts": 1,
+  "shack": {
+    "servers": 1,
+    "players": 3
+  },
+  "pcvr": {
+    "servers": 0,
+    "players": 0
+  },
+  "hosting_providers": {
+    "Example Hosting": {
+      "servers": 1,
+      "players": 3
+    }
+  },
+  "countries": {
+    "US": {
+      "servers": 1,
+      "players": 3
+    }
+  }
+}

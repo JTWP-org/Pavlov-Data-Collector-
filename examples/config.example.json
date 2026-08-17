@@ -61,6 +61,21 @@
     "auto_block_use_sudo": true,
     "auto_block_private_ips": false
   },
+  "ddos_watcher": {
+    "enabled": true,
+    "interface": "any",
+    "window_seconds": 5,
+    "cooldown_seconds": 60,
+    "packets_per_second_threshold": 5000,
+    "bytes_per_second_threshold": 5000000,
+    "unique_sources_threshold": 100,
+    "per_source_packets_per_second_threshold": 1500,
+    "minimum_trigger_conditions": 2,
+    "top_sources": 20,
+    "monitored_ports": [],
+    "capture_filter": "",
+    "tcpdump_path": "/usr/bin/tcpdump"
+  },
   "pavlov_api_enabled": true,
   "pavlov_api_host_cache_ttl_days": 30,
   "rcon_bridge": {

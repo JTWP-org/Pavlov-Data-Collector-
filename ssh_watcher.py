@@ -210,7 +210,12 @@ class SSHWatcher:
                 "source_ports": [],
                 "background": background,
                 "players_seen_on_ip": [],
+                "blocked": False,
             })
+
+            # Older failed_hosts.json records may predate the blocked field.
+            # Treat those records as not blocked until auto-block succeeds.
+            host.setdefault("blocked", False)
             host["first_seen"] = min(host.get("first_seen") or ts, ts)
             host["last_seen"] = max(host.get("last_seen") or ts, ts)
             host["failed_attempts"] = int(host.get("failed_attempts", 0)) + 1
@@ -383,7 +388,7 @@ class SSHWatcher:
                         f"Type: `{event.get('type')}`\nUsername: `{event.get('username')}`\n"
                         f"Source Port: `{event.get('source_port')}`\n"
                         f"Attempts From Host: `{host.get('failed_attempts', 0)}`\n"
-                        f"Blocked: `{self._yn(host.get('blocked'))}`",
+                        f"Blocked: `{self._yn(host.get('blocked', False))}`",
                      "inline": False},
                     {"name": "IP Hash", "value": f"`{event.get('ip_hash')}`", "inline": False},
                     {"name": "Network", "value":

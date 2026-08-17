@@ -200,9 +200,40 @@ class RconBridge:
 
         return " ".join(parts), normalized
 
-    async def _read_line(self, reader: asyncio.StreamReader) -> str:
-        raw = await asyncio.wait_for(reader.readline(), timeout=self.read_timeout)
-        return raw.decode("utf-8", errors="replace").strip()
+    async def _read_until_contains(
+        self,
+        reader: asyncio.StreamReader,
+        needle: bytes,
+        timeout: float | None = None,
+    ) -> bytes:
+        """Read raw RCON bytes until a marker appears, without requiring newlines."""
+        limit = self.read_timeout if timeout is None else timeout
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + limit
+        data = bytearray()
+
+        while needle not in data:
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                raise TimeoutError(
+                    f"Timed out waiting for {needle.decode(errors='replace')!r}; "
+                    f"received={bytes(data)!r}"
+                )
+
+            chunk = await asyncio.wait_for(
+                reader.read(4096),
+                timeout=remaining,
+            )
+
+            if not chunk:
+                raise ConnectionError(
+                    f"RCON connection closed while waiting for "
+                    f"{needle.decode(errors='replace')!r}; received={bytes(data)!r}"
+                )
+
+            data.extend(chunk)
+
+        return bytes(data)
 
     async def _send(self, server: dict, command: str):
         password_env = server["password_env"]
@@ -218,26 +249,26 @@ class RconBridge:
                 timeout=self.connect_timeout,
             )
 
-            # Pavlov sends "Password: " as a prompt without a trailing newline,
-            # so readline() would wait until timeout. Read through the prompt instead.
-            try:
-                banner_raw = await asyncio.wait_for(
-                    reader.readuntil(b"Password: "),
-                    timeout=self.read_timeout,
-                )
-            except asyncio.IncompleteReadError as e:
-                banner_raw = e.partial
-
+            banner_raw = await self._read_until_contains(
+                reader,
+                b"Password:",
+            )
             banner = banner_raw.decode("utf-8", errors="replace").strip()
-            if "Password:" not in banner:
-                raise RuntimeError(f"Unexpected RCON banner: {banner!r}")
 
             writer.write((password + "\n").encode("utf-8"))
             await writer.drain()
 
-            auth = await self._read_line(reader)
-            if "Authenticated=1" not in auth:
-                raise RuntimeError(f"RCON authentication failed: {auth!r}")
+            # Pavlov may not terminate this response with a newline, so wait
+            # specifically for the successful marker.
+            try:
+                auth_raw = await self._read_until_contains(
+                    reader,
+                    b"Authenticated=1",
+                )
+            except TimeoutError as e:
+                raise RuntimeError(f"RCON authentication timed out: {e}") from e
+
+            auth = auth_raw.decode("utf-8", errors="replace").strip()
 
             writer.write((command + "\n").encode("utf-8"))
             await writer.drain()

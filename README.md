@@ -12,7 +12,7 @@ data.
 > installation**, **main configuration**, and **feature overview**.
 >
 > Detailed setup and usage instructions are kept in the
-> [`Guides/`](Guides/) folder.
+> [`Guide/`](Guide/) folder.
 
 ------------------------------------------------------------------------
 

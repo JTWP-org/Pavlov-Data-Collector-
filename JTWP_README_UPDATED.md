@@ -41,6 +41,7 @@ data.
 -   Can store provider, organisation, network type, location, hosting,
     proxy/VPN/Tor, risk, and confidence information when available.
 -   Caches lookup data to reduce API usage.
+-   Keeps player ip's hidden and uses a hash of the ip for tracking 
 
 ### 🗺️ Mod.io Integration
 

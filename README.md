@@ -384,14 +384,36 @@ python3 connection_watcher.py -c config.json
 Copy:
 
 ```
-jtwp-connection-watcher.service
+[Unit]
+Description=JTWP Pavlov Connection Watcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=steam
+Group=steam
+
+WorkingDirectory=/home/steam/jtwp-collector
+EnvironmentFile=-/home/steam/jtwp-collector/.env
+
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/connection_watcher.py -c /home/steam/jtwp-collector/config.json
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
 
 ```
 
 to:
 
 ```
-/etc/systemd/system/
+sudo nano /etc/systemd/system/jtwp-connection-watcher.service
 
 ```
 

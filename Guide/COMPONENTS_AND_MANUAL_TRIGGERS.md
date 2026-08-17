@@ -298,6 +298,14 @@ This gives the Pavlov ModKit a way to request a lightweight
 public-server-data refresh using the same ModSave file system already
 used by the RCON bridge.
 
+so to trigger the api just make a json in the ModSave folder RCON 
+
+/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon
+named EXE_PPAPI.json there dose not need to be anything in the json u
+ know its been triggered when the file has been removed 
+
+ triggering this will update all the public server info 
+
 
 ------------------------------------------------------------------------
 

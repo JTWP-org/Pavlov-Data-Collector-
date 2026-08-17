@@ -1,3 +1,304 @@
+Pasted markdown(5).md
+File
+id also like to collect some data from the Game.ini 
+ServerName=JTWP.org Dev Testing
+bVerboseLogging=True
+TickRate=90
+
+MapRotation=(MapId="UGC2815354",GameMode="TDM")
+#MapRotation=(MapId="datacenter", GameMode="SND")
+#MapRotation=(MapId="sand", GameMode="DM")
+
+disregard the commented out lines this is the server map rotation u will need to get all the lines with MapRotation as there may be many 
+
+AdditionalMods=UGC3793776
+AdditionalMods=UGC3700181
+AdditionalMods=UGC3796283
+AdditionalMods=UGC5765660
+AdditionalMods=UGC6270412
+AdditionalMods=UGC6279197
+AdditionalMods=UGC3462586
+
+this is the server mods that are hard coded into the server id like to use Mod.io API to collect more data on the mods and maps from the rotation we will need to remove UGC from the id 
+
+here is the endpoint
+https://api.mod.io/v1/games/3959/mods/{ID}?api_key=7f74fed9a44bbdf3683f468a1e9046ab
+with my api key the output is attached id like to save the following data 
+name 
+thumb_320x180
+downloads_today  
+downloads_total  
+summary 
+
+Pasted markdown(6).md
+File
+here is the full list
+
+Pasted markdown(7).md
+File
+
+now lets add
+
+PAVLOV_API="https://pavlovservers.com/api/servers?all=true"
+
+for some more data
+_id	"0f488261d0c25c80fb2d59caedbc8a36"
+bPasswordProtected	1
+bSecured	1
+game_mode	"TDM"
+hash	"0f488261d0c25c80fb2d59caedbc8a36"
+ip	"15.204.243.166"
+map_id	"UGC3283728"
+map_label	"Overpass Shack [Temp]"
+max_slots	10
+name	"SMM Match-20128"
+pk	"0f488261d0c25c80fb2d59caedbc8a36"
+port	7777
+server_type	"Shack Live"
+slots	3
+updated	"2026-08-16T19:00:24.280Z"
+version	"1.0.28"
+
+Pasted markdown(9).md
+File
+can we add info about that file trigger to the rcon guide
+
+Pasted text(20260817-070621).txt
+Document
+
+Good — it’s running correctly now.
+
+The important line is:
+
+Active: active (running)
+
+and the process tree shows both pieces are alive:
+
+ssh_watcher.py
+journalctl -f ... ssh.service ... sshd.service
+
+So the watcher is now actively following SSH events again.
+
+If you want it to start automatically after reboot, enable it:
+
+sudo systemctl enable jtwp-ssh-watcher
+
+Then confirm:
+
+systemctl is-enabled jtwp-ssh-watcher
+
+You should get:
+
+enabled
+
+For live activity:
+
+sudo journalctl -u jtwp-ssh-watcher -f
+
+And after the next failed SSH attempt, the webhook should now report:
+
+Blocked: No
+
+until the failure threshold is exceeded and the block command succeeds, at which point it should report:
+
+Blocked: Yes
+
+
+Aug 17 07:09:23 JTWP python3[554720]: SSH webhook failed: HTTP 429: {"code":0,"message":"You are being blocked from accessing our API temporarily due to exceeding global rate limits. Refer to https://discord.com/developers/docs/topics/rate-limits for more information.
+
+That 429 means the SSH watcher is sending webhook requests too quickly and Discord has temporarily rate-limited that webhook/IP. Discord expects clients to honor the Retry-After value on 429 responses rather than immediately retrying.
+
+Right now your watcher retries with a simple:
+
+time.sleep(attempt + 1)
+
+which can keep hitting the limit.
+
+I’d update send_webhook() so that on HTTP 429 it reads retry_after from Discord’s JSON response or the Retry-After header, waits that amount, then retries.
+
+Use this logic in ssh_watcher.py:
+
+def send_webhook(self, event: dict, host: dict):
+    if not self.webhook_url:
+        return
+
+    bg = event.get("background") or {}
+    matches = event.get("player_matches") or []
+
+    match_text = "None" if not matches else "\n".join(
+        f"• {x.get('player_name') or 'Unknown'} (`{x.get('product_id')}`)"
+        for x in matches[:10]
+    )
+
+    payload = {
+        "username": "JTWP Security",
+        "embeds": [{
+            "title": "SSH Authentication Failed",
+            "description": "A failed SSH authentication attempt was detected.",
+            "fields": [
+                {
+                    "name": "Attempt",
+                    "value":
+                        f"Type: `{event.get('type')}`\n"
+                        f"Username: `{event.get('username')}`\n"
+                        f"Source Port: `{event.get('source_port')}`\n"
+                        f"Attempts From Host: `{host.get('failed_attempts', 0)}`\n"
+                        f"Blocked: `{self._yn(host.get('blocked', False))}`",
+                    "inline": False
+                },
+                {
+                    "name": "IP Hash",
+                    "value": f"`{event.get('ip_hash')}`",
+                    "inline": False
+                },
+                {
+                    "name": "Network",
+                    "value":
+                        f"Organisation: `{bg.get('organisation') or 'Unknown'}`\n"
+                        f"Country: `{bg.get('country_code') or 'Unknown'}`\n"
+                        f"Type: `{bg.get('network_type') or 'Unknown'}`\n"
+                        f"Proxy: `{self._yn(bg.get('proxy'))}` | "
+                        f"VPN: `{self._yn(bg.get('vpn'))}` | "
+                        f"Hosting: `{self._yn(bg.get('hosting'))}` | "
+                        f"Tor: `{self._yn(bg.get('tor'))}`",
+                    "inline": False
+                },
+                {
+                    "name": "Players Seen On Same IP",
+                    "value": match_text,
+                    "inline": False
+                },
+            ],
+            "footer": {
+                "text": f"JTWP • {event.get('timestamp')}"
+            }
+        }]
+    }
+
+    import time
+
+    last = None
+
+    for attempt in range(self.webhook_retries + 1):
+        try:
+            r = self.http.post(
+                self.webhook_url,
+                json=payload,
+                timeout=self.webhook_timeout
+            )
+
+            if 200 <= r.status_code < 300:
+                return
+
+            if r.status_code == 429:
+                retry_after = None
+
+                try:
+                    body = r.json()
+                    retry_after = body.get("retry_after")
+                except Exception:
+                    pass
+
+                if retry_after is None:
+                    retry_after = r.headers.get("Retry-After")
+
+                try:
+                    retry_after = float(retry_after)
+                except (TypeError, ValueError):
+                    retry_after = 5.0
+
+                # Keep a reasonable minimum.
+                retry_after = max(retry_after, 1.0)
+
+                print(
+                    f"Discord webhook rate limited. "
+                    f"Retrying after {retry_after:.2f}s...",
+                    file=sys.stderr,
+                )
+
+                if attempt < self.webhook_retries:
+                    time.sleep(retry_after)
+
+                last = f"HTTP 429 rate limited"
+                continue
+
+            last = f"HTTP {r.status_code}: {r.text[:200]}"
+
+        except requests.RequestException as e:
+            last = str(e)
+
+        if attempt < self.webhook_retries:
+            time.sleep(attempt + 1)
+
+    print(
+        f"SSH webhook failed: {last}",
+        file=sys.stderr
+    )
+
+There is another improvement I’d strongly recommend for this watcher: don’t send a Discord message for every single failed password attempt. If a bot hits SSH 20 times in a few seconds, your current design may send 20 webhook messages, which makes a rate limit very easy to hit.
+
+A better policy would be something like:
+
+attempt 1  → webhook
+attempt 5  → webhook
+attempt 10 → webhook
+attempt 20 → webhook
+blocked    → webhook
+
+while still recording every attempt in failed_hosts.json and events.jsonl.
+
+That would dramatically reduce Discord traffic without losing any collector data.
+
+can i have an updated ssh_watcher.py  
+
+Yep — here’s the updated full watcher with the Discord 429 handling added:
+
+It keeps the Blocked: No/Yes fix and now:
+
+    detects HTTP 429
+
+    reads Discord’s retry_after value
+
+    waits before retrying
+
+    falls back to the Retry-After header if needed
+
+    avoids immediate retry loops
+
+    still logs a final failure if retries are exhausted
+
+Replace your current file, then run:
+
+cd /home/steam/jtwp-collector/Pavlov-Data-Collector-
+
+cp ssh_watcher.py ssh_watcher.py.bak
+
+cp /path/to/ssh_watcher_rate_limit_fixed.py ssh_watcher.py
+
+Syntax-check:
+
+/home/steam/jtwp-collector/venv/bin/python3 \
+    -m py_compile ssh_watcher.py
+
+Then restart:
+
+sudo systemctl restart jtwp-ssh-watcher
+sudo systemctl status jtwp-ssh-watcher --no-pager
+
+And watch it:
+
+sudo journalctl -u jtwp-ssh-watcher -f
+
+If Discord rate-limits it again, you should now see something like:
+
+Discord webhook rate limited. Retrying after 4.50s...
+
+instead of repeatedly hammering the webhook.
+
+
+Library
+/ssh_watcher_rate_limit_fixed.py
+
 #!/usr/bin/env python3
 """
 JTWP SSH failed-login watcher.
@@ -372,50 +673,124 @@ class SSHWatcher:
     def send_webhook(self, event: dict, host: dict):
         if not self.webhook_url:
             return
+
         bg = event.get("background") or {}
         matches = event.get("player_matches") or []
+
         match_text = "None" if not matches else "\n".join(
             f"• {x.get('player_name') or 'Unknown'} (`{x.get('product_id')}`)"
             for x in matches[:10]
         )
+
         payload = {
             "username": "JTWP Security",
             "embeds": [{
                 "title": "SSH Authentication Failed",
                 "description": "A failed SSH authentication attempt was detected.",
                 "fields": [
-                    {"name": "Attempt", "value":
-                        f"Type: `{event.get('type')}`\nUsername: `{event.get('username')}`\n"
-                        f"Source Port: `{event.get('source_port')}`\n"
-                        f"Attempts From Host: `{host.get('failed_attempts', 0)}`\n"
-                        f"Blocked: `{self._yn(host.get('blocked', False))}`",
-                     "inline": False},
-                    {"name": "IP Hash", "value": f"`{event.get('ip_hash')}`", "inline": False},
-                    {"name": "Network", "value":
-                        f"Organisation: `{bg.get('organisation') or 'Unknown'}`\n"
-                        f"Country: `{bg.get('country_code') or 'Unknown'}`\n"
-                        f"Type: `{bg.get('network_type') or 'Unknown'}`\n"
-                        f"Proxy: `{self._yn(bg.get('proxy'))}` | VPN: `{self._yn(bg.get('vpn'))}` | "
-                        f"Hosting: `{self._yn(bg.get('hosting'))}` | Tor: `{self._yn(bg.get('tor'))}`",
-                     "inline": False},
-                    {"name": "Players Seen On Same IP", "value": match_text, "inline": False},
+                    {
+                        "name": "Attempt",
+                        "value":
+                            f"Type: `{event.get('type')}`\n"
+                            f"Username: `{event.get('username')}`\n"
+                            f"Source Port: `{event.get('source_port')}`\n"
+                            f"Attempts From Host: `{host.get('failed_attempts', 0)}`\n"
+                            f"Blocked: `{self._yn(host.get('blocked', False))}`",
+                        "inline": False
+                    },
+                    {
+                        "name": "IP Hash",
+                        "value": f"`{event.get('ip_hash')}`",
+                        "inline": False
+                    },
+                    {
+                        "name": "Network",
+                        "value":
+                            f"Organisation: `{bg.get('organisation') or 'Unknown'}`\n"
+                            f"Country: `{bg.get('country_code') or 'Unknown'}`\n"
+                            f"Type: `{bg.get('network_type') or 'Unknown'}`\n"
+                            f"Proxy: `{self._yn(bg.get('proxy'))}` | "
+                            f"VPN: `{self._yn(bg.get('vpn'))}` | "
+                            f"Hosting: `{self._yn(bg.get('hosting'))}` | "
+                            f"Tor: `{self._yn(bg.get('tor'))}`",
+                        "inline": False
+                    },
+                    {
+                        "name": "Players Seen On Same IP",
+                        "value": match_text,
+                        "inline": False
+                    },
                 ],
-                "footer": {"text": f"JTWP • {event.get('timestamp')}"}
+                "footer": {
+                    "text": f"JTWP • {event.get('timestamp')}"
+                }
             }]
         }
+
+        import time
+
         last = None
+
         for attempt in range(self.webhook_retries + 1):
             try:
-                r = self.http.post(self.webhook_url, json=payload, timeout=self.webhook_timeout)
+                r = self.http.post(
+                    self.webhook_url,
+                    json=payload,
+                    timeout=self.webhook_timeout
+                )
+
                 if 200 <= r.status_code < 300:
                     return
+
+                if r.status_code == 429:
+                    retry_after = None
+
+                    try:
+                        body = r.json()
+                        retry_after = body.get("retry_after")
+                    except Exception:
+                        pass
+
+                    if retry_after is None:
+                        retry_after = r.headers.get("Retry-After")
+
+                    try:
+                        retry_after = float(retry_after)
+                    except (TypeError, ValueError):
+                        retry_after = 5.0
+
+                    # Avoid immediate retry loops if Discord sends 0 or
+                    # an unusably small retry interval.
+                    retry_after = max(retry_after, 1.0)
+
+                    last = (
+                        "HTTP 429 rate limited; "
+                        f"retry_after={retry_after:.2f}s"
+                    )
+
+                    print(
+                        "Discord webhook rate limited. "
+                        f"Retrying after {retry_after:.2f}s...",
+                        file=sys.stderr,
+                    )
+
+                    if attempt < self.webhook_retries:
+                        time.sleep(retry_after)
+
+                    continue
+
                 last = f"HTTP {r.status_code}: {r.text[:200]}"
+
             except requests.RequestException as e:
                 last = str(e)
+
             if attempt < self.webhook_retries:
-                import time
                 time.sleep(attempt + 1)
-        print(f"SSH webhook failed: {last}", file=sys.stderr)
+
+        print(
+            f"SSH webhook failed: {last}",
+            file=sys.stderr
+        )
 
     def run(self):
         # journalctl accepts multiple -u arguments.
@@ -466,3 +841,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -24,6 +24,7 @@ Environment variables:
     PROXYCHECK_API_KEY     Optional but recommended.
     MODIO_API_KEY          Optional; needed for mod.io enrichment.
     IPAPI_API_KEY          Optional; ipapi.is can work without one on free tier.
+    PAVLOV_API             Optional public server-list URL.
 """
 
 from __future__ import annotations
@@ -169,6 +170,8 @@ DEFAULT_CONFIG = {
     "modio_game_id": 3959,
     "modio_cache_ttl_hours": 24,
     "ip_lookup_cache_ttl_days": 30,
+    "pavlov_api_enabled": True,
+    "pavlov_api_host_cache_ttl_days": 30,
     "rotate_active_logs": True,
     "count_unverified_player_kills": True,
     "servers": [
@@ -253,8 +256,11 @@ class Enricher:
             pass
         self.ip_cache_path = self.private_dir / "ip_lookup_cache.json"
         self.modio_cache_path = data_root / "global" / "modio" / "mods.json"
+        self.server_host_cache_path = data_root / "global" / "pavlov_api" / "network_hosts_cache.json"
+        self.server_host_ttl = int(cfg.get("pavlov_api_host_cache_ttl_days", 30)) * 86400
         self.ip_cache = load_json(self.ip_cache_path, {})
         self.modio_cache = load_json(self.modio_cache_path, {})
+        self.server_host_cache = load_json(self.server_host_cache_path, {})
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "JTWP-Pavlov-Collector/1.0"})
 
@@ -361,6 +367,129 @@ class Enricher:
             "tor": data.get("is_tor"),
             "risk": None,
             "confidence": None,
+        }
+
+    def lookup_server_host(self, ip: str) -> dict:
+        """Richer public-host enrichment for Pavlov server-list IPs."""
+        cached = self.server_host_cache.get(ip)
+        if isinstance(cached, dict) and self._cache_fresh(cached, self.server_host_ttl):
+            return {k: v for k, v in cached.items() if not k.startswith("_")}
+
+        primary_error = None
+        try:
+            result = self._proxycheck_server(ip)
+        except Exception as e:
+            primary_error = f"{type(e).__name__}: {e}"
+            try:
+                result = self._ipapi_server(ip)
+                result["fallback"] = True
+                result["primary_failure"] = primary_error
+            except Exception as e2:
+                result = {
+                    "lookup_status": "failed",
+                    "source": None,
+                    "fallback": True,
+                    "primary_failure": primary_error,
+                    "fallback_failure": f"{type(e2).__name__}: {e2}",
+                    "provider": None,
+                    "organisation": None,
+                    "type": None,
+                    "continent_code": None,
+                    "country_name": None,
+                    "country_code": None,
+                    "region_name": None,
+                    "region_code": None,
+                    "city_name": None,
+                    "risk": None,
+                    "confidence": None,
+                    "hosting": None,
+                    "proxy": None,
+                    "vpn": None,
+                }
+
+        result["looked_up_at"] = now_iso()
+        cache_entry = dict(result)
+        cache_entry["_cached_unix"] = time.time()
+        self.server_host_cache[ip] = cache_entry
+        atomic_write_json(self.server_host_cache_path, self.server_host_cache)
+        return result
+
+    def _proxycheck_server(self, ip: str) -> dict:
+        params = {}
+        if self.proxy_key:
+            params["key"] = self.proxy_key
+        r = self.session.get(f"https://proxycheck.io/v3/{ip}", params=params, timeout=self.timeout)
+        r.raise_for_status()
+        data = r.json()
+        if data.get("status") not in {"ok", "warning"} or ip not in data:
+            raise ValueError(f"ProxyCheck invalid response status={data.get('status')!r}")
+        item = data[ip]
+        return {
+            "lookup_status": "success",
+            "source": "proxycheck",
+            "fallback": False,
+            "provider": json_get(item, "network", "provider"),
+            "organisation": json_get(item, "network", "organisation"),
+            "type": json_get(item, "network", "type"),
+            "continent_code": json_get(item, "location", "continent_code"),
+            "country_name": json_get(item, "location", "country_name"),
+            "country_code": json_get(item, "location", "country_code"),
+            "region_name": json_get(item, "location", "region_name"),
+            "region_code": json_get(item, "location", "region_code"),
+            "city_name": json_get(item, "location", "city_name"),
+            "risk": json_get(item, "detections", "risk"),
+            "confidence": json_get(item, "detections", "confidence"),
+            "hosting": json_get(item, "detections", "hosting"),
+            "proxy": json_get(item, "detections", "proxy"),
+            "vpn": json_get(item, "detections", "vpn"),
+        }
+
+    def _ipapi_server(self, ip: str) -> dict:
+        params = {"q": ip}
+        if self.ipapi_key:
+            params["key"] = self.ipapi_key
+        r = self.session.get("https://api.ipapi.is/", params=params, timeout=self.timeout)
+        r.raise_for_status()
+        data = r.json()
+        if data.get("ip") and data.get("ip") != ip:
+            raise ValueError("ipapi returned a different IP")
+
+        provider = (
+            data.get("company_name")
+            or json_get(data, "company", "name")
+            or data.get("asn_org")
+            or json_get(data, "asn", "org")
+        )
+        organisation = (
+            data.get("asn_org")
+            or json_get(data, "asn", "org")
+            or data.get("company_name")
+            or json_get(data, "company", "name")
+        )
+        country_code = data.get("cc") or json_get(data, "location", "country_code")
+        hosting = data.get("is_datacenter")
+        network_type = json_get(data, "company", "type") or json_get(data, "asn", "type")
+        if network_type is None and hosting is True:
+            network_type = "Hosting"
+
+        return {
+            "lookup_status": "success",
+            "source": "ipapi",
+            "fallback": True,
+            "provider": provider,
+            "organisation": organisation,
+            "type": network_type,
+            "continent_code": data.get("continent_code") or json_get(data, "location", "continent_code"),
+            "country_name": data.get("country") or data.get("country_name") or json_get(data, "location", "country_name"),
+            "country_code": country_code,
+            "region_name": data.get("region") or data.get("region_name") or json_get(data, "location", "region_name"),
+            "region_code": data.get("region_code") or json_get(data, "location", "region_code"),
+            "city_name": data.get("city") or data.get("city_name") or json_get(data, "location", "city_name"),
+            "risk": None,
+            "confidence": None,
+            "hosting": hosting,
+            "proxy": data.get("is_proxy"),
+            "vpn": data.get("is_vpn"),
         }
 
     def modio(self, ugc_or_id: str | int) -> Optional[dict]:
@@ -897,6 +1026,10 @@ class Collector:
         self.platforms: dict[str, str] = {}
 
     def run(self):
+        # Public Pavlov server-list snapshot is independent of local log rotation.
+        if bool(self.cfg.get("pavlov_api_enabled", True)):
+            self.collect_pavlov_api()
+
         # Read config-side files first.
         self.load_global_admins()
         for server in self.servers:
@@ -940,6 +1073,169 @@ class Collector:
         self.apply_admin_flags()
         self.apply_ban_flags_from_snapshots()
         self.reconcile_rcon_player_links()
+
+    def collect_pavlov_api(self) -> dict[str, Any]:
+        """Fetch, enrich, index, and persist the public Pavlov server list."""
+        api_url = os.getenv("PAVLOV_API", "").strip()
+        outdir = self.data_root / "global" / "pavlov_api"
+        indexdir = outdir / "index"
+        outdir.mkdir(parents=True, exist_ok=True)
+        indexdir.mkdir(parents=True, exist_ok=True)
+
+        result = {
+            "success": False,
+            "collected_at": now_iso(),
+            "api_url_configured": bool(api_url),
+            "server_count": 0,
+            "unique_host_count": 0,
+        }
+
+        if not api_url:
+            result["error"] = "PAVLOV_API is not configured"
+            atomic_write_json(outdir / "last_update.json", result)
+            return result
+
+        try:
+            r = self.enricher.session.get(api_url, timeout=self.enricher.timeout)
+            r.raise_for_status()
+            raw = r.json()
+            if not isinstance(raw, list):
+                raise ValueError("PAVLOV_API response is not a JSON array")
+        except Exception as e:
+            result["error"] = f"{type(e).__name__}: {e}"
+            atomic_write_json(outdir / "last_update.json", result)
+            return result
+
+        # Enrich each unique host only once. Cache prevents repeat provider calls.
+        host_data: dict[str, dict[str, Any]] = {}
+        for row in raw:
+            if not isinstance(row, dict):
+                continue
+            ip = str(row.get("ip") or "").strip()
+            if not ip or ip in host_data:
+                continue
+            try:
+                ipaddress.ip_address(ip)
+            except ValueError:
+                continue
+            host_data[ip] = self.enricher.lookup_server_host(ip)
+
+        servers: list[dict[str, Any]] = []
+        by_name: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        by_ip: dict[str, list[str]] = defaultdict(list)
+        by_map: dict[str, list[str]] = defaultdict(list)
+        by_mode: dict[str, list[str]] = defaultdict(list)
+        by_type: dict[str, list[str]] = defaultdict(list)
+
+        total_players = 0
+        total_slots = 0
+        shack_servers = shack_players = 0
+        pcvr_servers = pcvr_players = 0
+        providers: dict[str, dict[str, int]] = defaultdict(lambda: {"servers": 0, "players": 0})
+        countries: dict[str, dict[str, int]] = defaultdict(lambda: {"servers": 0, "players": 0})
+
+        for row in raw:
+            if not isinstance(row, dict):
+                continue
+            sid = str(row.get("_id") or row.get("hash") or row.get("pk") or "").strip()
+            if not sid:
+                continue
+            ip = str(row.get("ip") or "").strip()
+            name = str(row.get("name") or "").strip() or "Unnamed Server"
+            slots = int(row.get("slots") or 0)
+            max_slots = int(row.get("max_slots") or 0)
+            server_type = str(row.get("server_type") or "")
+            game_mode = str(row.get("game_mode") or "")
+            map_id = str(row.get("map_id") or "")
+
+            rec = {
+                "id": sid,
+                "name": name,
+                "ip": ip or None,
+                "port": row.get("port"),
+                "server_type": server_type or None,
+                "game_mode": game_mode or None,
+                "map_id": map_id or None,
+                "map_label": row.get("map_label"),
+                "slots": slots,
+                "max_slots": max_slots,
+                "password_protected": normalize_bool(row.get("bPasswordProtected")),
+                "secured": normalize_bool(row.get("bSecured")),
+                "version": row.get("version"),
+                "updated": row.get("updated"),
+                "host": host_data.get(ip),
+            }
+            servers.append(rec)
+
+            by_name[name.lower()].append({
+                "name": name,
+                "id": sid,
+                "ip": ip or None,
+                "port": row.get("port")
+            })
+            if ip:
+                unique_append(by_ip[ip], sid)
+            if map_id:
+                unique_append(by_map[map_id], sid)
+            if game_mode:
+                unique_append(by_mode[game_mode], sid)
+            if server_type:
+                unique_append(by_type[server_type], sid)
+
+            total_players += slots
+            total_slots += max_slots
+            st_lower = server_type.lower()
+            if "shack" in st_lower:
+                shack_servers += 1
+                shack_players += slots
+            else:
+                pcvr_servers += 1
+                pcvr_players += slots
+
+            host = host_data.get(ip) or {}
+            provider = host.get("provider") or host.get("organisation")
+            if provider:
+                providers[provider]["servers"] += 1
+                providers[provider]["players"] += slots
+            country = host.get("country_code")
+            if country:
+                countries[country]["servers"] += 1
+                countries[country]["players"] += slots
+
+        servers.sort(key=lambda x: (str(x.get("name") or "").lower(), str(x.get("id") or "")))
+        clean_hosts = {ip: data for ip, data in sorted(host_data.items())}
+
+        summary = {
+            "collected_at": result["collected_at"],
+            "total_servers": len(servers),
+            "total_players": total_players,
+            "total_slots": total_slots,
+            "unique_hosts": len(clean_hosts),
+            "shack": {"servers": shack_servers, "players": shack_players},
+            "pcvr": {"servers": pcvr_servers, "players": pcvr_players},
+            "hosting_providers": dict(sorted(providers.items(), key=lambda kv: (-kv[1]["servers"], kv[0].lower()))),
+            "countries": dict(sorted(countries.items(), key=lambda kv: (-kv[1]["servers"], kv[0]))),
+        }
+
+        atomic_write_json(outdir / "servers.json", {
+            "collected_at": result["collected_at"],
+            "servers": servers,
+        })
+        atomic_write_json(outdir / "network_hosts.json", clean_hosts)
+        atomic_write_json(outdir / "summary.json", summary)
+        atomic_write_json(indexdir / "by_name.json", dict(sorted(by_name.items())))
+        atomic_write_json(indexdir / "by_ip.json", dict(sorted(by_ip.items())))
+        atomic_write_json(indexdir / "by_map.json", dict(sorted(by_map.items())))
+        atomic_write_json(indexdir / "by_game_mode.json", dict(sorted(by_mode.items())))
+        atomic_write_json(indexdir / "by_server_type.json", dict(sorted(by_type.items())))
+
+        result.update({
+            "success": True,
+            "server_count": len(servers),
+            "unique_host_count": len(clean_hosts),
+        })
+        atomic_write_json(outdir / "last_update.json", result)
+        return result
 
     # --------------------- global admin / bans ---------------------------
 

@@ -168,7 +168,7 @@ chmod 600 .env
 ## 4️⃣ Configure `config.json`
 
 ``` bash
-nano config.json
+nano /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
 ```
 
 At minimum, configure: - data path - archive path - Pavlov server log
@@ -192,7 +192,7 @@ Example server:
 Validate:
 
 ``` bash
-jq empty config.json && echo "✅ config.json is valid"
+jq empty /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json && echo "✅ config.json is valid"
 ```
 
 ## 5️⃣ Create the Data Directory
@@ -252,6 +252,10 @@ Pavlov-Data-Collector-/
     ├── RCON_COMMANDS.md
     ├── SSHblocking.MD
     ├── USEFUL_COMMANDS.md
+    ├── SSHblocking.MD
+    ├── API_SETUP.md
+    ├── SCRIPTS.MD
+    ├── SERVICES.md
     └── ...
 ```
 

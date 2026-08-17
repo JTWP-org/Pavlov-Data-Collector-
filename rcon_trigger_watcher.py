@@ -218,8 +218,18 @@ class RconBridge:
                 timeout=self.connect_timeout,
             )
 
-            banner = await self._read_line(reader)
-            if "Password" not in banner:
+            # Pavlov sends "Password: " as a prompt without a trailing newline,
+            # so readline() would wait until timeout. Read through the prompt instead.
+            try:
+                banner_raw = await asyncio.wait_for(
+                    reader.readuntil(b"Password: "),
+                    timeout=self.read_timeout,
+                )
+            except asyncio.IncompleteReadError as e:
+                banner_raw = e.partial
+
+            banner = banner_raw.decode("utf-8", errors="replace").strip()
+            if "Password:" not in banner:
                 raise RuntimeError(f"Unexpected RCON banner: {banner!r}")
 
             writer.write((password + "\n").encode("utf-8"))

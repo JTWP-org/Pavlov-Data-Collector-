@@ -230,3 +230,10 @@ scripts/
 -   Run `block-ip` and `unblock-ip` with `sudo`.
 -   Review folders exposed by `setup-data-links`.
 -   Never commit `.env`, API keys, webhook secrets, or credentials.
+
+```
+##"=========================================="
+##"🔄 JTWP Service Restart"
+##"=========================================="
+
+chmod +x scripts/restart-jtwp.sh

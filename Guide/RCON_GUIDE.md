@@ -1,6 +1,7 @@
     # 🎛️ JTWP Pavlov RCON Bridge
 
     This guide documents the file-trigger RCON bridge and all commands currently defined in `rcon_commands.json`.
+    just simply make a json in the mod save with the cmd u want to run and the tool will delete it and make a new one with the output inside it 
 
 ### 🧭 What This Guide Covers
 

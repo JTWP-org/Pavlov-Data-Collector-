@@ -7,6 +7,7 @@
   "ip_lookup_cache_ttl_days": 30,
   "rotate_active_logs": true,
   "count_unverified_player_kills": true,
+
   "servers": [
     {
       "log_path": "/home/steam/pavlovserver/Pavlov/Saved/Logs/",
@@ -14,7 +15,7 @@
       "rcon": {
         "enabled": true,
         "host": "127.0.0.1",
-        "port": 9104,
+        "port": 9000,
         "password_env": "PAVLOVSERVER_RCON_PASSWORD"
       }
     },
@@ -24,7 +25,7 @@
       "rcon": {
         "enabled": true,
         "host": "127.0.0.1",
-        "port": 9204,
+        "port": 9100,
         "password_env": "PAVLOVSERVER0_RCON_PASSWORD"
       }
     },
@@ -34,11 +35,12 @@
       "rcon": {
         "enabled": true,
         "host": "127.0.0.1",
-        "port": 9304,
+        "port": 9200,
         "password_env": "PAVLOVSERVER1_RCON_PASSWORD"
       }
     }
   ],
+
   "connection_watcher": {
     "poll_interval_seconds": 0.5,
     "start_at_end": true,
@@ -46,6 +48,7 @@
     "webhook_timeout_seconds": 8,
     "webhook_retries": 2
   },
+
   "ssh_watcher": {
     "units": [
       "ssh.service",
@@ -54,17 +57,31 @@
     "enrich_ips": true,
     "include_invalid_user_events": false,
     "webhook_timeout_seconds": 8,
-    "webhook_retries": 2
+    "webhook_retries": 2,
+    "auto_block_enabled": true,
+    "auto_block_after": 20,
+    "auto_block_command": "/usr/local/bin/block-ip",
+    "auto_block_use_sudo": true,
+    "auto_block_private_ips": false
   },
+
   "pavlov_api_enabled": true,
   "pavlov_api_host_cache_ttl_days": 30,
+
   "rcon_bridge": {
     "enabled": true,
     "poll_interval_seconds": 0.25,
+
     "command_file": "rcon_commands.json",
     "game_modes_file": "game_modes.json",
     "default_maps_file": "default_maps.json",
     "limited_ammo_types_file": "limited_ammo_types.json",
-    "remove_input_on_error": true
+
+    "remove_input_on_error": true,
+
+    "ppapi_trigger_enabled": true,
+    "ppapi_trigger_file": "EXE_PPAPI.json",
+    "ppapi_updater": "update_pavlov_api.py",
+    "ppapi_timeout_seconds": 300
   }
 }

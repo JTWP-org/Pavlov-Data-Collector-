@@ -1,0 +1,16 @@
+[Unit]
+Description=JTWP Discord Administration Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/discord_bot.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json -a /home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

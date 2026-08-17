@@ -672,4 +672,3 @@ echo "🗑️ Removed:  $MOD_COUNT entries"
 echo "📝 Metadata: $SERVICE_JSON"
 echo "📝 Log:      $MAINT_LOG"
 echo
-

@@ -39,6 +39,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -219,6 +220,11 @@ class ServerCfg:
             stats_path=stats,
             game_ini_path=game_ini,
         )
+
+    @property
+    def server_root(self) -> Path:
+        # .../{server_id}/Pavlov/Saved/Logs
+        return self.log_path.parents[2]
 
     @property
     def config_dir(self) -> Path:
@@ -1070,6 +1076,7 @@ class Collector:
         for server in self.servers:
             self.collect_game_ini(server)
             self.collect_bans(server)
+            self.collect_systemd_service_metadata(server)
 
         archives: dict[str, tuple[list[Path], list[Path]]] = {}
         for server in self.servers:
@@ -1372,6 +1379,143 @@ class Collector:
                         changed = True
             if changed:
                 atomic_write_json(path, hosts)
+
+    # --------------------- systemd service metadata ----------------------
+
+    @staticmethod
+    def _systemctl_value(unit: str, prop: str) -> str:
+        try:
+            p = subprocess.run(
+                ["systemctl", "show", unit, "-p", prop, "--value", "--no-pager"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            return p.stdout.strip()
+        except Exception:
+            return ""
+
+    def collect_systemd_service_metadata(self, server: ServerCfg) -> None:
+        """
+        Discover the systemd service associated with this Pavlov server path.
+
+        The mapping is informational and is safe for normal collector output:
+        it stores local service/path information but no passwords or raw IPs.
+        """
+        server_root = server.server_root.resolve()
+        out = self.data_root / "servers" / server.server_id / "server" / "service.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+
+        matches: list[dict[str, Any]] = []
+
+        try:
+            p = subprocess.run(
+                [
+                    "systemctl",
+                    "list-unit-files",
+                    "--type=service",
+                    "--no-legend",
+                    "--no-pager",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+            units = [
+                line.split()[0]
+                for line in p.stdout.splitlines()
+                if line.strip() and line.split()
+            ]
+        except Exception as e:
+            atomic_write_json(out, {
+                "server_id": server.server_id,
+                "server_path": str(server_root),
+                "detected_at": now_iso(),
+                "service": None,
+                "matches": [],
+                "error": f"systemctl discovery failed: {type(e).__name__}: {e}",
+            })
+            return
+
+        target = str(server_root)
+
+        for unit in units:
+            try:
+                q = subprocess.run(
+                    [
+                        "systemctl",
+                        "show",
+                        unit,
+                        "-p", "WorkingDirectory",
+                        "-p", "ExecStart",
+                        "-p", "FragmentPath",
+                        "--no-pager",
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=3,
+                    check=False,
+                )
+                info = q.stdout
+            except Exception:
+                continue
+
+            if target not in info:
+                continue
+
+            working_directory = self._systemctl_value(unit, "WorkingDirectory")
+            exec_start = self._systemctl_value(unit, "ExecStart")
+            fragment_path = self._systemctl_value(unit, "FragmentPath")
+            active_state = self._systemctl_value(unit, "ActiveState")
+            unit_file_state = self._systemctl_value(unit, "UnitFileState")
+
+            matches.append({
+                "service": unit,
+                "working_directory": working_directory or None,
+                "exec_start": exec_start or None,
+                "fragment_path": fragment_path or None,
+                "active_state": active_state or None,
+                "unit_file_state": unit_file_state or None,
+            })
+
+        service = matches[0]["service"] if len(matches) == 1 else None
+
+        commands = {}
+        if service:
+            commands = {
+                "status": f"sudo systemctl status {service} --no-pager",
+                "start": f"sudo systemctl start {service}",
+                "stop": f"sudo systemctl stop {service}",
+                "restart": f"sudo systemctl restart {service}",
+                "enable": f"sudo systemctl enable {service}",
+                "disable": f"sudo systemctl disable {service}",
+                "enable_now": f"sudo systemctl enable --now {service}",
+                "disable_now": f"sudo systemctl disable --now {service}",
+                "logs": f"sudo journalctl -u {service} -n 100 --no-pager",
+                "logs_live": f"sudo journalctl -u {service} -f",
+                "is_active": f"systemctl is-active {service}",
+                "is_enabled": f"systemctl is-enabled {service}",
+            }
+
+        atomic_write_json(out, {
+            "server_id": server.server_id,
+            "server_path": str(server_root),
+            "detected_at": now_iso(),
+            "service": service,
+            "match_count": len(matches),
+            "matches": matches,
+            "commands": commands,
+            "note": (
+                None
+                if len(matches) == 1
+                else "No unique service match; zero or multiple services reference the server path."
+            ),
+        })
 
     # --------------------- platform / Game.ini ---------------------------
 
@@ -2416,4 +2560,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,0 +1,43 @@
+# Review with visudo before installing.
+#
+# IMPORTANT:
+# sudoers wildcard matching is textual. For the strongest isolation,
+# create root-owned wrapper scripts for individual server actions.
+#
+# This example assumes the bot runs as steam.
+
+steam ALL=(root) NOPASSWD: /bin/systemctl status pavlovserver.service --no-pager
+steam ALL=(root) NOPASSWD: /bin/systemctl status pavlovserver0.service --no-pager
+steam ALL=(root) NOPASSWD: /bin/systemctl status pavlovserver1.service --no-pager
+steam ALL=(root) NOPASSWD: /bin/systemctl status pavlovserver2.service --no-pager
+
+steam ALL=(root) NOPASSWD: /bin/systemctl start pavlovserver.service
+steam ALL=(root) NOPASSWD: /bin/systemctl start pavlovserver0.service
+steam ALL=(root) NOPASSWD: /bin/systemctl start pavlovserver1.service
+steam ALL=(root) NOPASSWD: /bin/systemctl start pavlovserver2.service
+
+steam ALL=(root) NOPASSWD: /bin/systemctl stop pavlovserver.service
+steam ALL=(root) NOPASSWD: /bin/systemctl stop pavlovserver0.service
+steam ALL=(root) NOPASSWD: /bin/systemctl stop pavlovserver1.service
+steam ALL=(root) NOPASSWD: /bin/systemctl stop pavlovserver2.service
+
+steam ALL=(root) NOPASSWD: /bin/systemctl restart pavlovserver.service
+steam ALL=(root) NOPASSWD: /bin/systemctl restart pavlovserver0.service
+steam ALL=(root) NOPASSWD: /bin/systemctl restart pavlovserver1.service
+steam ALL=(root) NOPASSWD: /bin/systemctl restart pavlovserver2.service
+
+steam ALL=(root) NOPASSWD: /bin/systemctl enable pavlovserver.service
+steam ALL=(root) NOPASSWD: /bin/systemctl enable pavlovserver0.service
+steam ALL=(root) NOPASSWD: /bin/systemctl enable pavlovserver1.service
+steam ALL=(root) NOPASSWD: /bin/systemctl enable pavlovserver2.service
+
+steam ALL=(root) NOPASSWD: /bin/systemctl disable pavlovserver.service
+steam ALL=(root) NOPASSWD: /bin/systemctl disable pavlovserver0.service
+steam ALL=(root) NOPASSWD: /bin/systemctl disable pavlovserver1.service
+steam ALL=(root) NOPASSWD: /bin/systemctl disable pavlovserver2.service
+
+steam ALL=(root) NOPASSWD: /bin/systemctl start jtwp-collector.service
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver0
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver1
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver2

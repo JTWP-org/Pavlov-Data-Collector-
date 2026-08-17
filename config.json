@@ -1,0 +1,157 @@
+{
+  "data_path": "/home/steam/jtwp-collector-data",
+  "archive_path": "/home/steam/jtwp-log-archive",
+  "request_timeout_seconds": 8,
+  "modio_game_id": 3959,
+  "modio_cache_ttl_hours": 24,
+  "ip_lookup_cache_ttl_days": 30,
+  "rotate_active_logs": true,
+  "count_unverified_player_kills": true,
+  "servers": [
+    {
+      "log_path": "/home/steam/pavlovserver/Pavlov/Saved/Logs/",
+      "platform": "auto",
+      "rcon": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 9000,
+        "password_env": "PAVLOVSERVER_RCON_PASSWORD"
+      }
+    },
+    {
+      "log_path": "/home/steam/pavlovserver0/Pavlov/Saved/Logs/",
+      "platform": "auto",
+      "rcon": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 9100,
+        "password_env": "PAVLOVSERVER0_RCON_PASSWORD"
+      }
+    },
+    {
+      "log_path": "/home/steam/pavlovserver1/Pavlov/Saved/Logs/",
+      "platform": "auto",
+      "rcon": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 9200,
+        "password_env": "PAVLOVSERVER1_RCON_PASSWORD"
+      }
+    }
+  ],
+  "connection_watcher": {
+    "poll_interval_seconds": 0.5,
+    "start_at_end": true,
+    "webhook_mode": "discord",
+    "webhook_timeout_seconds": 8,
+    "webhook_retries": 2
+  },
+  "ssh_watcher": {
+    "units": [
+      "ssh.service",
+      "sshd.service"
+    ],
+    "enrich_ips": true,
+    "include_invalid_user_events": false,
+    "webhook_timeout_seconds": 8,
+    "webhook_retries": 2,
+    "auto_block_enabled": true,
+    "auto_block_after": 20,
+    "auto_block_command": "/usr/local/bin/block-ip",
+    "auto_block_use_sudo": true,
+    "auto_block_private_ips": false
+  },
+  "ddos_watcher": {
+    "enabled": true,
+    "interface": "any",
+    "window_seconds": 5,
+    "cooldown_seconds": 60,
+    "packets_per_second_threshold": 5000,
+    "bytes_per_second_threshold": 5000000,
+    "unique_sources_threshold": 100,
+    "per_source_packets_per_second_threshold": 1500,
+    "minimum_trigger_conditions": 2,
+    "top_sources": 20,
+    "monitored_ports": [],
+    "capture_filter": "",
+    "tcpdump_path": "/usr/bin/tcpdump"
+  },
+  "pavlov_api_enabled": true,
+  "pavlov_api_host_cache_ttl_days": 30,
+  "rcon_bridge": {
+    "enabled": true,
+    "poll_interval_seconds": 0.25,
+    "command_file": "rcon_commands.json",
+    "game_modes_file": "game_modes.json",
+    "default_maps_file": "default_maps.json",
+    "limited_ammo_types_file": "limited_ammo_types.json",
+    "remove_input_on_error": true,
+    "ppapi_trigger_enabled": true,
+    "ppapi_trigger_file": "EXE_PPAPI.json",
+    "ppapi_updater": "update_pavlov_api.py",
+    "ppapi_timeout_seconds": 300,
+    "rcon_resource_trigger_enabled": true,
+    "rcon_resource_trigger_file": "IN-RCON.json",
+    "rcon_resource_output_file": "OUT--RCON.json",
+    "rcon_resource_url": "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
+    "rcon_resource_local_file": "rcon_commands.json",
+    "rcon_resource_timeout_seconds": 30
+  },
+  "active_file": "active.json",
+  "data_tools": {
+    "output_root": "/home/steam/jtwp-collector-output",
+    "backup_dir": "/home/steam/jtwp-collector-output/backups",
+    "export_dir": "/home/steam/jtwp-collector-output/exports",
+    "env_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env"
+  },
+  "rcon_loop": {
+    "enabled": true,
+    "poll_interval_seconds": 0.5,
+    "control_path": "/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/loopData.json",
+    "output_path": "/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/loopOutput.json",
+    "min_loop_seconds": 1,
+    "max_loop_seconds": 3600
+  },
+  "admin_notifications": {
+    "enabled": true,
+    "role_id": "ADMIN_DISCORD_ROLE_ID",
+    "webhook_env": "JTWP_ADMIN_WEBHOOK_URL",
+    "loop_output_path": "/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/loopOutput.json",
+    "poll_interval_seconds": 2,
+    "no_admin_delay_seconds": 60,
+    "negative_score_threshold": 0,
+    "teamkill_threshold": 2,
+    "response_window_seconds": 900
+  },
+  "discord_bot": {
+    "enabled": true,
+    "prefix": "!",
+    "control_channel_id": "DISCORD_CONTROL_CHANNEL_ID",
+    "roles": {
+      "admin": "DISCORD_ADMIN_ROLE_ID",
+      "owner": "DISCORD_OWNER_ROLE_ID"
+    },
+    "admin_allowed_rcon_commands": [
+      "serverinfo",
+      "inspectall",
+      "maplist",
+      "inspectplayer",
+      "inspectteam",
+      "help",
+      "itemlist",
+      "banlist",
+      "ugcmodlist"
+    ],
+    "systemctl_actions": [
+      "status",
+      "start",
+      "stop",
+      "restart",
+      "enable",
+      "disable"
+    ],
+    "rcon_timeout_seconds": 15,
+    "command_output_limit": 3500,
+    "token_env": "JTWP_DISCORD_BOT_TOKEN"
+  }
+}

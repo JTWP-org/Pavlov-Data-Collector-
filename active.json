@@ -1,0 +1,346 @@
+{
+  "collector": {
+    "enabled": true,
+    "historical_logs": true,
+    "active_logs": true,
+    "stats_logs": true,
+    "archive_logs": true,
+    "rotate_active_logs": true,
+    "processing_state": true,
+    "duplicate_detection": true
+  },
+  "players": {
+    "enabled": true,
+    "identity": {
+      "enabled": true,
+      "product_id": true,
+      "unique_id": true,
+      "current_name": true,
+      "name_history": true,
+      "first_seen": true,
+      "last_seen": true
+    },
+    "connections": {
+      "enabled": true,
+      "connect_events": true,
+      "disconnect_events": true,
+      "times_connected": true,
+      "connection_history": true,
+      "server_history": true
+    },
+    "settings": {
+      "enabled": true,
+      "right_handed": true,
+      "vstock": true,
+      "player_height": true,
+      "client_platform": true
+    },
+    "stats": {
+      "enabled": true,
+      "kills": true,
+      "deaths": true,
+      "headshots": true,
+      "suicides": true,
+      "teamkills": true,
+      "bot_kills": true,
+      "unverified_team_kills": true,
+      "matches": true,
+      "times_connected": true
+    },
+    "weapons": {
+      "enabled": true,
+      "weapon_kills": true,
+      "weapon_headshots": true,
+      "favorite_weapon": true,
+      "favorite_weapon_kills": true,
+      "total_weapon_kills": true,
+      "weapon_source": true
+    },
+    "network": {
+      "enabled": true,
+      "ip_hash": true,
+      "ip_history": true,
+      "known_ip_count": true,
+      "network_enrichment": true,
+      "provider": true,
+      "organisation": true,
+      "network_type": true,
+      "country": true,
+      "country_code": true,
+      "region": true,
+      "city": true,
+      "proxy": true,
+      "vpn": true,
+      "hosting": true,
+      "tor": true,
+      "risk": true,
+      "confidence": true,
+      "lookup_source": true
+    },
+    "status": {
+      "enabled": true,
+      "admin": true,
+      "banned": true
+    },
+    "history": {
+      "enabled": true,
+      "name_changes": true,
+      "ip_changes": true,
+      "network_changes": true,
+      "settings_changes": true,
+      "admin_changes": true,
+      "ban_changes": true
+    },
+    "indexes": {
+      "enabled": true,
+      "by_name": true,
+      "by_unique_id": true,
+      "by_product_id": true,
+      "by_ip_hash": true
+    }
+  },
+  "server_data": {
+    "enabled": true,
+    "server_identity": true,
+    "server_name": true,
+    "server_path": true,
+    "platform": true,
+    "game_ini": true,
+    "runtime": true,
+    "admins": true,
+    "bans": true,
+    "http_events": true,
+    "service_info": true
+  },
+  "matches": {
+    "enabled": true,
+    "round_files": true,
+    "map_label": true,
+    "game_mode": true,
+    "match_duration": true,
+    "player_count": true,
+    "teams_enabled": true,
+    "team_scores": true,
+    "player_stats": true
+  },
+  "maps": {
+    "enabled": true,
+    "map_rotation": true,
+    "map_id": true,
+    "map_label": true,
+    "game_mode": true,
+    "configured_state": true,
+    "observed_maps": true,
+    "modio": true
+  },
+  "mods": {
+    "enabled": true,
+    "configured_mods": true,
+    "observed_mods": true,
+    "configured_vs_observed": true,
+    "ugc_id": true,
+    "modio": true
+  },
+  "custom_content": {
+    "enabled": true,
+    "custom_guns": true,
+    "custom_items": true,
+    "loot_meshes": true,
+    "failed_items": true,
+    "unknown_items": true
+  },
+  "rcon": {
+    "enabled": true,
+    "authentication": true,
+    "connections": true,
+    "commands": true,
+    "known_hosts": true,
+    "failed_hosts": true,
+    "ip_hash": true,
+    "network_enrichment": true,
+    "player_correlation": true,
+    "webhook": true
+  },
+  "rcon_bridge": {
+    "enabled": true,
+    "watcher": true,
+    "input_files": true,
+    "output_files": true,
+    "ppapi_trigger": true,
+    "rcon_resource_trigger": true
+  },
+  "rcon_loop": {
+    "enabled": true,
+    "watcher": true,
+    "serverinfo": true,
+    "inspectall": true,
+    "output": true,
+    "control_helper": true
+  },
+  "ssh": {
+    "enabled": true,
+    "watcher": true,
+    "failed_password": true,
+    "failed_publickey": true,
+    "invalid_user": true,
+    "max_auth_attempts": true,
+    "host_data": true,
+    "network_enrichment": true,
+    "player_correlation": true,
+    "auto_block": true,
+    "webhook": true,
+    "private_raw_ip_storage": true
+  },
+  "ddos": {
+    "enabled": true,
+    "watcher": true,
+    "packet_capture": true,
+    "network_stats": true,
+    "events": true,
+    "host_history": true,
+    "player_correlation": true,
+    "rcon_correlation": true,
+    "ssh_correlation": true,
+    "webhook": true
+  },
+  "pavlov_public_api": {
+    "enabled": true,
+    "updater": true,
+    "manual_update": true,
+    "file_trigger": true,
+    "server_data": true,
+    "network_enrichment": true
+  },
+  "modio": {
+    "enabled": true,
+    "api_requests": true,
+    "cache": true,
+    "map_lookup": true,
+    "mod_lookup": true
+  },
+  "admins": {
+    "enabled": true,
+    "tracking": {
+      "enabled": true,
+      "admin_status": true,
+      "admin_sessions": true,
+      "admin_time": true,
+      "admin_server_time": true,
+      "connection_history": true
+    },
+    "logs": {
+      "enabled": true,
+      "admin_events": true,
+      "admin_actions": true,
+      "future_external_admin_log_ingest": true
+    },
+    "notifications": {
+      "enabled": true,
+      "no_admin_online": true,
+      "negative_player_score": true,
+      "multiple_teamkills": true,
+      "ping_admin_role": true,
+      "response_tracking": {
+        "enabled": true,
+        "track_admin_join": true,
+        "track_response_time": true,
+        "track_expired_alerts": true,
+        "admin_response_stats": true
+      }
+    }
+  },
+  "discord_bot": {
+    "enabled": true,
+    "permissions": {
+      "enabled": true,
+      "admin_role": true,
+      "owner_role": true,
+      "channel_restriction": true
+    },
+    "rcon": {
+      "enabled": true,
+      "admin_limited_commands": true,
+      "owner_all_commands": true,
+      "response_embeds": true,
+      "command_logging": true
+    },
+    "systemctl": {
+      "enabled": true,
+      "owner_only": true,
+      "status": true,
+      "start": true,
+      "stop": true,
+      "restart": true,
+      "enable": true,
+      "disable": true,
+      "command_logging": true
+    },
+    "player_lookup": {
+      "enabled": true,
+      "get_product_id": true,
+      "get_network": true,
+      "get_names": true,
+      "get_stats": true,
+      "get_guns": true,
+      "get_player": true,
+      "get_dump": true,
+      "check_cons": true
+    },
+    "owner_commands": {
+      "enabled": true,
+      "clear_pavlov_mods": true,
+      "run_collector": true,
+      "run_pavlov_api": true,
+      "run_ssh_report": true
+    },
+    "loop_control": {
+      "enabled": true,
+      "start": true,
+      "stop": true,
+      "status": true
+    }
+  },
+  "data_tools": {
+    "enabled": true,
+    "clear_data": true,
+    "export_data": true,
+    "backup_data": true,
+    "include_hash_secret_in_export": true
+  },
+  "maintenance": {
+    "enabled": true,
+    "clear_mods": true,
+    "maintenance_logging": true,
+    "service_metadata_refresh": true
+  },
+  "service_discovery": {
+    "enabled": true,
+    "discover_services": true,
+    "save_commands": true
+  },
+  "privacy": {
+    "enabled": true,
+    "ip_hashing": true,
+    "private_player_ips": true,
+    "private_ssh_ips": true,
+    "ip_lookup_cache": true,
+    "raw_ip_in_webhooks": false,
+    "raw_ip_in_ddos_records": false
+  },
+  "scripts": {
+    "enabled": true,
+    "collector": true,
+    "connection_watcher": true,
+    "ssh_watcher": true,
+    "ddos_watcher": true,
+    "rcon_trigger_watcher": true,
+    "rcon_loop": true,
+    "admin_monitor": true,
+    "discord_bot": true,
+    "pavlov_api_updater": true,
+    "clear_pavlov_mods": true,
+    "clear_data": true,
+    "export_data": true,
+    "backup_data": true
+  }
+}

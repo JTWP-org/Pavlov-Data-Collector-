@@ -1,0 +1,15 @@
+[Unit]
+Description=JTWP Admin Session and Moderation Alert Monitor
+After=network-online.target jtwp-rcon-loop.service
+
+[Service]
+Type=simple
+User=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/admin_monitor.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json -a /home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

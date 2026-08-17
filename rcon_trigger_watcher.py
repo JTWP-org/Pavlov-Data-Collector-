@@ -28,15 +28,7 @@ DEFAULT_CONFIG = {
         "ppapi_trigger_enabled": True,
         "ppapi_trigger_file": "EXE_PPAPI.json",
         "ppapi_updater": "update_pavlov_api.py",
-        "ppapi_timeout_seconds": 300,
-
-        # Resource refresh trigger.
-        "rcon_resource_trigger_enabled": True,
-        "rcon_resource_trigger_file": "IN-RCON.json",
-        "rcon_resource_output_file": "OUT--RCON.json",
-        "rcon_resource_url": "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
-        "rcon_resource_local_file": "rcon_commands.json",
-        "rcon_resource_timeout_seconds": 30
+        "ppapi_timeout_seconds": 300
     }
 }
 
@@ -119,39 +111,6 @@ class RconBridge:
         self.ppapi_running = False
 
         # ----------------------------------------------------
-        # RCON command resource refresh trigger
-        # ----------------------------------------------------
-
-        self.rcon_resource_trigger_enabled = bool(
-            bcfg.get("rcon_resource_trigger_enabled", True)
-        )
-
-        self.rcon_resource_trigger_file = str(
-            bcfg.get("rcon_resource_trigger_file", "IN-RCON.json")
-        )
-
-        self.rcon_resource_output_file = str(
-            bcfg.get("rcon_resource_output_file", "OUT--RCON.json")
-        )
-
-        self.rcon_resource_url = str(
-            bcfg.get(
-                "rcon_resource_url",
-                "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
-            )
-        )
-
-        self.rcon_resource_local_file = self.project_root / str(
-            bcfg.get("rcon_resource_local_file", "rcon_commands.json")
-        )
-
-        self.rcon_resource_timeout_seconds = int(
-            bcfg.get("rcon_resource_timeout_seconds", 30)
-        )
-
-        self.rcon_resource_running = False
-
-        # ----------------------------------------------------
         # RCON support/reference files
         # ----------------------------------------------------
 
@@ -204,7 +163,7 @@ class RconBridge:
                 rcon.get(
                     "trigger_path",
                     str(
-                        log_path.parent
+                        log_path.parents[1]
                         / "Config"
                         / "ModSave"
                         / "JTWP"
@@ -659,261 +618,6 @@ class RconBridge:
             self.ppapi_running = False
 
     # ========================================================
-    # RCON COMMAND RESOURCE TRIGGER
-    # ========================================================
-
-    def _find_rcon_resource_triggers(self) -> list[Path]:
-        if not self.rcon_resource_trigger_enabled:
-            return []
-
-        triggers = []
-
-        for server in self.servers:
-            p = (
-                server["trigger_path"]
-                / self.rcon_resource_trigger_file
-            )
-
-            if p.is_file():
-                triggers.append(p)
-
-        return triggers
-
-    def _consume_rcon_resource_triggers(
-        self,
-        triggers: list[Path],
-    ) -> None:
-        for trigger in triggers:
-            try:
-                trigger.unlink()
-                print(
-                    "[RCON-RESOURCE] Removed trigger: "
-                    f"{trigger}",
-                    flush=True,
-                )
-            except FileNotFoundError:
-                pass
-            except Exception as exc:
-                print(
-                    "[RCON-RESOURCE] Could not remove "
-                    f"{trigger}: {exc}",
-                    file=sys.stderr,
-                    flush=True,
-                )
-
-    def _download_rcon_resource_sync(self) -> dict:
-        temp_path = self.rcon_resource_local_file.with_name(
-            self.rcon_resource_local_file.name + ".download"
-        )
-
-        temp_path.unlink(missing_ok=True)
-
-        cmd = [
-            "wget",
-            "-q",
-            "--timeout",
-            str(self.rcon_resource_timeout_seconds),
-            "--tries",
-            "1",
-            "-O",
-            str(temp_path),
-            self.rcon_resource_url,
-        ]
-
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=str(self.project_root),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=self.rcon_resource_timeout_seconds + 5,
-                check=False,
-            )
-        except subprocess.TimeoutExpired:
-            temp_path.unlink(missing_ok=True)
-
-            return {
-                "success": False,
-                "error": (
-                    "wget timed out while downloading "
-                    "rcon_commands.json"
-                ),
-            }
-        except Exception as exc:
-            temp_path.unlink(missing_ok=True)
-
-            return {
-                "success": False,
-                "error": str(exc),
-            }
-
-        if result.returncode != 0:
-            temp_path.unlink(missing_ok=True)
-
-            return {
-                "success": False,
-                "error": (
-                    result.stderr.strip()
-                    or result.stdout.strip()
-                    or f"wget exited with code {result.returncode}"
-                ),
-            }
-
-        try:
-            downloaded = json.loads(
-                temp_path.read_text(encoding="utf-8")
-            )
-        except Exception as exc:
-            temp_path.unlink(missing_ok=True)
-
-            return {
-                "success": False,
-                "error": (
-                    "Downloaded rcon_commands.json is invalid JSON: "
-                    f"{exc}"
-                ),
-            }
-
-        if not isinstance(downloaded, dict):
-            temp_path.unlink(missing_ok=True)
-
-            return {
-                "success": False,
-                "error": (
-                    "Downloaded rcon_commands.json "
-                    "must contain a JSON object"
-                ),
-            }
-
-        # Replace the local resource only after the download
-        # has successfully parsed as JSON.
-        os.replace(
-            temp_path,
-            self.rcon_resource_local_file,
-        )
-
-        # Reload definitions immediately so subsequent RCON
-        # requests use the new command resource without a
-        # watcher restart.
-        self.command_defs = downloaded
-
-        return {
-            "success": True,
-            "data": downloaded,
-        }
-
-    async def process_rcon_resource_trigger(
-        self,
-        triggers: list[Path],
-    ) -> None:
-        if not triggers:
-            return
-
-        if self.rcon_resource_running:
-            self._consume_rcon_resource_triggers(
-                triggers
-            )
-
-            print(
-                "[RCON-RESOURCE] Refresh already running; "
-                "duplicate trigger consumed.",
-                flush=True,
-            )
-
-            return
-
-        # Capture every directory that requested the resource
-        # so each caller receives OUT--RCON.json.
-        output_paths = [
-            trigger.with_name(
-                self.rcon_resource_output_file
-            )
-            for trigger in triggers
-        ]
-
-        # Remove stale output before beginning.
-        for output_path in output_paths:
-            output_path.unlink(missing_ok=True)
-
-        # Consume the trigger first so it cannot be executed
-        # repeatedly while wget is running.
-        self._consume_rcon_resource_triggers(
-            triggers
-        )
-
-        self.rcon_resource_running = True
-
-        print(
-            "[RCON-RESOURCE] IN-RCON.json detected.",
-            flush=True,
-        )
-
-        print(
-            "[RCON-RESOURCE] Downloading latest command "
-            "resource with wget...",
-            flush=True,
-        )
-
-        try:
-            result = await asyncio.to_thread(
-                self._download_rcon_resource_sync
-            )
-
-            if result.get("success"):
-                data = result["data"]
-
-                # OUT--RCON.json intentionally contains the
-                # resource JSON itself, not a response wrapper.
-                for output_path in output_paths:
-                    atomic_write_json(
-                        output_path,
-                        data,
-                    )
-
-                print(
-                    "[RCON-RESOURCE] Local "
-                    "rcon_commands.json updated.",
-                    flush=True,
-                )
-
-                print(
-                    "[RCON-RESOURCE] Wrote "
-                    f"{self.rcon_resource_output_file}.",
-                    flush=True,
-                )
-            else:
-                error = result.get(
-                    "error",
-                    "Unknown resource refresh error",
-                )
-
-                # On failure, return a small valid JSON error
-                # so the ModKit does not wait forever for a
-                # response file.
-                error_response = {
-                    "success": False,
-                    "error": error,
-                    "timestamp": now_iso(),
-                }
-
-                for output_path in output_paths:
-                    atomic_write_json(
-                        output_path,
-                        error_response,
-                    )
-
-                print(
-                    "[RCON-RESOURCE] Refresh failed: "
-                    f"{error}",
-                    file=sys.stderr,
-                    flush=True,
-                )
-
-        finally:
-            self.rcon_resource_running = False
-
-    # ========================================================
     # RCON TRIGGER PROCESSING
     # ========================================================
 
@@ -1082,14 +786,6 @@ class RconBridge:
                 flush=True,
             )
 
-        if self.rcon_resource_trigger_enabled:
-            print(
-                "  RCON resource trigger: "
-                f"{self.rcon_resource_trigger_file} "
-                f"-> {self.rcon_resource_output_file}",
-                flush=True,
-            )
-
         while True:
             did_work = False
 
@@ -1109,21 +805,6 @@ class RconBridge:
                 )
 
             # ------------------------------------------------
-            # RCON command resource refresh trigger
-            # ------------------------------------------------
-
-            resource_triggers = (
-                self._find_rcon_resource_triggers()
-            )
-
-            if resource_triggers:
-                did_work = True
-
-                await self.process_rcon_resource_trigger(
-                    resource_triggers
-                )
-
-            # ------------------------------------------------
             # Normal RCON IN-*.json triggers
             # ------------------------------------------------
 
@@ -1133,12 +814,6 @@ class RconBridge:
                         "trigger_path"
                     ].glob("IN-*.json")
                 ):
-                    if (
-                        p.name
-                        == self.rcon_resource_trigger_file
-                    ):
-                        continue
-
                     did_work = True
 
                     await self.process_file(
@@ -1189,4 +864,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -42,3 +42,4 @@ echo "  IN  <- $IP"
 echo "  OUT -> $IP"
 
 ufw status numbered
+

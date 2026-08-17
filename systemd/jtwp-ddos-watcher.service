@@ -1,0 +1,26 @@
+[Unit]
+Description=JTWP DDoS / Network Abuse Watcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# tcpdump packet capture requires elevated privileges
+User=root
+Group=root
+
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/ddos_watcher.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

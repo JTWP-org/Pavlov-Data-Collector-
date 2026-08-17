@@ -232,8 +232,10 @@ scripts/
 -   Never commit `.env`, API keys, webhook secrets, or credentials.
 
 ```
-##"=========================================="
-##"🔄 JTWP Service Restart"
-##"=========================================="
+##==========================================
+##🔄 JTWP Service Restart
+##==========================================
 
+```
 chmod +x scripts/restart-jtwp.sh
+```

@@ -150,8 +150,8 @@ pip install -r requirements.txt
 If `.env.example` is included:
 
 ``` bash
-cp .env.example .env
-nano .env
+cp /home/steam/jtwp-collector/Pavlov-Data-Collector-/examples/env.example.env
+nano /home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
 ```
 
 The `.env` file is used for private values such as: - API keys - Discord

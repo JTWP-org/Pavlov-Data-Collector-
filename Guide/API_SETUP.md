@@ -220,8 +220,11 @@ A typical configuration value is:
 ``` json
 "ip_lookup_cache_ttl_days": 30
 ```
-
 This prevents repeatedly querying the same IP every collector run.
+
+to get a API key sign up for free at https://proxycheck.io/dashboard/
+
+
 
 ------------------------------------------------------------------------
 

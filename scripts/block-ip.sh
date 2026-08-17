@@ -31,7 +31,7 @@ fi
 echo "Blocking all traffic for: $IP"
 
 # Block incoming connections FROM this IP
-ufw deny from "$IP" to any
+ufw insert 1 deny from "$IP" to any
 
 # Block outgoing connections TO this IP
 ufw insert 1 deny from "$IP" to any

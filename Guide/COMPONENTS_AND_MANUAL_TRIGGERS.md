@@ -277,6 +277,30 @@ sudo journalctl -u jtwp-pavlov-api-update.service -n 100 --no-pager
 
 ------------------------------------------------------------------------
 
+# 9️⃣ 🌍 Manually Trigger the Pavlov Public API Updater From ModSave
+
+## What It Does
+
+The existing `rcon_trigger_watcher.py` also watches for:
+
+``` text
+EXE_PPAPI.json
+```
+
+This is **not an RCON command**. It is a special execution trigger that
+tells the watcher to run:
+
+``` text
+update_pavlov_api.py
+```
+
+This gives the Pavlov ModKit a way to request a lightweight
+public-server-data refresh using the same ModSave file system already
+used by the RCON bridge.
+
+
+------------------------------------------------------------------------
+
 # 3️⃣ 🗺️ Mod.io Enrichment
 
 ## What It Does
@@ -728,28 +752,6 @@ Guides/RCON_COMMANDS.md
 
 for the full command list.
 
-------------------------------------------------------------------------
-
-# 9️⃣ 🌍 Manually Trigger the Pavlov Public API Updater From ModSave
-
-## What It Does
-
-The existing `rcon_trigger_watcher.py` also watches for:
-
-``` text
-EXE_PPAPI.json
-```
-
-This is **not an RCON command**. It is a special execution trigger that
-tells the watcher to run:
-
-``` text
-update_pavlov_api.py
-```
-
-This gives the Pavlov ModKit a way to request a lightweight
-public-server-data refresh using the same ModSave file system already
-used by the RCON bridge.
 
 ------------------------------------------------------------------------
 

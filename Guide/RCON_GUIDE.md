@@ -76,6 +76,12 @@
     ``` bash
     rcon-md5 'your-password'
     ```
+    u can use netcat to connnect to rcon from terminal like this 
+
+    ```
+    nc 127.0.0.1 PORT
+    ```
+    u can use the loopback ip 127.0.0.1 because the server is hosted on the same machine 
 
     > \[!NOTE\] This helper is for testing/manual raw RCON work. The
     > JTWP watcher should still receive the **plaintext** password

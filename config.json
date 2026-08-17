@@ -126,10 +126,10 @@
   "discord_bot": {
     "enabled": true,
     "prefix": "!",
-    "control_channel_id": "DISCORD_CONTROL_CHANNEL_ID",
+    "control_channel_id": "1203848040432275516",
     "roles": {
-      "admin": "DISCORD_ADMIN_ROLE_ID",
-      "owner": "DISCORD_OWNER_ROLE_ID"
+      "admin": "1539038732810854480",
+      "owner": "1539038572672327741"
     },
     "admin_allowed_rcon_commands": [
       "serverinfo",

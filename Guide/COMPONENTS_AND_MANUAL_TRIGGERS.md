@@ -309,6 +309,220 @@ named EXE_PPAPI.json there dose not need to be anything in the json u
 
 ------------------------------------------------------------------------
 
+
+## 📁 Trigger Location
+
+The trigger can be placed in any configured server's RCON trigger
+directory.
+
+Examples:
+
+``` text
+/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
+/home/steam/pavlovserver0/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
+/home/steam/pavlovserver1/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
+```
+
+The watcher derives these directories from each server's configured
+Pavlov log path.
+
+------------------------------------------------------------------------
+
+## 📝 Trigger Contents
+
+Use valid JSON:
+
+``` json
+{}
+```
+
+The filename is what triggers the action; no arguments are currently
+required inside the JSON object.
+
+------------------------------------------------------------------------
+
+## ▶️ Manually Trigger PPAPI
+
+For `pavlovserver1`:
+
+``` bash
+echo '{}' > \
+/home/steam/pavlovserver1/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
+```
+
+Or with the variable used above:
+
+``` bash
+echo '{}' > "$RCON_DIR/EXE_PPAPI.json"
+```
+
+------------------------------------------------------------------------
+
+## 👀 Watch the Trigger Run
+
+In another terminal:
+
+``` bash
+sudo journalctl -u jtwp-rcon-trigger-watcher -f
+```
+
+Expected flow:
+
+``` text
+[PPAPI] Removed trigger: .../EXE_PPAPI.json
+[PPAPI] EXE_PPAPI.json detected.
+[PPAPI] Running update_pavlov_api.py...
+[PPAPI] Pavlov Public API update completed successfully.
+```
+
+The exact updater output between those messages depends on the current
+`update_pavlov_api.py`.
+
+------------------------------------------------------------------------
+
+## 🗑️ Trigger File Behavior
+
+The watcher removes:
+
+``` text
+EXE_PPAPI.json
+```
+
+before launching the updater.
+
+This prevents the same file from being processed repeatedly on later
+polling cycles.
+
+After triggering it, check:
+
+``` bash
+ls -lah "$RCON_DIR"
+```
+
+`EXE_PPAPI.json` should disappear.
+
+------------------------------------------------------------------------
+
+## 🧯 Duplicate Trigger Protection
+
+If multiple configured Pavlov servers create `EXE_PPAPI.json` at
+approximately the same time, the watcher consumes the detected PPAPI
+trigger files and performs one refresh instead of intentionally
+launching one updater for every server trigger.
+
+This keeps the public API refresh lightweight.
+
+------------------------------------------------------------------------
+
+## ⚙️ PPAPI `config.json` Settings
+
+The PPAPI trigger is configured inside the existing:
+
+``` json
+"rcon_bridge"
+```
+
+section.
+
+Example:
+
+``` json
+"rcon_bridge": {
+  "enabled": true,
+  "poll_interval_seconds": 0.25,
+  "command_file": "rcon_commands.json",
+  "game_modes_file": "game_modes.json",
+  "default_maps_file": "default_maps.json",
+  "limited_ammo_types_file": "limited_ammo_types.json",
+  "remove_input_on_error": true,
+  "ppapi_trigger_enabled": true,
+  "ppapi_trigger_file": "EXE_PPAPI.json",
+  "ppapi_updater": "update_pavlov_api.py",
+  "ppapi_timeout_seconds": 300
+}
+```
+
+### `ppapi_trigger_enabled`
+
+Enables or disables the special PPAPI file trigger.
+
+### `ppapi_trigger_file`
+
+Sets the filename watched for by the bridge:
+
+``` text
+EXE_PPAPI.json
+```
+
+### `ppapi_updater`
+
+Sets the updater script executed by the watcher:
+
+``` text
+update_pavlov_api.py
+```
+
+### `ppapi_timeout_seconds`
+
+Sets the maximum amount of time the watcher allows the updater to run.
+
+------------------------------------------------------------------------
+
+## 🧪 PPAPI Troubleshooting
+
+### Trigger does not disappear
+
+Confirm the RCON watcher is running:
+
+``` bash
+sudo systemctl status jtwp-rcon-trigger-watcher --no-pager
+```
+
+Check its logs:
+
+``` bash
+sudo journalctl -u jtwp-rcon-trigger-watcher -n 100 --no-pager
+```
+
+Confirm the watcher is using the correct ModSave path:
+
+``` bash
+find /home/steam/pavlovserver* \
+    -path '*/Saved/Config/ModSave/JTWP/Rcon' \
+    -type d 2>/dev/null
+```
+
+### Watcher sees the trigger but updater fails
+
+Run the updater directly:
+
+``` bash
+cd /home/steam/jtwp-collector/Pavlov-Data-Collector-
+
+source /home/steam/jtwp-collector/venv/bin/activate
+
+set -a
+source .env
+set +a
+
+python3 update_pavlov_api.py -c config.json
+```
+
+Then inspect the RCON watcher journal again:
+
+``` bash
+sudo journalctl -u jtwp-rcon-trigger-watcher -n 100 --no-pager
+```
+
+### Test only PPAPI-related log messages
+
+``` bash
+sudo journalctl -u jtwp-rcon-trigger-watcher \
+    -n 200 --no-pager | grep -i PPAPI
+```
+
+------------------------------------------------------------------------
+
 # 3️⃣ 🗺️ Mod.io Enrichment
 
 ## What It Does
@@ -763,218 +977,6 @@ for the full command list.
 
 ------------------------------------------------------------------------
 
-## 📁 Trigger Location
-
-The trigger can be placed in any configured server's RCON trigger
-directory.
-
-Examples:
-
-``` text
-/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
-/home/steam/pavlovserver0/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
-/home/steam/pavlovserver1/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
-```
-
-The watcher derives these directories from each server's configured
-Pavlov log path.
-
-------------------------------------------------------------------------
-
-## 📝 Trigger Contents
-
-Use valid JSON:
-
-``` json
-{}
-```
-
-The filename is what triggers the action; no arguments are currently
-required inside the JSON object.
-
-------------------------------------------------------------------------
-
-## ▶️ Manually Trigger PPAPI
-
-For `pavlovserver1`:
-
-``` bash
-echo '{}' > \
-/home/steam/pavlovserver1/Pavlov/Saved/Config/ModSave/JTWP/Rcon/EXE_PPAPI.json
-```
-
-Or with the variable used above:
-
-``` bash
-echo '{}' > "$RCON_DIR/EXE_PPAPI.json"
-```
-
-------------------------------------------------------------------------
-
-## 👀 Watch the Trigger Run
-
-In another terminal:
-
-``` bash
-sudo journalctl -u jtwp-rcon-trigger-watcher -f
-```
-
-Expected flow:
-
-``` text
-[PPAPI] Removed trigger: .../EXE_PPAPI.json
-[PPAPI] EXE_PPAPI.json detected.
-[PPAPI] Running update_pavlov_api.py...
-[PPAPI] Pavlov Public API update completed successfully.
-```
-
-The exact updater output between those messages depends on the current
-`update_pavlov_api.py`.
-
-------------------------------------------------------------------------
-
-## 🗑️ Trigger File Behavior
-
-The watcher removes:
-
-``` text
-EXE_PPAPI.json
-```
-
-before launching the updater.
-
-This prevents the same file from being processed repeatedly on later
-polling cycles.
-
-After triggering it, check:
-
-``` bash
-ls -lah "$RCON_DIR"
-```
-
-`EXE_PPAPI.json` should disappear.
-
-------------------------------------------------------------------------
-
-## 🧯 Duplicate Trigger Protection
-
-If multiple configured Pavlov servers create `EXE_PPAPI.json` at
-approximately the same time, the watcher consumes the detected PPAPI
-trigger files and performs one refresh instead of intentionally
-launching one updater for every server trigger.
-
-This keeps the public API refresh lightweight.
-
-------------------------------------------------------------------------
-
-## ⚙️ PPAPI `config.json` Settings
-
-The PPAPI trigger is configured inside the existing:
-
-``` json
-"rcon_bridge"
-```
-
-section.
-
-Example:
-
-``` json
-"rcon_bridge": {
-  "enabled": true,
-  "poll_interval_seconds": 0.25,
-  "command_file": "rcon_commands.json",
-  "game_modes_file": "game_modes.json",
-  "default_maps_file": "default_maps.json",
-  "limited_ammo_types_file": "limited_ammo_types.json",
-  "remove_input_on_error": true,
-  "ppapi_trigger_enabled": true,
-  "ppapi_trigger_file": "EXE_PPAPI.json",
-  "ppapi_updater": "update_pavlov_api.py",
-  "ppapi_timeout_seconds": 300
-}
-```
-
-### `ppapi_trigger_enabled`
-
-Enables or disables the special PPAPI file trigger.
-
-### `ppapi_trigger_file`
-
-Sets the filename watched for by the bridge:
-
-``` text
-EXE_PPAPI.json
-```
-
-### `ppapi_updater`
-
-Sets the updater script executed by the watcher:
-
-``` text
-update_pavlov_api.py
-```
-
-### `ppapi_timeout_seconds`
-
-Sets the maximum amount of time the watcher allows the updater to run.
-
-------------------------------------------------------------------------
-
-## 🧪 PPAPI Troubleshooting
-
-### Trigger does not disappear
-
-Confirm the RCON watcher is running:
-
-``` bash
-sudo systemctl status jtwp-rcon-trigger-watcher --no-pager
-```
-
-Check its logs:
-
-``` bash
-sudo journalctl -u jtwp-rcon-trigger-watcher -n 100 --no-pager
-```
-
-Confirm the watcher is using the correct ModSave path:
-
-``` bash
-find /home/steam/pavlovserver* \
-    -path '*/Saved/Config/ModSave/JTWP/Rcon' \
-    -type d 2>/dev/null
-```
-
-### Watcher sees the trigger but updater fails
-
-Run the updater directly:
-
-``` bash
-cd /home/steam/jtwp-collector/Pavlov-Data-Collector-
-
-source /home/steam/jtwp-collector/venv/bin/activate
-
-set -a
-source .env
-set +a
-
-python3 update_pavlov_api.py -c config.json
-```
-
-Then inspect the RCON watcher journal again:
-
-``` bash
-sudo journalctl -u jtwp-rcon-trigger-watcher -n 100 --no-pager
-```
-
-### Test only PPAPI-related log messages
-
-``` bash
-sudo journalctl -u jtwp-rcon-trigger-watcher \
-    -n 200 --no-pager | grep -i PPAPI
-```
-
-------------------------------------------------------------------------
 
 # 🔟 📚 RCON Support JSON Files
 

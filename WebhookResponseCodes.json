@@ -1,0 +1,88 @@
+{
+  "discordResponseCodes": [
+    {
+      "code": 200,
+      "name": "OK",
+      "description": "Request succeeded and Discord returned data.",
+      "success": true
+    },
+    {
+      "code": 204,
+      "name": "No Content",
+      "description": "Webhook sent successfully. This is the normal success response when Discord does not return the created message.",
+      "success": true
+    },
+    {
+      "code": 400,
+      "name": "Bad Request",
+      "description": "The request is invalid. This can be caused by malformed JSON, an invalid embed structure, or invalid field values.",
+      "success": false
+    },
+    {
+      "code": 401,
+      "name": "Unauthorized",
+      "description": "Authentication failed.",
+      "success": false
+    },
+    {
+      "code": 403,
+      "name": "Forbidden",
+      "description": "Discord understood the request but will not allow it. This is usually a permissions or access issue.",
+      "success": false
+    },
+    {
+      "code": 404,
+      "name": "Not Found",
+      "description": "The webhook does not exist, the URL or token is incorrect, or the webhook was deleted.",
+      "success": false
+    },
+    {
+      "code": 405,
+      "name": "Method Not Allowed",
+      "description": "The wrong HTTP method was used, such as GET when Discord expects POST.",
+      "success": false
+    },
+    {
+      "code": 413,
+      "name": "Payload Too Large",
+      "description": "The message, attachment, or request is too large.",
+      "success": false
+    },
+    {
+      "code": 415,
+      "name": "Unsupported Media Type",
+      "description": "The Content-Type or request encoding is incorrect.",
+      "success": false
+    },
+    {
+      "code": 429,
+      "name": "Too Many Requests",
+      "description": "The request was rate limited because too many requests were sent too quickly.",
+      "success": false
+    },
+    {
+      "code": 500,
+      "name": "Internal Server Error",
+      "description": "A problem occurred on Discord's side.",
+      "success": false
+    },
+    {
+      "code": 502,
+      "name": "Bad Gateway",
+      "description": "A temporary Discord or upstream gateway problem occurred.",
+      "success": false
+    },
+    {
+      "code": 503,
+      "name": "Service Unavailable",
+      "description": "Discord is temporarily unavailable.",
+      "success": false
+    },
+    {
+      "code": 504,
+      "name": "Gateway Timeout",
+      "description": "Discord or an upstream service took too long to respond.",
+      "success": false
+    }
+  ]
+}

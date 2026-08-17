@@ -9,16 +9,20 @@ if [[ -z "$IP" ]]; then
     exit 1
 fi
 
-# Basic IPv4 validation
+# Validate IPv4 or IPv6
 if ! python3 -c "import ipaddress; ipaddress.ip_address('$IP')" 2>/dev/null; then
     echo "Invalid IP address: $IP"
     exit 1
 fi
 
 # Safety: don't accidentally block the IP of your current SSH session
-SSH_IP="${SSH_CONNECTION%% *}"
+SSH_IP=""
 
-if [[ -n "${SSH_CONNECTION:-}" && "$IP" == "$SSH_IP" ]]; then
+if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    SSH_IP="${SSH_CONNECTION%% *}"
+fi
+
+if [[ -n "$SSH_IP" && "$IP" == "$SSH_IP" ]]; then
     echo "ERROR: $IP is the IP of your current SSH connection."
     echo "Blocking it would disconnect you."
     exit 1

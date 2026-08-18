@@ -124,7 +124,7 @@
     },
 
     "runcollector": {
-      "working": false,
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Runs the JTWP Pavlov data collector manually.",

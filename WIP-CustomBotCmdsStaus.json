@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "description": "JTWP custom command status, arguments, permissions, and usage information.",
+
+  "commands": {
+    "restartjtwp": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Restarts the JTWP collector, watcher, bot, and related JTWP services.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!restartjtwp",
+      "script": "/usr/local/bin/restart-jtwp",
+      "sudo": true,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-restartjtwp.json",
+        "output_file": "OUT-restartjtwp.json",
+        "example_input": {}
+      },
+      "notes": "May restart the Discord bot and RCON bridge while the command is executing."
+    },
+
+    "exportdata": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Creates a portable compressed export of JTWP collector data.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!exportdata",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/export-data.sh",
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-exportdata.json",
+        "output_file": "OUT-exportdata.json",
+        "example_input": {}
+      },
+      "notes": "Export may include the IP hashing secret depending on data-tool configuration."
+    },
+
+    "backupdata": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Creates a timestamped compressed backup of JTWP collector data.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!backupdata",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/backup-data.sh",
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-backupdata.json",
+        "output_file": "OUT-backupdata.json",
+        "example_input": {}
+      },
+      "notes": "Backups are intended to be stored in the configured backup output directory."
+    },
+
+    "cleardata": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Clears JTWP collector data using the clear-data maintenance script.",
+      "arguments": [
+        {
+          "name": "--yes",
+          "type": "flag",
+          "required": true,
+          "value": "--yes",
+          "description": "Confirms destructive deletion without an interactive prompt."
+        }
+      ],
+      "requires_arguments": false,
+      "example": "!cleardata",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/clear-data.sh",
+      "script_arguments": [
+        "--yes"
+      ],
+      "sudo": true,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-cleardata.json",
+        "output_file": "OUT-cleardata.json",
+        "example_input": {}
+      },
+      "notes": "Destructive command. Restrict to OWNER."
+    },
+
+    "clearpavlovmods": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Clears downloaded Pavlov mods for a selected Pavlov server.",
+      "arguments": [
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true,
+          "description": "Configured Pavlov server ID.",
+          "examples": [
+            "pavlovserver",
+            "pavlovserver0",
+            "pavlovserver1"
+          ]
+        }
+      ],
+      "requires_arguments": true,
+      "example": "!clearpavlovmods pavlovserver1",
+      "script": "/usr/local/bin/clear-pavlov-mods",
+      "sudo": true,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-clearpavlovmods.json",
+        "output_file": "OUT-clearpavlovmods.json",
+        "example_input": {
+          "server_id": "pavlovserver1"
+        }
+      },
+      "notes": "The selected server ID should be validated before execution."
+    },
+
+    "runcollector": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Runs the JTWP Pavlov data collector manually.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!runcollector",
+      "script": "/home/steam/jtwp-collector/venv/bin/python3",
+      "script_arguments": [
+        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py",
+        "-c",
+        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+      ],
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-runcollector.json",
+        "output_file": "OUT-runcollector.json",
+        "example_input": {}
+      },
+      "notes": "Requires collector environment variables such as JTWP_IP_HASH_SECRET to be available."
+    },
+
+    "runpavlovapi": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Runs the Pavlov public API updater manually.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!runpavlovapi",
+      "script": "/home/steam/jtwp-collector/venv/bin/python3",
+      "script_arguments": [
+        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/update_pavlov_api.py",
+        "-c",
+        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+      ],
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-runpavlovapi.json",
+        "output_file": "OUT-runpavlovapi.json",
+        "example_input": {}
+      },
+      "notes": "Refreshes saved Pavlov public server/API information."
+    },
+
+    "runssh": {
+      "working": false,
+      "enabled": true,
+      "permission": "OWNER",
+      "description": "Builds and sends the JTWP SSH security report.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!runssh",
+      "script": "/bin/bash",
+      "script_arguments": [
+        "-c",
+        "bash /home/steam/jtwp-collector-data/global/ssh/buildIt > /home/steam/jtwp-collector-data/global/ssh/built.txt && bash /home/steam/jtwp-collector-data/global/ssh/discordIt"
+      ],
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-runssh.json",
+        "output_file": "OUT-runssh.json",
+        "example_input": {}
+      },
+      "notes": "Runs buildIt first and then discordIt if the build succeeds."
+    },
+
+    "liveservers": {
+      "working": false,
+      "enabled": true,
+      "permission": "ADMIN",
+      "description": "Posts the current Pavlov live server browser as split Discord text embeds.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!liveservers",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/servers/LIVEserversArray.sh",
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-liveservers.json",
+        "output_file": "OUT-liveservers.json",
+        "example_input": {}
+      },
+      "output": {
+        "type": "discord_text_embeds",
+        "source_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/stringArray.txt",
+        "title": "PAVLOV SERVERS text",
+        "split_separator": "********************",
+        "max_embed_description": 3900
+      },
+      "notes": "Requires build-string-array.sh to have already generated stringArray.txt."
+    },
+
+    "liveserversimg": {
+      "working": false,
+      "enabled": true,
+      "permission": "ADMIN",
+      "description": "Generates and posts the current Pavlov live server browser as images.",
+      "arguments": [],
+      "requires_arguments": false,
+      "example": "!liveserversimg",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/servers/LIVEserversIMG.sh",
+      "sudo": false,
+      "file_bridge": {
+        "enabled": true,
+        "input_file": "IN-liveserversimg.json",
+        "output_file": "OUT-liveserversimg.json",
+        "example_input": {}
+      },
+      "output": {
+        "type": "discord_image_embeds",
+        "source_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/servers.tsv",
+        "generator": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/servers/generate-server-image.py",
+        "generated_files": "live-servers-*.png",
+        "title": "PAVLOV SERVERS IMAGE"
+      },
+      "notes": "Requires build-string-array.sh to have already generated servers.tsv."
+    }
+  }
+}

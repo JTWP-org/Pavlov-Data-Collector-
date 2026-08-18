@@ -4,7 +4,7 @@
 
   "commands": {
     "restartjtwp": {
-      "working": false,
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Restarts the JTWP collector, watcher, bot, and related JTWP services.",
@@ -90,8 +90,8 @@
       "notes": "Destructive command. Restrict to OWNER."
     },
 
-    "clearpavlovmods": {
-      "working": false,
+    "server clear-pavlov-mods pavlovserver1": {
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Clears downloaded Pavlov mods for a selected Pavlov server.",
@@ -109,7 +109,7 @@
         }
       ],
       "requires_arguments": true,
-      "example": "!clearpavlovmods pavlovserver1",
+      "example": "!server clear-pavlov-mods pavlovserver1",
       "script": "/usr/local/bin/clear-pavlov-mods",
       "sudo": true,
       "file_bridge": {
@@ -122,33 +122,28 @@
       },
       "notes": "The selected server ID should be validated before execution."
     },
-
-    "runcollector": {
-      "working": true,
-      "enabled": true,
-      "permission": "OWNER",
-      "description": "Runs the JTWP Pavlov data collector manually.",
-      "arguments": [],
-      "requires_arguments": false,
-      "example": "!runcollector",
-      "script": "/home/steam/jtwp-collector/venv/bin/python3",
-      "script_arguments": [
-        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py",
-        "-c",
-        "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
-      ],
-      "sudo": false,
-      "file_bridge": {
-        "enabled": true,
-        "input_file": "IN-runcollector.json",
-        "output_file": "OUT-runcollector.json",
-        "example_input": {}
-      },
-      "notes": "Requires collector environment variables such as JTWP_IP_HASH_SECRET to be available."
-    },
+"runcollector": {
+  "working": true,
+  "enabled": true,
+  "permission": "OWNER",
+  "description": "Runs the JTWP Pavlov data collector manually using the wrapper script that loads the project .env.",
+  "arguments": [],
+  "requires_arguments": false,
+  "example": "!runcollector",
+  "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/run-collector.sh",
+  "script_arguments": [],
+  "sudo": true,
+  "file_bridge": {
+    "enabled": true,
+    "input_file": "IN-runcollector.json",
+    "output_file": "OUT-runcollector.json",
+    "example_input": {}
+  },
+  "notes": "Loads /home/steam/jtwp-collector/Pavlov-Data-Collector-/.env before running collector.py with the JTWP virtual environment. Requires the matching NOPASSWD sudoers rule for run-collector.sh."
+}
 
     "runpavlovapi": {
-      "working": false,
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Runs the Pavlov public API updater manually.",

@@ -1,0 +1,6 @@
+# JTWP SSH auto-block compatibility file
+#
+# The active block/unblock permissions are in:
+#   /etc/sudoers.d/zz-jtwp-block-ip
+#
+# This file is intentionally rule-free because the server copy shown was empty.

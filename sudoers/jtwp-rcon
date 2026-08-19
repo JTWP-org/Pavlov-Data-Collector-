@@ -1,0 +1,2 @@
+# JTWP RCON/restart helper
+steam ALL=(root) NOPASSWD: /usr/local/bin/restart-jtwp

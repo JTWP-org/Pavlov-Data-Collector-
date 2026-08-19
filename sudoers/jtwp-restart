@@ -1,0 +1,3 @@
+# JTWP restart helper
+# NOTE: This duplicates the restart-jtwp permission in jtwp-rcon.
+steam ALL=(root) NOPASSWD: /usr/local/bin/restart-jtwp

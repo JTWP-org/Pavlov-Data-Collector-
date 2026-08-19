@@ -1,0 +1,2 @@
+# JTWP manual collector runner
+steam ALL=(root) NOPASSWD: /home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/run-collector.sh

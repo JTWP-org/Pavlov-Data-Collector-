@@ -27,7 +27,6 @@ Pavlov-Data-Collector-/
 │   ├── icon.json
 │   ├── items.json
 │   ├── limitedAmmoTypes.json
-│   ├── limited_ammo_types.json
 │   ├── rcon_commands.json
 │   ├── resource_audit.json
 │   └── resource_manifest.json

@@ -1,3 +1,80 @@
+
+```
+Pavlov-Data-Collector-/
+├── README-UPDATED-SCRIPTS.md
+├── active.json
+├── active_config.py
+├── admin_monitor.py
+├── collector.py
+├── config.json
+├── connection_watcher.py
+├── custom_commands.json
+├── ddos_watcher.py
+├── discord_bot.py
+├── rcon_loop.py
+├── rcon_trigger_watcher.py
+├── requirements-additions.txt
+├── requirements.txt
+├── ssh_watcher.py
+├── update_pavlov_api.py
+│
+├── resource/
+│   ├── BalancingTable.csv
+│   ├── README.md
+│   ├── WebhookResponseCodes.json
+│   ├── default_maps.json
+│   ├── game_modes.json
+│   ├── gunEmoji.json
+│   ├── icon.json
+│   ├── items.json
+│   ├── limited_ammo_types.json
+│   ├── rcon_commands.json
+│   ├── resource_audit.json
+│   └── resource_manifest.json
+│
+├── scripts/
+│   ├── LIVEservers.sh
+│   ├── backup-data.py
+│   ├── block-ip.sh
+│   ├── check-player-connections.sh
+│   ├── clear-data.sh
+│   ├── clear-pavlov-mods.sh
+│   ├── export-data.py
+│   ├── generate-server-image.py
+│   ├── install-rcon-bridge.sh
+│   ├── playerLookup.sh
+│   ├── rcon-md5.sh
+│   ├── rebuild-ip-index.py
+│   ├── run-collector.sh
+│   ├── send-ddos-embed.sh
+│   ├── set-rcon-loop.py
+│   ├── setup-data-links.sh
+│   ├── ufw-fix.sh
+│   ├── unblock-ip.sh
+│   ├── update-pavlov-api.sh
+│   ├── validate-resources.py
+│   │
+│   └── servers/
+│       ├── LIVEserversArray.sh
+│       ├── LIVEserversIMG.sh
+│       ├── build-string-array.sh
+│       ├── generate-server-image.py
+│       ├── send-discord.sh
+│       └── send-server-list.sh
+│
+└── systemd/
+    ├── jtwp-admin-monitor.service
+    ├── jtwp-collector.service
+    ├── jtwp-collector.timer
+    ├── jtwp-connection-watcher.service
+    ├── jtwp-ddos-watcher.service
+    ├── jtwp-discord-bot.service
+    ├── jtwp-rcon-loop.service
+    ├── jtwp-rcon-trigger-watcher.service
+    └── jtwp-ssh-watcher.service
+    ```
+
+
 # JTWP Latest Updated Scripts Package
 
 This package consolidates the corrected JTWP scripts from the earlier review and

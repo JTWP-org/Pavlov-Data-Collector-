@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "description": "JTWP moderation decision policy.",
+  "principles": {
+    "admin_selects_category": true,
+    "rule_match_required_for_valid_case": false,
+    "category_match_required_for_valid_case": false,
+    "punishment_can_be_valid_without_existing_rule": true,
+    "unmatched_cases_require_policy_review": true,
+    "senior_admin_final_approval_required_for_bans": true,
+    "admin_votes_are_advisory": true,
+    "temporary_ban_days_set_by_senior_admin": true,
+    "permanent_ban_supported": true
+  },
+  "unmatched_behavior_policy": {
+    "category_id": "OTHER",
+    "rule_id": null,
+    "case_status_note": "Valid moderation case with rules-gap flag.",
+    "required_fields": [
+      "admin_selected_category",
+      "incident_summary",
+      "evidence",
+      "reason_existing_rules_do_not_fit"
+    ],
+    "automatic_flags": [
+      "NEEDS_RULE_REVIEW"
+    ],
+    "explanation": "A missing rule does not make an otherwise justified moderation action invalid. The case remains valid, but senior administration should review the incident and decide whether a new rule or category should be added."
+  },
+  "case_fields": {
+    "admin_selected_category": {
+      "required_for_warning": true,
+      "required_for_ban_log": true,
+      "required_for_report": false
+    },
+    "matched_rule_id": {
+      "required": false
+    },
+    "rule_match_status": {
+      "allowed_values": [
+        "matched",
+        "partial_match",
+        "no_match"
+      ]
+    },
+    "rules_gap": {
+      "type": "boolean",
+      "description": "True when the conduct is punishable but current rules do not adequately cover it."
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "description": "Display-oriented JTWP rules list.",
+  "rules": [
+    {
+      "id": "R001",
+      "title": "No Racism",
+      "category": "HATE_SPEECH",
+      "severity": "high",
+      "summary": "Racist language, conduct, imagery, or targeted behavior is prohibited."
+    },
+    {
+      "id": "R002",
+      "title": "No Sexist Behavior",
+      "category": "HARASSMENT",
+      "severity": "high",
+      "summary": "Sexist, misogynistic, or gender-based harassment is prohibited."
+    },
+    {
+      "id": "R003",
+      "title": "Treat Other Players With Respect",
+      "category": "CONDUCT",
+      "severity": "medium",
+      "summary": "Players are expected to interact with others respectfully."
+    },
+    {
+      "id": "R004",
+      "title": "No Bullying",
+      "category": "HARASSMENT",
+      "severity": "high",
+      "summary": "Repeated or coordinated bullying of another player is prohibited."
+    },
+    {
+      "id": "R005",
+      "title": "No Intentional Team Killing",
+      "category": "GAMEPLAY",
+      "severity": "medium",
+      "summary": "Deliberate team killing or repeated intentional team damage is prohibited."
+    },
+    {
+      "id": "R006",
+      "title": "Do Not Intentionally Impact Server Performance",
+      "category": "SERVER_INTEGRITY",
+      "severity": "critical",
+      "summary": "Players may not knowingly attempt to degrade, overload, crash, or destabilize the server."
+    },
+    {
+      "id": "R007",
+      "title": "Do Not Disclose Other Players' Private Information",
+      "category": "PRIVACY",
+      "severity": "critical",
+      "summary": "Players may not disclose, threaten to disclose, or solicit another person's private identifying information."
+    },
+    {
+      "id": "R008",
+      "title": "No Cheating or Unfair-Advantage Software",
+      "category": "CHEATING",
+      "severity": "critical",
+      "summary": "External software, cheats, unauthorized modifications, or automation used for an unfair gameplay advantage are prohibited."
+    },
+    {
+      "id": "R009",
+      "title": "No Gore or Sexually Explicit Material",
+      "category": "EXPLICIT_CONTENT",
+      "severity": "high",
+      "summary": "Graphic real-world gore and sexually explicit material may not be posted or displayed through JTWP servers."
+    },
+    {
+      "id": "R010",
+      "title": "No Game-Mode Manipulation for Unfair Advantage",
+      "category": "EXPLOITING",
+      "severity": "high",
+      "summary": "Players may not intentionally manipulate game-mode systems, bugs, or unintended mechanics for an unfair advantage."
+    },
+    {
+      "id": "R011",
+      "title": "Do Not Threaten Other Players",
+      "category": "HARASSMENT",
+      "severity": "critical",
+      "summary": "Credible or targeted threats of serious harm are prohibited."
+    },
+    {
+      "id": "R012",
+      "title": "Do Not Deliberately Stop Other Players From Enjoying the Server",
+      "category": "DISRUPTION",
+      "severity": "medium",
+      "summary": "Deliberately and repeatedly interfering with other players' reasonable use or enjoyment of the server is prohibited."
+    },
+    {
+      "id": "R013",
+      "title": "No Spam or Deliberate Annoyance",
+      "category": "COMMUNICATION",
+      "severity": "low",
+      "summary": "Repeated spam or deliberate communication disruption is prohibited."
+    },
+    {
+      "id": "R014",
+      "title": "No Slurs or Other Hate Speech",
+      "category": "HATE_SPEECH",
+      "severity": "high",
+      "summary": "Slurs and hate speech targeting people based on identity or perceived identity are prohibited."
+    }
+  ],
+  "fallback": {
+    "category": "OTHER",
+    "label": "Other / No Existing Rule",
+    "description": "Select this when the behavior warrants moderation but no current rule adequately covers it. The case remains valid and is flagged for rules review."
+  }
+}

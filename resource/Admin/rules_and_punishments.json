@@ -1,0 +1,482 @@
+{
+  "version": 2,
+  "description": "Expanded JTWP server rules and advisory punishment guidance. Admins select a category during review. A case may remain valid even when no existing rule fully covers the conduct.",
+  "enforcement": {
+    "final_ban_decision": "senior_admin",
+    "admin_vote_required_before_senior_review": true,
+    "suggested_punishments_are_advisory": true,
+    "missing_rule_does_not_invalidate_case": true,
+    "missing_rule_creates_rules_gap": true
+  },
+  "rules": {
+    "R001": {
+      "title": "No Racism",
+      "category": "HATE_SPEECH",
+      "severity": "high",
+      "summary": "Racist language, conduct, imagery, or targeted behavior is prohibited.",
+      "details": "Players may not demean, target, exclude, threaten, or harass another person or group based on race, ethnicity, nationality, ancestry, or perceived racial background.",
+      "examples": [
+        "Racial insults or slurs",
+        "Racist stereotypes directed at another person",
+        "Racist usernames, images, signs, voice chat, or messages",
+        "Encouraging hostility or discrimination toward a racial or ethnic group"
+      ],
+      "evidence_guidance": [
+        "Chat logs or screenshots",
+        "Voice recordings where permitted",
+        "Multiple consistent witness reports",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Repeated conduct after warning",
+        "Targeted harassment",
+        "Organized or group harassment",
+        "Threats accompanying racist conduct"
+      ],
+      "mitigating_factors": [
+        "Ambiguous context",
+        "Single isolated incident with credible evidence of misunderstanding"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R002": {
+      "title": "No Sexist Behavior",
+      "category": "HARASSMENT",
+      "severity": "high",
+      "summary": "Sexist, misogynistic, or gender-based harassment is prohibited.",
+      "details": "Players may not demean, harass, intimidate, or target another person because of sex, gender, gender identity, or perceived gender.",
+      "examples": [
+        "Sexist insults",
+        "Gender-based harassment",
+        "Repeated unwanted sexual comments directed at another player",
+        "Targeting or excluding someone because of gender"
+      ],
+      "evidence_guidance": [
+        "Chat logs",
+        "Voice recordings where permitted",
+        "Screenshots",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Repeated targeted harassment",
+        "Sexual threats",
+        "Coordinated harassment"
+      ],
+      "mitigating_factors": [
+        "Ambiguous context",
+        "One isolated comment without targeted harassment"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R003": {
+      "title": "Treat Other Players With Respect",
+      "category": "CONDUCT",
+      "severity": "medium",
+      "summary": "Players are expected to interact with others respectfully.",
+      "details": "Disagreement, competition, and ordinary trash talk are not automatically violations. Repeated personal attacks, targeted hostility, intimidation, or deliberately abusive conduct may be moderated.",
+      "examples": [
+        "Repeated personal insults",
+        "Continuing abusive conduct after being asked to stop",
+        "Targeting one player across multiple rounds",
+        "Deliberately provoking another player to cause conflict"
+      ],
+      "evidence_guidance": [
+        "Context around the interaction",
+        "Repeated incidents",
+        "Moderator observation",
+        "Consistent witness reports"
+      ],
+      "aggravating_factors": [
+        "Repeated conduct",
+        "Targeting a specific player",
+        "Conduct continuing after moderator instruction"
+      ],
+      "mitigating_factors": [
+        "Mutual non-targeted trash talk",
+        "Single low-level disagreement",
+        "Lack of evidence showing targeting"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "temporary_ban"
+      }
+    },
+    "R004": {
+      "title": "No Bullying",
+      "category": "HARASSMENT",
+      "severity": "high",
+      "summary": "Repeated or coordinated bullying of another player is prohibited.",
+      "details": "Players may not repeatedly target, humiliate, intimidate, isolate, or encourage others to gang up on another player.",
+      "examples": [
+        "Repeated humiliation of one player",
+        "Following a player between sessions to continue harassment",
+        "Encouraging a group to target one person",
+        "Repeated intimidation through voice or text"
+      ],
+      "evidence_guidance": [
+        "Pattern across multiple incidents",
+        "Chat logs",
+        "Voice evidence",
+        "Witness statements"
+      ],
+      "aggravating_factors": [
+        "Multiple offenders acting together",
+        "Long-term targeting",
+        "Victim asks offender to stop and conduct continues"
+      ],
+      "mitigating_factors": [
+        "Insufficient evidence of repetition",
+        "Mutual conflict without clear targeting"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R005": {
+      "title": "No Intentional Team Killing",
+      "category": "GAMEPLAY",
+      "severity": "medium",
+      "summary": "Deliberate team killing or repeated intentional team damage is prohibited.",
+      "details": "Accidental team damage can happen during normal gameplay. Moderation should focus on deliberate, retaliatory, repeated, or clearly reckless team killing.",
+      "examples": [
+        "Deliberately shooting a teammate",
+        "Repeatedly damaging teammates",
+        "Retaliatory team killing",
+        "Using explosives specifically to kill teammates"
+      ],
+      "evidence_guidance": [
+        "Kill logs",
+        "Team-kill counts",
+        "Video evidence",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Multiple intentional kills",
+        "Retaliation",
+        "Continues after warning",
+        "Targets the same teammate repeatedly"
+      ],
+      "mitigating_factors": [
+        "Accidental crossfire",
+        "Explosive accident",
+        "Single incident with unclear intent"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "temporary_ban"
+      }
+    },
+    "R006": {
+      "title": "Do Not Intentionally Impact Server Performance",
+      "category": "SERVER_INTEGRITY",
+      "severity": "critical",
+      "summary": "Players may not knowingly attempt to degrade, overload, crash, or destabilize the server.",
+      "details": "Deliberately creating excessive load, abusing objects, exploiting map behavior, or repeatedly performing actions known to cause lag, crashes, or instability is prohibited.",
+      "examples": [
+        "Attempting to crash the server",
+        "Mass-spawning objects to cause lag",
+        "Repeatedly using a known lag exploit",
+        "Continuing performance-impacting behavior after being warned"
+      ],
+      "evidence_guidance": [
+        "Server logs",
+        "DDoS/network watcher data",
+        "Performance metrics",
+        "Video evidence",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Intentional crash attempt",
+        "Repeated behavior",
+        "Large impact on other players",
+        "Attempt to evade detection"
+      ],
+      "mitigating_factors": [
+        "Unintentional performance impact",
+        "Unknown bug triggered during normal play"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "permanent_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R007": {
+      "title": "Do Not Disclose Other Players' Private Information",
+      "category": "PRIVACY",
+      "severity": "critical",
+      "summary": "Players may not disclose, threaten to disclose, or solicit another person's private identifying information.",
+      "details": "Posting, sharing, threatening to share, or encouraging others to obtain private personal information about another player is prohibited.",
+      "examples": [
+        "Posting a home address",
+        "Sharing a private phone number or email address",
+        "Posting identifying personal information",
+        "Threatening to doxx another player"
+      ],
+      "evidence_guidance": [
+        "Screenshots",
+        "Message logs",
+        "Moderator observation",
+        "Preserved evidence with sensitive information redacted from public logs"
+      ],
+      "aggravating_factors": [
+        "Credible threat to expose information",
+        "Actual disclosure",
+        "Repeated disclosure",
+        "Targeted intimidation"
+      ],
+      "mitigating_factors": [
+        "Information was already intentionally public and not used for harassment",
+        "Evidence does not establish the accused disclosed it"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "permanent_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R008": {
+      "title": "No Cheating or Unfair-Advantage Software",
+      "category": "CHEATING",
+      "severity": "critical",
+      "summary": "External software, cheats, unauthorized modifications, or automation used for an unfair gameplay advantage are prohibited.",
+      "details": "Players may not knowingly use tools or modifications intended to provide information, aim, movement, automation, visibility, or other competitive capabilities unavailable through normal gameplay.",
+      "examples": [
+        "Aimbots",
+        "Wallhacks",
+        "Unauthorized automated aiming or firing",
+        "External tools providing hidden gameplay information"
+      ],
+      "evidence_guidance": [
+        "Anti-cheat evidence",
+        "Video evidence",
+        "Server logs",
+        "Consistent moderator observations"
+      ],
+      "aggravating_factors": [
+        "Clear intentional use",
+        "Distribution of cheat tools",
+        "Ban evasion",
+        "Repeated cheating"
+      ],
+      "mitigating_factors": [
+        "Insufficient evidence",
+        "Legitimate accessibility or hardware behavior incorrectly suspected"
+      ],
+      "suggested_punishment": {
+        "first_offense": "permanent_ban",
+        "repeat_offense": "permanent_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R009": {
+      "title": "No Gore or Sexually Explicit Material",
+      "category": "EXPLICIT_CONTENT",
+      "severity": "high",
+      "summary": "Graphic real-world gore and sexually explicit material may not be posted or displayed through JTWP servers.",
+      "details": "Players may not deliberately upload, display, transmit, link, or expose others to pornographic, sexually explicit, or graphic real-world gore content through server-supported systems.",
+      "examples": [
+        "Pornographic imagery",
+        "Sexually explicit videos or links",
+        "Graphic real-world gore",
+        "Repeated attempts to expose players to prohibited content"
+      ],
+      "evidence_guidance": [
+        "Screenshots with sensitive content safely redacted where possible",
+        "Message/link logs",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Repeated posting",
+        "Targeting minors or vulnerable users",
+        "Attempting to evade moderation"
+      ],
+      "mitigating_factors": [
+        "Accidental link",
+        "Content was not actually explicit after review"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "permanent_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R010": {
+      "title": "No Game-Mode Manipulation for Unfair Advantage",
+      "category": "EXPLOITING",
+      "severity": "high",
+      "summary": "Players may not intentionally manipulate game-mode systems, bugs, or unintended mechanics for an unfair advantage.",
+      "details": "Using game-mode logic, roles, team systems, economy systems, bugs, or unintended mechanics in a knowingly abusive way to gain an unfair advantage is prohibited.",
+      "examples": [
+        "Abusing role mechanics to bypass restrictions",
+        "Manipulating team assignment",
+        "Abusing economy or scoring systems",
+        "Repeated use of a known exploit"
+      ],
+      "evidence_guidance": [
+        "Video evidence",
+        "Server logs",
+        "Game-mode logs",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Repeated exploit use",
+        "Sharing the exploit to others",
+        "Large competitive impact"
+      ],
+      "mitigating_factors": [
+        "Unclear whether behavior was unintended",
+        "One accidental trigger"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R011": {
+      "title": "Do Not Threaten Other Players",
+      "category": "HARASSMENT",
+      "severity": "critical",
+      "summary": "Credible or targeted threats of serious harm are prohibited.",
+      "details": "Players may not threaten violence, stalking, doxxing, or other serious harm in a way reasonably understood as targeted intimidation.",
+      "examples": [
+        "Threatening physical violence",
+        "Threatening to stalk or locate another player",
+        "Threatening to expose private information",
+        "Repeated targeted threats"
+      ],
+      "evidence_guidance": [
+        "Exact messages",
+        "Voice evidence",
+        "Screenshots",
+        "Context showing target and seriousness"
+      ],
+      "aggravating_factors": [
+        "Specific or credible threats",
+        "Threat references private information",
+        "Repeated threats",
+        "Threat continues outside the server"
+      ],
+      "mitigating_factors": [
+        "Clearly non-targeted joking context",
+        "Insufficient evidence of what was actually said"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "permanent_ban",
+        "severe_offense": "permanent_ban"
+      }
+    },
+    "R012": {
+      "title": "Do Not Deliberately Stop Other Players From Enjoying the Server",
+      "category": "DISRUPTION",
+      "severity": "medium",
+      "summary": "Deliberately and repeatedly interfering with other players' reasonable use or enjoyment of the server is prohibited.",
+      "details": "This rule covers intentional disruptive conduct that may not fit another specific rule but is clearly aimed at ruining or preventing normal gameplay for others.",
+      "examples": [
+        "Repeatedly blocking a player solely to disrupt them",
+        "Following someone solely to interfere with gameplay",
+        "Sabotaging normal gameplay without a legitimate game-mode purpose",
+        "Repeated disruption after warnings"
+      ],
+      "evidence_guidance": [
+        "Pattern of conduct",
+        "Video evidence",
+        "Moderator observation",
+        "Multiple consistent reports"
+      ],
+      "aggravating_factors": [
+        "Repeated behavior",
+        "Multiple victims",
+        "Continues after warning"
+      ],
+      "mitigating_factors": [
+        "Legitimate game-mode strategy",
+        "Single isolated incident"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "temporary_ban"
+      }
+    },
+    "R013": {
+      "title": "No Spam or Deliberate Annoyance",
+      "category": "COMMUNICATION",
+      "severity": "low",
+      "summary": "Repeated spam or deliberate communication disruption is prohibited.",
+      "details": "Players may not repeatedly flood messages, voice, sounds, commands, or other communication systems in a way intended to disrupt or annoy others.",
+      "examples": [
+        "Message flooding",
+        "Microphone spam",
+        "Repeated command spam",
+        "Continuing spam after being asked to stop"
+      ],
+      "evidence_guidance": [
+        "Chat logs",
+        "Voice evidence",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "High-volume disruption",
+        "Continues after warning",
+        "Targeted spam against one player"
+      ],
+      "mitigating_factors": [
+        "Brief accidental repetition",
+        "Normal enthusiastic communication"
+      ],
+      "suggested_punishment": {
+        "first_offense": "warning",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "temporary_ban"
+      }
+    },
+    "R014": {
+      "title": "No Slurs or Other Hate Speech",
+      "category": "HATE_SPEECH",
+      "severity": "high",
+      "summary": "Slurs and hate speech targeting people based on identity or perceived identity are prohibited.",
+      "details": "Players may not use slurs, dehumanizing group-based language, or content that promotes hatred or hostility toward people because of race, ethnicity, nationality, religion, sex, gender, sexual orientation, disability, or similar protected or marginalized identity.",
+      "examples": [
+        "Racial slurs",
+        "Homophobic or transphobic slurs",
+        "Religious or ethnic hate speech",
+        "Dehumanizing identity-based language"
+      ],
+      "evidence_guidance": [
+        "Exact chat messages",
+        "Voice evidence",
+        "Screenshots",
+        "Moderator observation"
+      ],
+      "aggravating_factors": [
+        "Repeated slurs",
+        "Targeting a particular player",
+        "Encouraging others to join in"
+      ],
+      "mitigating_factors": [
+        "Unclear evidence",
+        "Dispute over exact wording where no reliable record exists"
+      ],
+      "suggested_punishment": {
+        "first_offense": "temporary_ban",
+        "repeat_offense": "temporary_ban",
+        "severe_offense": "permanent_ban"
+      }
+    }
+  }
+}

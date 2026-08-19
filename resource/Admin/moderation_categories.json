@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "description": "Canonical JTWP moderation categories selected by an admin during case review. If no category fits, OTHER/UNCATEGORIZED may be used without invalidating the moderation action.",
+  "categories": {
+    "HATE_SPEECH": {
+      "label": "Hate Speech / Discrimination",
+      "description": "Racism, slurs, hate speech, discriminatory harassment, or identity-based targeting."
+    },
+    "HARASSMENT": {
+      "label": "Harassment / Bullying",
+      "description": "Bullying, targeted harassment, intimidation, threats, or repeated abusive conduct."
+    },
+    "CONDUCT": {
+      "label": "General Conduct / Respect",
+      "description": "General disrespectful or disruptive behavior that does not fit a more specific category."
+    },
+    "GAMEPLAY": {
+      "label": "Gameplay Misconduct",
+      "description": "Intentional team killing, griefing, or other prohibited gameplay behavior."
+    },
+    "SERVER_INTEGRITY": {
+      "label": "Server Integrity / Performance",
+      "description": "Behavior intended to degrade, crash, overload, or destabilize the server."
+    },
+    "PRIVACY": {
+      "label": "Privacy / Personal Information",
+      "description": "Doxxing, disclosure of private information, or threats involving private information."
+    },
+    "CHEATING": {
+      "label": "Cheating / Unfair Software",
+      "description": "External software, cheats, unauthorized modifications, automation, or similar unfair advantages."
+    },
+    "EXPLICIT_CONTENT": {
+      "label": "Explicit / Graphic Content",
+      "description": "Pornographic, sexually explicit, or graphic real-world gore content."
+    },
+    "EXPLOITING": {
+      "label": "Exploiting / Game-Mode Manipulation",
+      "description": "Abusing bugs, game-mode systems, or unintended mechanics for an unfair advantage."
+    },
+    "DISRUPTION": {
+      "label": "Disruption / Griefing",
+      "description": "Deliberately interfering with other players' ability to enjoy or use the server."
+    },
+    "COMMUNICATION": {
+      "label": "Spam / Communication Abuse",
+      "description": "Message spam, microphone spam, command spam, or similar deliberate communication disruption."
+    },
+    "OTHER": {
+      "label": "Other / Uncategorized",
+      "description": "Use when the conduct appears punishable but no existing category or rule adequately describes it. This does not invalidate the case or punishment; it flags a rules gap for later review.",
+      "requires_rule_review": true
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "description": "Recommended moderation case fields supporting unmatched rules/categories.",
+  "required_review_fields": {
+    "admin_selected_category": "Category ID selected by reviewing admin.",
+    "matched_rule_id": "Rule ID or null if none adequately fits.",
+    "rule_match_status": "matched | partial_match | no_match",
+    "rules_gap": "True when current written rules do not adequately cover the incident.",
+    "reason_existing_rules_do_not_fit": "Required when rule_match_status=no_match.",
+    "incident_summary": "Plain-language description of what happened.",
+    "evidence": "Evidence references or notes.",
+    "admin_reasoning": "Why moderation action is justified."
+  },
+  "example_unmatched_case": {
+    "admin_selected_category": "OTHER",
+    "matched_rule_id": null,
+    "rule_match_status": "no_match",
+    "rules_gap": true,
+    "reason_existing_rules_do_not_fit": "The conduct is clearly disruptive but is not adequately described by the current rules.",
+    "case_valid": true,
+    "flags": [
+      "NEEDS_RULE_REVIEW"
+    ]
+  }
+}

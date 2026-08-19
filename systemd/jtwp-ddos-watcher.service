@@ -6,19 +6,18 @@ Wants=network-online.target
 [Service]
 Type=simple
 
-# tcpdump packet capture requires elevated privileges
+# The current watcher launches tcpdump directly, so this unit preserves the
+# existing root execution model. If you later move packet-capture permission
+# to Linux capabilities, this service can be hardened further.
 User=root
 Group=root
 
 WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
-
 EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
-
 ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/ddos_watcher.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
 
 Restart=always
 RestartSec=5
-
 StandardOutput=journal
 StandardError=journal
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COLLECTOR_DIR="${JTWP_COLLECTOR_DIR:-/home/steam/jtwp-collector}"
-PYTHON="${COLLECTOR_DIR}/venv/bin/python3"
-CONFIG="${JTWP_COLLECTOR_CONFIG:-${COLLECTOR_DIR}/config.json}"
-ENV_FILE="${JTWP_COLLECTOR_ENV:-${COLLECTOR_DIR}/.env}"
+PROJECT_ROOT="${JTWP_COLLECTOR_DIR:-/home/steam/jtwp-collector/Pavlov-Data-Collector-}"
+VENV_ROOT="${JTWP_VENV_DIR:-/home/steam/jtwp-collector/venv}"
+PYTHON="${VENV_ROOT}/bin/python3"
+CONFIG="${JTWP_COLLECTOR_CONFIG:-${PROJECT_ROOT}/config.json}"
+ENV_FILE="${JTWP_COLLECTOR_ENV:-${PROJECT_ROOT}/.env}"
 
 if [[ -f "$ENV_FILE" ]]; then
     set -a
@@ -13,4 +14,4 @@ if [[ -f "$ENV_FILE" ]]; then
     set +a
 fi
 
-exec "$PYTHON" "${COLLECTOR_DIR}/update_pavlov_api.py" -c "$CONFIG"
+exec "$PYTHON" "${PROJECT_ROOT}/update_pavlov_api.py" -c "$CONFIG"

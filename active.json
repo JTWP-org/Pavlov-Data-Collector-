@@ -1,346 +1,913 @@
 {
+  "_comment_collector": "Master controls for the main collector and how it processes Pavlov logs and state.",
   "collector": {
+    "_comment_enabled": "Master switch for the collector section.",
     "enabled": true,
+
+    "_comment_historical_logs": "Allow the collector to process older/historical Pavlov log files.",
     "historical_logs": true,
+
+    "_comment_active_logs": "Allow the collector to process currently active Pavlov log files.",
     "active_logs": true,
+
+    "_comment_stats_logs": "Enable processing of Pavlov stats files.",
     "stats_logs": true,
+
+    "_comment_archive_logs": "Enable archiving/copying of processed logs.",
     "archive_logs": true,
+
+    "_comment_rotate_active_logs": "Allow active logs to be rotated when supported by the collector.",
     "rotate_active_logs": true,
+
+    "_comment_processing_state": "Save processing state so files and offsets can be tracked between runs.",
     "processing_state": true,
+
+    "_comment_duplicate_detection": "Prevent already-processed events from being counted more than once.",
     "duplicate_detection": true
   },
+
+  "_comment_players": "Controls collection and storage of player identity, stats, settings, network data and indexes.",
   "players": {
+    "_comment_enabled": "Master switch for all player-related collection.",
     "enabled": true,
+
+    "_comment_identity": "Player identity and name-history fields.",
     "identity": {
+      "_comment_enabled": "Master switch for player identity tracking.",
       "enabled": true,
+
+      "_comment_product_id": "Store the Pavlov ProductID used as the primary player key.",
       "product_id": true,
+
+      "_comment_unique_id": "Store the player's platform/Pavlov UniqueID when available.",
       "unique_id": true,
+
+      "_comment_current_name": "Store the player's most recently observed name.",
       "current_name": true,
+
+      "_comment_name_history": "Track previously observed player names.",
       "name_history": true,
+
+      "_comment_first_seen": "Store when the player was first observed.",
       "first_seen": true,
+
+      "_comment_last_seen": "Store when the player was most recently observed.",
       "last_seen": true
     },
+
+    "_comment_connections": "Player connect/disconnect and server history tracking.",
     "connections": {
+      "_comment_enabled": "Master switch for player connection tracking.",
       "enabled": true,
+
+      "_comment_connect_events": "Record player connection/join events.",
       "connect_events": true,
+
+      "_comment_disconnect_events": "Record player disconnect/leave events.",
       "disconnect_events": true,
+
+      "_comment_times_connected": "Maintain a count of how many times each player has connected.",
       "times_connected": true,
+
+      "_comment_connection_history": "Keep historical connection records for each player.",
       "connection_history": true,
+
+      "_comment_server_history": "Track which configured Pavlov servers each player has used.",
       "server_history": true
     },
+
+    "_comment_settings": "Player client/settings data observed from Pavlov logs.",
     "settings": {
+      "_comment_enabled": "Master switch for player settings tracking.",
       "enabled": true,
+
+      "_comment_right_handed": "Track whether the player uses right-handed controls.",
       "right_handed": true,
+
+      "_comment_vstock": "Track the player's virtual-stock setting when available.",
       "vstock": true,
+
+      "_comment_player_height": "Track the player height value when exposed by Pavlov.",
       "player_height": true,
+
+      "_comment_client_platform": "Track the player's client platform when available.",
       "client_platform": true
     },
+
+    "_comment_stats": "Player combat and gameplay statistics.",
     "stats": {
+      "_comment_enabled": "Master switch for player statistic tracking.",
       "enabled": true,
+
+      "_comment_kills": "Track player kills.",
       "kills": true,
+
+      "_comment_deaths": "Track player deaths.",
       "deaths": true,
+
+      "_comment_headshots": "Track headshot kills.",
       "headshots": true,
+
+      "_comment_suicides": "Track player suicides.",
       "suicides": true,
+
+      "_comment_teamkills": "Track verified teamkills.",
       "teamkills": true,
+
+      "_comment_bot_kills": "Track kills involving bots when detected.",
       "bot_kills": true,
+
+      "_comment_unverified_team_kills": "Track suspected/unverified teamkills when full verification is unavailable.",
       "unverified_team_kills": true,
+
+      "_comment_matches": "Track match/round participation statistics.",
       "matches": true,
+
+      "_comment_times_connected": "Include connection count in player stats.",
       "times_connected": true
     },
+
+    "_comment_weapons": "Per-weapon kill and headshot statistics.",
     "weapons": {
+      "_comment_enabled": "Master switch for weapon-stat tracking.",
       "enabled": true,
+
+      "_comment_weapon_kills": "Track kills made with each weapon/item.",
       "weapon_kills": true,
+
+      "_comment_weapon_headshots": "Track headshots by weapon.",
       "weapon_headshots": true,
+
+      "_comment_favorite_weapon": "Calculate/store the player's most-used kill weapon.",
       "favorite_weapon": true,
+
+      "_comment_favorite_weapon_kills": "Store the number of kills with the favorite weapon.",
       "favorite_weapon_kills": true,
+
+      "_comment_total_weapon_kills": "Store total kills represented by weapon statistics.",
       "total_weapon_kills": true,
+
+      "_comment_weapon_source": "Track where weapon/item identification came from when available.",
       "weapon_source": true
     },
+
+    "_comment_network": "Hashed IP history and network enrichment for players.",
     "network": {
+      "_comment_enabled": "Master switch for player network tracking.",
       "enabled": true,
+
+      "_comment_ip_hash": "Store a keyed hash of observed player IP addresses.",
       "ip_hash": true,
+
+      "_comment_ip_history": "Track multiple hashed IPs previously used by the player.",
       "ip_history": true,
+
+      "_comment_known_ip_count": "Maintain a count of known IP hashes associated with the player.",
       "known_ip_count": true,
-      "network_enrichment": true,
-      "provider": true,
-      "organisation": true,
-      "network_type": true,
-      "country": true,
-      "country_code": true,
-      "region": true,
-      "city": true,
-      "proxy": true,
-      "vpn": true,
-      "hosting": true,
-      "tor": true,
-      "risk": true,
-      "confidence": true,
-      "lookup_source": true
+
+      "_comment_network_enrichment": "Enable enrichment of observed network/IP data.",
+      "network_enrichment": false,
+
+      "_comment_provider": "Store network provider information.",
+      "provider": false,
+
+      "_comment_organisation": "Store network organisation/ASN owner information.",
+      "organisation": false,
+
+      "_comment_network_type": "Store detected network type when available.",
+      "network_type": false,
+
+      "_comment_country": "Store country name.",
+      "country": false,
+
+      "_comment_country_code": "Store country code.",
+      "country_code": false,
+
+      "_comment_region": "Store region/state information.",
+      "region": false,
+
+      "_comment_city": "Store city-level enrichment when available.",
+      "city": false,
+
+      "_comment_proxy": "Store proxy detection result.",
+      "proxy": false,
+
+      "_comment_vpn": "Store VPN detection result.",
+      "vpn": false,
+
+      "_comment_hosting": "Store hosting/datacenter detection result.",
+      "hosting": false,
+
+      "_comment_tor": "Store Tor detection result when provided by the enrichment source.",
+      "tor": false,
+
+      "_comment_risk": "Store network risk assessment information.",
+      "risk": false,
+
+      "_comment_confidence": "Store confidence information associated with network/risk results.",
+      "confidence": false,
+
+      "_comment_lookup_source": "Store which service/source produced the network enrichment.",
+      "lookup_source": false
     },
+
+    "_comment_status": "Current player status flags.",
     "status": {
+      "_comment_enabled": "Master switch for player status flags.",
       "enabled": true,
+
+      "_comment_admin": "Track whether the player is recognized as an admin.",
       "admin": true,
+
+      "_comment_banned": "Track whether the player is currently recognized as banned.",
       "banned": true
     },
+
+    "_comment_history": "Historical changes to important player data.",
     "history": {
+      "_comment_enabled": "Master switch for player-change history.",
       "enabled": true,
+
+      "_comment_name_changes": "Log name changes.",
       "name_changes": true,
+
+      "_comment_ip_changes": "Log observed IP-hash changes.",
       "ip_changes": true,
+
+      "_comment_network_changes": "Log changes to enriched network information.",
       "network_changes": true,
+
+      "_comment_settings_changes": "Log changes to tracked player settings.",
       "settings_changes": true,
+
+      "_comment_admin_changes": "Log admin-status changes.",
       "admin_changes": true,
+
+      "_comment_ban_changes": "Log ban-status changes.",
       "ban_changes": true
     },
+
+    "_comment_indexes": "Lookup indexes used for fast player searches and correlation.",
     "indexes": {
+      "_comment_enabled": "Master switch for player indexes.",
       "enabled": true,
+
+      "_comment_by_name": "Maintain player-name to ProductID lookup index.",
       "by_name": true,
+
+      "_comment_by_unique_id": "Maintain UniqueID to ProductID lookup index.",
       "by_unique_id": true,
+
+      "_comment_by_product_id": "Maintain ProductID index.",
       "by_product_id": true,
+
+      "_comment_by_ip_hash": "Maintain IP-hash to ProductID correlation index.",
       "by_ip_hash": true
     }
   },
+
+  "_comment_server_data": "Server configuration, runtime, admin, ban and service metadata.",
   "server_data": {
+    "_comment_enabled": "Master switch for server-data collection.",
     "enabled": true,
+
+    "_comment_server_identity": "Track the collector's server ID.",
     "server_identity": true,
+
+    "_comment_server_name": "Track configured/observed Pavlov server name.",
     "server_name": true,
+
+    "_comment_server_path": "Store the server installation/log path.",
     "server_path": true,
+
+    "_comment_platform": "Track whether the server is PCVR, Shack or auto-detected.",
     "platform": true,
+
+    "_comment_game_ini": "Parse and store relevant Game.ini configuration.",
     "game_ini": true,
+
+    "_comment_runtime": "Track runtime/server-state information.",
     "runtime": true,
+
+    "_comment_admins": "Track configured server administrators.",
     "admins": true,
+
+    "_comment_bans": "Track server ban information.",
     "bans": true,
+
+    "_comment_http_events": "Track relevant HTTP/backend errors seen in server logs.",
     "http_events": true,
+
+    "_comment_service_info": "Track the systemd service associated with each Pavlov server.",
     "service_info": true
   },
+
+  "_comment_matches": "Round and match data collection.",
   "matches": {
+    "_comment_enabled": "Master switch for match/round tracking.",
     "enabled": true,
+
+    "_comment_round_files": "Process Pavlov stats/round files.",
     "round_files": true,
+
+    "_comment_map_label": "Store map label/name for matches.",
     "map_label": true,
+
+    "_comment_game_mode": "Store game mode for matches.",
     "game_mode": true,
+
+    "_comment_match_duration": "Track match duration when available.",
     "match_duration": true,
+
+    "_comment_player_count": "Track match player count.",
     "player_count": true,
+
+    "_comment_teams_enabled": "Track whether teams were enabled.",
     "teams_enabled": true,
+
+    "_comment_team_scores": "Store team scores when available.",
     "team_scores": true,
+
+    "_comment_player_stats": "Store per-player statistics from match data.",
     "player_stats": true
   },
+
+  "_comment_maps": "Map rotation and observed-map tracking.",
   "maps": {
+    "_comment_enabled": "Master switch for map tracking.",
     "enabled": true,
+
+    "_comment_map_rotation": "Track configured map rotation.",
     "map_rotation": true,
+
+    "_comment_map_id": "Store map IDs such as default-map IDs or UGC IDs.",
     "map_id": true,
+
+    "_comment_map_label": "Store map display labels.",
     "map_label": true,
+
+    "_comment_game_mode": "Track game modes associated with maps.",
     "game_mode": true,
+
+    "_comment_configured_state": "Track whether a map is currently configured.",
     "configured_state": true,
+
+    "_comment_observed_maps": "Track maps seen loaded by the server.",
     "observed_maps": true,
+
+    "_comment_modio": "Enrich UGC maps with mod.io information.",
     "modio": true
   },
+
+  "_comment_mods": "Configured and observed Pavlov mod tracking.",
   "mods": {
+    "_comment_enabled": "Master switch for mod tracking.",
     "enabled": true,
+
+    "_comment_configured_mods": "Track mods configured for the server.",
     "configured_mods": true,
+
+    "_comment_observed_mods": "Track mods actually observed loading/running.",
     "observed_mods": true,
+
+    "_comment_configured_vs_observed": "Compare configured mods against mods observed at runtime.",
     "configured_vs_observed": true,
+
+    "_comment_ugc_id": "Store mod UGC IDs.",
     "ugc_id": true,
+
+    "_comment_modio": "Enrich mods using mod.io metadata.",
     "modio": true
   },
+
+  "_comment_custom_content": "Custom guns, items and map-provided content.",
   "custom_content": {
+    "_comment_enabled": "Master switch for custom-content tracking.",
     "enabled": true,
+
+    "_comment_custom_guns": "Track custom guns observed on servers/maps.",
     "custom_guns": true,
+
+    "_comment_custom_items": "Track custom items.",
     "custom_items": true,
+
+    "_comment_loot_meshes": "Track custom loot/item mesh references when detected.",
     "loot_meshes": true,
+
+    "_comment_failed_items": "Track custom item load/resolve failures.",
     "failed_items": true,
+
+    "_comment_unknown_items": "Track unknown/unrecognized items.",
     "unknown_items": true
   },
+
+  "_comment_rcon": "RCON connection, authentication, command and host tracking.",
   "rcon": {
+    "_comment_enabled": "Master switch for RCON data collection.",
     "enabled": true,
+
+    "_comment_authentication": "Track successful/failed RCON authentication.",
     "authentication": true,
+
+    "_comment_connections": "Track RCON connections and connection history.",
     "connections": true,
+
+    "_comment_commands": "Track commands sent through RCON.",
     "commands": true,
+
+    "_comment_known_hosts": "Track hosts that successfully connect to RCON.",
     "known_hosts": true,
+
+    "_comment_failed_hosts": "Track hosts that fail RCON authentication.",
     "failed_hosts": true,
+
+    "_comment_ip_hash": "Hash RCON source IPs before persistence.",
     "ip_hash": true,
+
+    "_comment_network_enrichment": "Perform network enrichment for RCON source addresses.",
     "network_enrichment": true,
+
+    "_comment_player_correlation": "Compare RCON IP hashes against known player IP hashes.",
     "player_correlation": true,
+
+    "_comment_webhook": "Allow RCON-related webhook notifications.",
     "webhook": true
   },
+
+  "_comment_rcon_bridge": "Controls file-trigger bridge behavior.",
   "rcon_bridge": {
+    "_comment_enabled": "Master switch for the RCON/custom-command bridge.",
     "enabled": true,
+
+    "_comment_watcher": "Enable the bridge watcher process.",
     "watcher": true,
+
+    "_comment_input_files": "Allow IN-*.json trigger files to be processed.",
     "input_files": true,
+
+    "_comment_output_files": "Allow OUT-*.json response files to be written.",
     "output_files": true,
+
+    "_comment_ppapi_trigger": "Allow the Pavlov Public API updater file trigger.",
     "ppapi_trigger": true,
+
+    "_comment_rcon_resource_trigger": "Allow the RCON resource refresh file trigger.",
     "rcon_resource_trigger": true
   },
+
+  "_comment_rcon_loop": "Continuous ServerInfo + InspectAll polling loop.",
   "rcon_loop": {
+    "_comment_enabled": "Master switch for the RCON loop system.",
     "enabled": true,
+
+    "_comment_watcher": "Run the loop watcher service.",
     "watcher": true,
+
+    "_comment_serverinfo": "Request ServerInfo during each loop iteration.",
     "serverinfo": true,
+
+    "_comment_inspectall": "Request InspectAll during each loop iteration.",
     "inspectall": true,
+
+    "_comment_output": "Write the latest loop results to loopOutput.json.",
     "output": true,
+
+    "_comment_control_helper": "Enable helper/control support for creating/removing loopData.json.",
     "control_helper": true
   },
+
+  "_comment_ssh": "SSH security monitoring and automatic blocking.",
   "ssh": {
+    "_comment_enabled": "Master switch for SSH monitoring.",
     "enabled": true,
+
+    "_comment_watcher": "Run the SSH journal watcher.",
     "watcher": true,
+
+    "_comment_failed_password": "Track failed-password SSH attempts.",
     "failed_password": true,
+
+    "_comment_failed_publickey": "Track failed public-key SSH attempts.",
     "failed_publickey": true,
+
+    "_comment_invalid_user": "Track attempts against invalid/nonexistent users.",
     "invalid_user": true,
+
+    "_comment_max_auth_attempts": "Track SSH max-auth-attempt events.",
     "max_auth_attempts": true,
+
+    "_comment_host_data": "Maintain per-source SSH host statistics.",
     "host_data": true,
+
+    "_comment_network_enrichment": "Enrich SSH source network information.",
     "network_enrichment": true,
+
+    "_comment_player_correlation": "Compare SSH source IP hashes against player IP hashes.",
     "player_correlation": true,
+
+    "_comment_auto_block": "Allow automatic firewall blocking after configured thresholds.",
     "auto_block": true,
+
+    "_comment_webhook": "Allow SSH webhook notifications.",
     "webhook": true,
+
+    "_comment_private_raw_ip_storage": "Allow raw SSH IPs to be stored only in the designated private data location.",
     "private_raw_ip_storage": true
   },
+
+  "_comment_ddos": "DDoS/network-abuse watcher and correlation.",
   "ddos": {
+    "_comment_enabled": "Master switch for DDoS/network-abuse monitoring.",
     "enabled": true,
+
+    "_comment_watcher": "Run the DDoS watcher.",
     "watcher": true,
+
+    "_comment_packet_capture": "Allow packet capture/traffic sampling.",
     "packet_capture": true,
+
+    "_comment_network_stats": "Save traffic statistics.",
     "network_stats": true,
+
+    "_comment_events": "Save triggered network-abuse events.",
     "events": true,
+
+    "_comment_host_history": "Maintain historical traffic information by hashed source.",
     "host_history": true,
+
+    "_comment_player_correlation": "Check source IP hashes against players.",
     "player_correlation": true,
+
+    "_comment_rcon_correlation": "Check source IP hashes against RCON activity.",
     "rcon_correlation": true,
+
+    "_comment_ssh_correlation": "Check source IP hashes against SSH activity.",
     "ssh_correlation": true,
+
+    "_comment_webhook": "Allow DDoS/network-abuse webhook alerts.",
     "webhook": true
   },
+
+  "_comment_pavlov_public_api": "Pavlov public server API updater and enrichment.",
   "pavlov_public_api": {
+    "_comment_enabled": "Master switch for Pavlov public API data.",
     "enabled": true,
+
+    "_comment_updater": "Enable the Pavlov public API updater.",
     "updater": true,
+
+    "_comment_manual_update": "Allow manual execution of the updater.",
     "manual_update": true,
+
+    "_comment_file_trigger": "Allow file-trigger execution of the updater.",
     "file_trigger": true,
+
+    "_comment_server_data": "Store data returned by the Pavlov public server API.",
     "server_data": true,
+
+    "_comment_network_enrichment": "Enrich public server IP/network information.",
     "network_enrichment": true
   },
+
+  "_comment_modio": "Global controls for mod.io lookups and caching.",
   "modio": {
+    "_comment_enabled": "Master switch for mod.io integration.",
     "enabled": true,
+
+    "_comment_api_requests": "Allow requests to the mod.io API.",
     "api_requests": true,
+
+    "_comment_cache": "Allow local caching of mod.io responses.",
     "cache": true,
+
+    "_comment_map_lookup": "Lookup map metadata on mod.io.",
     "map_lookup": true,
+
+    "_comment_mod_lookup": "Lookup mod metadata on mod.io.",
     "mod_lookup": true
   },
+
+  "_comment_admins": "Admin identity, session-time tracking, logging and moderation alerts.",
   "admins": {
+    "_comment_enabled": "Master switch for admin tracking.",
     "enabled": true,
+
+    "_comment_tracking": "Admin presence/session tracking.",
     "tracking": {
+      "_comment_enabled": "Master switch for admin tracking data.",
       "enabled": true,
+
+      "_comment_admin_status": "Track whether known players are admins.",
       "admin_status": true,
+
+      "_comment_admin_sessions": "Record individual admin join/leave sessions.",
       "admin_sessions": true,
+
+      "_comment_admin_time": "Calculate total time admins spend online.",
       "admin_time": true,
+
+      "_comment_admin_server_time": "Calculate admin time separately for each Pavlov server.",
       "admin_server_time": true,
+
+      "_comment_connection_history": "Keep historical admin connection records.",
       "connection_history": true
     },
+
+    "_comment_logs": "Admin action/event log framework.",
     "logs": {
+      "_comment_enabled": "Master switch for admin logging.",
       "enabled": true,
+
+      "_comment_admin_events": "Store admin join/leave/status events.",
       "admin_events": true,
+
+      "_comment_admin_actions": "Store admin actions when an action source/parser is available.",
       "admin_actions": true,
+
+      "_comment_future_external_admin_log_ingest": "Reserve support for external/admin-tool log ingestion not yet implemented.",
       "future_external_admin_log_ingest": true
     },
+
+    "_comment_notifications": "Moderation alerts sent to administrators.",
     "notifications": {
+      "_comment_enabled": "Master switch for admin notifications.",
       "enabled": true,
+
+      "_comment_no_admin_online": "Alert when players are online but no known admin is present.",
       "no_admin_online": true,
+
+      "_comment_negative_player_score": "Alert when a player's score drops below the configured threshold.",
       "negative_player_score": true,
+
+      "_comment_multiple_teamkills": "Alert when a player reaches the configured teamkill threshold.",
       "multiple_teamkills": true,
+
+      "_comment_ping_admin_role": "Ping the configured Discord admin role when alerts are sent.",
       "ping_admin_role": true,
+
+      "_comment_response_tracking": "Track whether admins respond to alerts.",
       "response_tracking": {
+        "_comment_enabled": "Master switch for admin alert-response tracking.",
         "enabled": true,
+
+        "_comment_track_admin_join": "Track an admin joining after an alert.",
         "track_admin_join": true,
+
+        "_comment_track_response_time": "Calculate how long after the alert the admin joined.",
         "track_response_time": true,
+
+        "_comment_track_expired_alerts": "Record alerts that receive no admin response before the response window expires.",
         "track_expired_alerts": true,
+
+        "_comment_admin_response_stats": "Maintain aggregated admin response statistics.",
         "admin_response_stats": true
       }
     }
   },
+
+  "_comment_discord_bot": "Discord control/query bot and permissions.",
   "discord_bot": {
+    "_comment_enabled": "Master switch for the Discord bot.",
     "enabled": true,
+
+    "_comment_permissions": "Discord permission controls.",
     "permissions": {
+      "_comment_enabled": "Master switch for bot permission checks.",
       "enabled": true,
+
+      "_comment_admin_role": "Enable ADMIN-role authorization.",
       "admin_role": true,
+
+      "_comment_owner_role": "Enable OWNER-role authorization.",
       "owner_role": true,
+
+      "_comment_channel_restriction": "Restrict bot commands to the configured control channel.",
       "channel_restriction": true
     },
+
+    "_comment_rcon": "Discord-to-Pavlov RCON command controls.",
     "rcon": {
+      "_comment_enabled": "Allow RCON commands through the Discord bot.",
       "enabled": true,
+
+      "_comment_admin_limited_commands": "Restrict ADMIN users to the configured RCON allow-list.",
       "admin_limited_commands": true,
+
+      "_comment_owner_all_commands": "Allow OWNER users access to all supported RCON commands.",
       "owner_all_commands": true,
+
+      "_comment_response_embeds": "Return formatted Discord embeds for RCON responses.",
       "response_embeds": true,
+
+      "_comment_command_logging": "Audit-log Discord RCON command usage.",
       "command_logging": true
     },
+
+    "_comment_systemctl": "Discord systemd/Pavlov service control.",
     "systemctl": {
+      "_comment_enabled": "Enable supported systemctl actions from the bot.",
       "enabled": true,
+
+      "_comment_owner_only": "Restrict systemctl controls to OWNER.",
       "owner_only": true,
+
+      "_comment_status": "Allow service status checks.",
       "status": true,
+
+      "_comment_start": "Allow starting configured Pavlov services.",
       "start": true,
+
+      "_comment_stop": "Allow stopping configured Pavlov services.",
       "stop": true,
+
+      "_comment_restart": "Allow restarting configured Pavlov services.",
       "restart": true,
+
+      "_comment_enable": "Allow enabling configured Pavlov services at boot.",
       "enable": true,
+
+      "_comment_disable": "Allow disabling configured Pavlov services at boot.",
       "disable": true,
+
+      "_comment_command_logging": "Audit-log service-control commands.",
       "command_logging": true
     },
+
+    "_comment_player_lookup": "Read-only player lookup commands exposed through Discord.",
     "player_lookup": {
+      "_comment_enabled": "Master switch for player lookup commands.",
       "enabled": true,
+
+      "_comment_get_product_id": "Enable !getProductID.",
       "get_product_id": true,
+
+      "_comment_get_network": "Enable !getNETWORK.",
       "get_network": true,
+
+      "_comment_get_names": "Enable !getNAMES.",
       "get_names": true,
+
+      "_comment_get_stats": "Enable !getSTATS.",
       "get_stats": true,
+
+      "_comment_get_guns": "Enable !getGUNS.",
       "get_guns": true,
+
+      "_comment_get_player": "Enable !getPLAYER.",
       "get_player": true,
+
+      "_comment_get_dump": "Enable !getDUMP.",
       "get_dump": true,
+
+      "_comment_check_cons": "Enable cross-system player/RCON/SSH/network correlation lookup.",
       "check_cons": true
     },
+
+    "_comment_owner_commands": "Higher-impact maintenance commands available through the bot.",
     "owner_commands": {
+      "_comment_enabled": "Master switch for OWNER maintenance commands.",
       "enabled": true,
+
+      "_comment_clear_pavlov_mods": "Allow OWNER to run the Pavlov mod-cleaning helper.",
       "clear_pavlov_mods": true,
+
+      "_comment_run_collector": "Allow OWNER to manually run/start the collector.",
       "run_collector": true,
+
+      "_comment_run_pavlov_api": "Allow OWNER to manually run the Pavlov API updater.",
       "run_pavlov_api": true,
+
+      "_comment_run_ssh_report": "Allow OWNER to build/send the SSH report.",
       "run_ssh_report": true
     },
+
+    "_comment_loop_control": "Discord controls for the ServerInfo/InspectAll loop.",
     "loop_control": {
+      "_comment_enabled": "Master switch for Discord loop controls.",
       "enabled": true,
+
+      "_comment_start": "Allow starting/creating the RCON loop control file.",
       "start": true,
+
+      "_comment_stop": "Allow stopping the loop by deleting its control file.",
       "stop": true,
+
+      "_comment_status": "Allow reading current loop status/output.",
       "status": true
     }
   },
+
+  "_comment_data_tools": "Data deletion, export and backup tools.",
   "data_tools": {
+    "_comment_enabled": "Master switch for collector data tools.",
     "enabled": true,
+
+    "_comment_clear_data": "Enable the data-clearing maintenance tool.",
     "clear_data": true,
+
+    "_comment_export_data": "Enable portable data export.",
     "export_data": true,
+
+    "_comment_backup_data": "Enable timestamped data backup.",
     "backup_data": true,
+
+    "_comment_include_hash_secret_in_export": "Include the IP hashing secret in portable exports so historical hashes remain correlatable after restore.",
     "include_hash_secret_in_export": true
   },
+
+  "_comment_maintenance": "General maintenance features.",
   "maintenance": {
+    "_comment_enabled": "Master switch for maintenance features.",
     "enabled": true,
+
+    "_comment_clear_mods": "Allow Pavlov installed-mod cleanup.",
     "clear_mods": true,
+
+    "_comment_maintenance_logging": "Log maintenance actions.",
     "maintenance_logging": true,
+
+    "_comment_service_metadata_refresh": "Refresh saved service information when maintenance/service discovery runs.",
     "service_metadata_refresh": true
   },
+
+  "_comment_service_discovery": "Discovery and storage of Pavlov systemd service information.",
   "service_discovery": {
+    "_comment_enabled": "Master switch for service discovery.",
     "enabled": true,
+
+    "_comment_discover_services": "Search systemd services to find the one associated with each configured server path.",
     "discover_services": true,
+
+    "_comment_save_commands": "Save useful service commands such as start/stop/restart/status for later use.",
     "save_commands": true
   },
+
+  "_comment_privacy": "Privacy and raw-IP exposure controls.",
   "privacy": {
+    "_comment_enabled": "Master switch for privacy protections.",
     "enabled": true,
+
+    "_comment_ip_hashing": "Use keyed IP hashing for correlation instead of exposing raw addresses.",
     "ip_hashing": true,
+
+    "_comment_private_player_ips": "Keep raw player IP data only in designated private storage when required.",
     "private_player_ips": true,
+
+    "_comment_private_ssh_ips": "Keep raw SSH source addresses only in designated private storage when required.",
     "private_ssh_ips": true,
+
+    "_comment_ip_lookup_cache": "Allow cached network-enrichment responses.",
     "ip_lookup_cache": true,
+
+    "_comment_raw_ip_in_webhooks": "Permit raw IP addresses in Discord/webhook payloads. Recommended false.",
     "raw_ip_in_webhooks": false,
+
+    "_comment_raw_ip_in_ddos_records": "Permit raw IP addresses in persisted DDoS/network records. Recommended false.",
     "raw_ip_in_ddos_records": false
   },
+
+  "_comment_scripts": "Top-level enable/disable switches for individual JTWP scripts.",
   "scripts": {
+    "_comment_enabled": "Master switch for scripted JTWP components.",
     "enabled": true,
+
+    "_comment_collector": "Enable collector.py.",
     "collector": true,
+
+    "_comment_connection_watcher": "Enable connection_watcher.py.",
     "connection_watcher": true,
+
+    "_comment_ssh_watcher": "Enable ssh_watcher.py.",
     "ssh_watcher": true,
+
+    "_comment_ddos_watcher": "Enable ddos_watcher.py.",
     "ddos_watcher": true,
+
+    "_comment_rcon_trigger_watcher": "Enable rcon_trigger_watcher.py.",
     "rcon_trigger_watcher": true,
+
+    "_comment_rcon_loop": "Enable rcon_loop.py.",
     "rcon_loop": true,
+
+    "_comment_admin_monitor": "Enable admin_monitor.py.",
     "admin_monitor": true,
+
+    "_comment_discord_bot": "Enable discord_bot.py.",
     "discord_bot": true,
+
+    "_comment_pavlov_api_updater": "Enable the Pavlov public API updater script.",
     "pavlov_api_updater": true,
+
+    "_comment_clear_pavlov_mods": "Enable the Pavlov mod-cleanup helper.",
     "clear_pavlov_mods": true,
+
+    "_comment_clear_data": "Enable the data-clearing script.",
     "clear_data": true,
+
+    "_comment_export_data": "Enable the portable export script.",
     "export_data": true,
+
+    "_comment_backup_data": "Enable the backup script.",
     "backup_data": true
   }
 }

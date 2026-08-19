@@ -7,6 +7,7 @@ import io
 import json
 import os
 import subprocess
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,29 @@ def now_iso() -> str:
     ).isoformat(
         timespec="seconds"
     ).replace("+00:00", "Z")
+
+
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
 
 
 def load_json(
@@ -61,6 +85,14 @@ def append_jsonl(
             )
             + "\n"
         )
+
+
+ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
+def strip_ansi(value: str | None) -> str:
+    """Remove terminal ANSI color/formatting escape sequences."""
+    return ANSI_ESCAPE_RE.sub("", value or "")
 
 
 class JTWPBot(commands.Bot):
@@ -400,6 +432,224 @@ def register_commands(
     bot: JTWPBot,
 ) -> None:
 
+    @bot.command(name="exportdata")
+    async def export_data(ctx):
+        if not await bot.guard(
+            ctx,
+            owner_only=True,
+        ):
+           return
+
+        await ctx.send(
+            "📦 JTWP data export started..."
+        )
+
+        result = await asyncio.to_thread(
+            subprocess.run,
+            [
+                "/home/steam/jtwp-collector/venv/bin/python3",
+                "-u",
+                "/home/steam/jtwp-collector/"
+                "Pavlov-Data-Collector-/"
+                "scripts/export-data.py",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=1800,
+            check=False,
+        )
+
+        output = strip_ansi(
+            result.stdout
+            or "(no output)"
+        )[-bot.output_limit:]
+
+        bot.audit(
+            ctx,
+            "exportdata",
+            result.returncode == 0,
+            returncode=result.returncode,
+        )
+
+        await ctx.send(
+            embed=discord.Embed(
+                title=(
+                    "✅ Export Complete"
+                    if result.returncode == 0
+                    else "❌ Export Failed"
+                ),
+                description=(
+                    "```text\n"
+                    + output
+                   + "\n```"
+                ),
+            )
+        )
+
+
+    @bot.command(name="backupdata")
+    async def backup_data(ctx):
+        if not await bot.guard(
+            ctx,
+            owner_only=True,
+        ):
+            return
+
+        await ctx.send(
+            "📦 JTWP backup started..."
+        )
+
+        result = await asyncio.to_thread(
+            subprocess.run,
+            [
+                "/home/steam/jtwp-collector/venv/bin/python3",
+                "-u",
+                "/home/steam/jtwp-collector/"
+                "Pavlov-Data-Collector-/"
+                "scripts/backup-data.py",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=1800,
+            check=False,
+        )
+
+        output = strip_ansi(
+            result.stdout
+            or "(no output)"
+        )[-bot.output_limit:]
+
+        bot.audit(
+            ctx,
+            "backupdata",
+            result.returncode == 0,
+            returncode=result.returncode,
+        )
+
+        await ctx.send(
+            embed=discord.Embed(
+                title=(
+                    "✅ Backup Complete"
+                    if result.returncode == 0
+                    else "❌ Backup Failed"
+                ),
+                description=(
+                    "```text\n"
+                    + output
+                    + "\n```"
+                ),
+            )
+        )
+
+
+    @bot.command(name="cleardata")
+    async def clear_data(
+        ctx,
+        confirmation: str = None,
+    ):
+        if not await bot.guard(
+            ctx,
+            owner_only=True,
+        ):
+            return
+
+        if confirmation != "YES":
+            await ctx.send(
+                embed=discord.Embed(
+                    title=(
+                        "⚠️ ARE YOU SURE YOU WANT TO "
+                        "REMOVE ALL THE DATA?"
+                    ),
+                    description=(
+                        "This will permanently clear the "
+                        "JTWP collector data.\n\n"
+                        "To confirm, type:\n"
+                        "```text\n"
+                        "!cleardata YES\n"
+                        "```"
+                    ),
+                )
+            )
+            return
+
+        await ctx.send(
+            "🧹 Clearing JTWP collector data..."
+        )
+
+        result = await asyncio.to_thread(
+            subprocess.run,
+            [
+                "sudo",
+                "-n",
+                "/home/steam/jtwp-collector/"
+                "Pavlov-Data-Collector-/"
+                "scripts/clear-data.sh",
+                "--yes",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+
+        output = strip_ansi(
+            result.stdout
+            or "(no output)"
+        )[-bot.output_limit:]
+
+        bot.audit(
+            ctx,
+            "cleardata",
+            result.returncode == 0,
+            returncode=result.returncode,
+        )
+
+        await ctx.send(
+            embed=discord.Embed(
+                title=(
+                    "✅ Clear Data Complete"
+                    if result.returncode == 0
+                    else "❌ Clear Data Failed"
+                ),
+                description=(
+                    "```text\n"
+                    + output
+                    + "\n```"
+                ),
+            )
+        )
+
+    @bot.command(name="restartjtwp")
+    async def restart_jtwp(ctx):
+        if not await bot.guard(
+            ctx,
+            owner_only=True,
+        ):
+            return
+
+        await ctx.send(
+            "🔄 Restarting JTWP services..."
+        )
+
+        process = await asyncio.create_subprocess_exec(
+            "sudo",
+            "-n",
+            "/usr/local/bin/restart-jtwp",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        bot.audit(
+            ctx,
+            "restartjtwp",
+            True,
+            pid=process.pid,
+        )
+
+
     @bot.event
     async def on_ready():
         print(
@@ -593,7 +843,7 @@ def register_commands(
             returncode=result.returncode,
         )
 
-        output = (
+        output = strip_ansi(
             result.stdout
             or "(no output)"
         )[-bot.output_limit:]
@@ -1062,8 +1312,8 @@ def register_commands(
             subprocess.run,
             [
                 "sudo",
-                "/usr/local/bin/"
-                "clear-pavlov-mods",
+                "-n",
+                "/usr/local/bin/clear-pavlov-mods",
                 server_id,
             ],
             stdout=subprocess.PIPE,
@@ -1081,7 +1331,7 @@ def register_commands(
             returncode=result.returncode,
         )
 
-        output = (
+        output = strip_ansi(
             result.stdout
             or "(no output)"
         )[-bot.output_limit:]
@@ -1095,6 +1345,17 @@ def register_commands(
                     + "\n```"
                 ),
             )
+        )
+
+    @bot.command(name="clearpavlovmods")
+    async def clear_pavlov_mods_alias(
+        ctx,
+        server_id: str = None,
+    ):
+        """Top-level alias for !server clear-pavlov-mods."""
+        await clear_pavlov_mods(
+            ctx,
+            server_id,
         )
 
     async def run_owner_process(
@@ -1126,7 +1387,7 @@ def register_commands(
             returncode=result.returncode,
         )
 
-        output = (
+        output = strip_ansi(
             result.stdout
             or "(no output)"
         )[-bot.output_limit:]
@@ -1144,15 +1405,32 @@ def register_commands(
 
     @bot.command(name="RUNcollector")
     async def run_collector(ctx):
-        await run_owner_process(
+
+        if not await bot.guard(
+            ctx,
+            owner_only=True,
+        ):
+            return
+
+        await ctx.send(
+            "🚀 JTWP collector started."
+        )
+
+        process = await asyncio.create_subprocess_exec(
+            "sudo",
+            "-n",
+            "/home/steam/jtwp-collector/"
+            "Pavlov-Data-Collector-/"
+            "scripts/run-collector.sh",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        bot.audit(
             ctx,
             "RUNcollector",
-            [
-                "sudo",
-                "systemctl",
-                "start",
-                "jtwp-collector.service",
-            ],
+            True,
+            pid=process.pid,
         )
 
     @bot.command(name="RUNpavlovApi")
@@ -1175,97 +1453,640 @@ def register_commands(
 
     @bot.command(name="RUNssh")
     async def run_ssh_report(ctx):
+        """
+        Build a combined Player + SSH + RCON connection correlation report.
+
+        Correlation is performed using the stable HMAC-SHA256 IP hash.
+        A shared hash indicates association only; it does not prove that a
+        player performed SSH or RCON activity.
+        """
         if not await bot.guard(
             ctx,
             owner_only=True,
         ):
             return
 
-        ssh_dir = (
+        await ctx.send(
+            "🔎 Building combined Player / SSH / RCON connection report..."
+        )
+
+        player_root = (
+            bot.data_root
+            / "players"
+            / "records"
+        )
+
+        ssh_path = (
             bot.data_root
             / "global"
             / "ssh"
+            / "failed_hosts.json"
         )
 
-        build_script = (
-            ssh_dir
-            / "buildIt"
+        servers_root = (
+            bot.data_root
+            / "servers"
         )
 
-        built_file = (
-            ssh_dir
-            / "built.txt"
+        players_by_hash: dict[str, list[dict[str, Any]]] = {}
+        ssh_hosts: dict[str, Any] = {}
+        rcon_by_hash: dict[str, list[dict[str, Any]]] = {}
+
+        player_records_with_hash = 0
+        total_player_hash_links = 0
+        rcon_record_count = 0
+
+        if player_root.exists():
+            for player_dir in sorted(player_root.iterdir()):
+                if not player_dir.is_dir():
+                    continue
+
+                player = load_json(
+                    player_dir / "player.json",
+                    {},
+                )
+
+                ips = load_json(
+                    player_dir / "ips.json",
+                    {},
+                )
+
+                product_id = str(
+                    player.get("product_id")
+                    or player_dir.name
+                )
+
+                player_name = str(
+                    player.get("current_name")
+                    or "Unknown"
+                )
+
+                hashes: set[str] = set()
+
+                if isinstance(ips, dict):
+                    current_hash = ips.get(
+                        "current_ip_hash"
+                    )
+
+                    if (
+                        isinstance(current_hash, str)
+                        and current_hash
+                    ):
+                        hashes.add(current_hash)
+
+                    known_ips = (
+                        ips.get("ips")
+                        or {}
+                    )
+
+                    if isinstance(known_ips, dict):
+                        for ip_hash in known_ips.keys():
+                            if (
+                                isinstance(ip_hash, str)
+                                and ip_hash
+                            ):
+                                hashes.add(ip_hash)
+
+                network = (
+                    player.get("network")
+                    or {}
+                )
+
+                if isinstance(network, dict):
+                    current_hash = network.get(
+                        "current_ip_hash"
+                    )
+
+                    if (
+                        isinstance(current_hash, str)
+                        and current_hash
+                    ):
+                        hashes.add(current_hash)
+
+                if hashes:
+                    player_records_with_hash += 1
+
+                for ip_hash in hashes:
+                    players_by_hash.setdefault(
+                        ip_hash,
+                        [],
+                    ).append(
+                        {
+                            "product_id": product_id,
+                            "name": player_name,
+                            "admin": bool(
+                                player.get(
+                                    "admin",
+                                    False,
+                                )
+                            ),
+                            "banned": bool(
+                                player.get(
+                                    "banned",
+                                    False,
+                                )
+                            ),
+                        }
+                    )
+                    total_player_hash_links += 1
+
+        raw_ssh = load_json(
+            ssh_path,
+            {},
         )
 
-        discord_script = (
-            ssh_dir
-            / "discordIt"
+        if isinstance(raw_ssh, dict):
+            ssh_hosts = raw_ssh
+
+        if servers_root.exists():
+            for server_dir in sorted(servers_root.iterdir()):
+                if not server_dir.is_dir():
+                    continue
+
+                rcon_dir = (
+                    server_dir
+                    / "rcon"
+                )
+
+                for filename, kind in (
+                    (
+                        "known_hosts.json",
+                        "known",
+                    ),
+                    (
+                        "failed_hosts.json",
+                        "failed",
+                    ),
+                ):
+                    data = load_json(
+                        rcon_dir / filename,
+                        {},
+                    )
+
+                    if not isinstance(data, dict):
+                        continue
+
+                    for ip_hash, record in data.items():
+                        if not isinstance(ip_hash, str):
+                            continue
+
+                        rcon_by_hash.setdefault(
+                            ip_hash,
+                            [],
+                        ).append(
+                            {
+                                "server_id": server_dir.name,
+                                "kind": kind,
+                                "record": (
+                                    record
+                                    if isinstance(record, dict)
+                                    else {
+                                        "value": record
+                                    }
+                                ),
+                            }
+                        )
+
+                        rcon_record_count += 1
+
+        all_hashes = (
+            set(players_by_hash)
+            | set(ssh_hosts)
+            | set(rcon_by_hash)
         )
 
-        build = await asyncio.to_thread(
-            subprocess.run,
-            [
-                "bash",
-                str(build_script),
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=180,
-            check=False,
-        )
+        shared: list[dict[str, Any]] = []
 
-        if build.returncode != 0:
-            error = build.stderr.decode(
-                errors="replace"
+        player_ssh = 0
+        player_rcon = 0
+        ssh_rcon = 0
+        all_three = 0
+
+        for ip_hash in all_hashes:
+            has_player = (
+                ip_hash in players_by_hash
             )
 
-            bot.audit(
-                ctx,
-                "RUNssh",
-                False,
-                error=error,
+            has_ssh = (
+                ip_hash in ssh_hosts
+            )
+
+            has_rcon = (
+                ip_hash in rcon_by_hash
+            )
+
+            systems = (
+                int(has_player)
+                + int(has_ssh)
+                + int(has_rcon)
+            )
+
+            if systems < 2:
+                continue
+
+            if has_player and has_ssh:
+                player_ssh += 1
+
+            if has_player and has_rcon:
+                player_rcon += 1
+
+            if has_ssh and has_rcon:
+                ssh_rcon += 1
+
+            if has_player and has_ssh and has_rcon:
+                all_three += 1
+
+            ssh_record = (
+                ssh_hosts.get(ip_hash)
+                if has_ssh
+                else None
+            )
+
+            ssh_attempts = 0
+            ssh_blocked = False
+
+            if isinstance(ssh_record, dict):
+                try:
+                    ssh_attempts = int(
+                        ssh_record.get(
+                            "failed_attempts",
+                            0,
+                        )
+                        or 0
+                    )
+                except (TypeError, ValueError):
+                    ssh_attempts = 0
+
+                ssh_blocked = bool(
+                    ssh_record.get(
+                        "blocked",
+                        False,
+                    )
+                )
+
+            shared.append(
+                {
+                    "ip_hash": ip_hash,
+                    "players": players_by_hash.get(
+                        ip_hash,
+                        [],
+                    ),
+                    "ssh": ssh_record,
+                    "rcon": rcon_by_hash.get(
+                        ip_hash,
+                        [],
+                    ),
+                    "has_player": has_player,
+                    "has_ssh": has_ssh,
+                    "has_rcon": has_rcon,
+                    "systems": systems,
+                    "ssh_attempts": ssh_attempts,
+                    "ssh_blocked": ssh_blocked,
+                }
+            )
+
+        shared.sort(
+            key=lambda item: (
+                item["systems"],
+                item["ssh_attempts"],
+                len(item["players"]),
+                len(item["rcon"]),
+            ),
+            reverse=True,
+        )
+
+        report_path = (
+            bot.data_root
+            / "global"
+            / "ssh"
+            / "connection_correlations.json"
+        )
+
+        report_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        report = {
+            "generated_at": now_iso(),
+            "summary": {
+                "player_records_with_hash": (
+                    player_records_with_hash
+                ),
+                "player_hash_links": (
+                    total_player_hash_links
+                ),
+                "unique_player_hashes": (
+                    len(players_by_hash)
+                ),
+                "ssh_hashes": len(ssh_hosts),
+                "rcon_hashes": len(rcon_by_hash),
+                "rcon_records": rcon_record_count,
+                "shared_hashes": len(shared),
+                "player_ssh": player_ssh,
+                "player_rcon": player_rcon,
+                "ssh_rcon": ssh_rcon,
+                "all_three": all_three,
+            },
+            "correlations": shared,
+            "warning": (
+                "Shared IP-hash correlation indicates association only. "
+                "It does not prove a player performed SSH or RCON activity."
+            ),
+        }
+
+        report_path.write_text(
+            json.dumps(
+                report,
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        summary = discord.Embed(
+            title=(
+                "🔌 JTWP Combined Connection Report"
+            ),
+            description=(
+                "Player, SSH, and RCON records correlated using "
+                "the stable full IP hash."
+            ),
+            color=0xF39C12,
+            timestamp=datetime.now(
+                timezone.utc
+            ),
+        )
+
+        summary.add_field(
+            name="📊 Data Sources",
+            value=(
+                f"Players With Hashes: "
+                f"**{player_records_with_hash:,}**\n"
+                f"Unique Player Hashes: "
+                f"**{len(players_by_hash):,}**\n"
+                f"SSH Hashes: "
+                f"**{len(ssh_hosts):,}**\n"
+                f"RCON Hashes: "
+                f"**{len(rcon_by_hash):,}**"
+            ),
+            inline=True,
+        )
+
+        summary.add_field(
+            name="🔗 Correlations",
+            value=(
+                f"Shared Hashes: "
+                f"**{len(shared):,}**\n"
+                f"Player ↔ SSH: "
+                f"**{player_ssh:,}**\n"
+                f"Player ↔ RCON: "
+                f"**{player_rcon:,}**\n"
+                f"SSH ↔ RCON: "
+                f"**{ssh_rcon:,}**\n"
+                f"All Three: "
+                f"**{all_three:,}**"
+            ),
+            inline=True,
+        )
+
+        summary.add_field(
+            name="💾 Stored Report",
+            value=(
+                "`global/ssh/"
+                "connection_correlations.json`"
+            ),
+            inline=False,
+        )
+
+        summary.set_footer(
+            text=(
+                "JTWP • Shared hashes are correlation evidence only, "
+                "not proof of activity."
+            )
+        )
+
+        await ctx.send(
+            embed=summary
+        )
+
+        max_detail_embeds = int(
+            bot.bot_cfg.get(
+                "runssh_max_detail_embeds",
+                10,
+            )
+        )
+
+        for index, item in enumerate(
+            shared[:max_detail_embeds],
+            start=1,
+        ):
+            ip_hash = item["ip_hash"]
+
+            systems = []
+
+            if item["has_player"]:
+                systems.append("👤 Player")
+
+            if item["has_ssh"]:
+                systems.append("🔐 SSH")
+
+            if item["has_rcon"]:
+                systems.append("🎛️ RCON")
+
+            detail = discord.Embed(
+                title=(
+                    f"🔗 Correlation #{index}"
+                ),
+                description=(
+                    "**Full IP Hash**\n"
+                    f"```text\n{ip_hash}\n```\n"
+                    f"Matched Systems: "
+                    f"**{' + '.join(systems)}**"
+                ),
+                color=(
+                    0xE74C3C
+                    if item["ssh_blocked"]
+                    else 0xF39C12
+                ),
+                timestamp=datetime.now(
+                    timezone.utc
+                ),
+            )
+
+            players = item["players"]
+
+            if players:
+                player_lines = []
+
+                for player in players[:10]:
+                    player_lines.append(
+                        f"**{player['name']}**\n"
+                        f"Product ID: "
+                        f"`{player['product_id']}`\n"
+                        f"Admin: "
+                        f"`{player['admin']}` • "
+                        f"Banned: "
+                        f"`{player['banned']}`"
+                    )
+
+                if len(players) > 10:
+                    player_lines.append(
+                        f"…and **{len(players) - 10}** more."
+                    )
+
+                detail.add_field(
+                    name="👤 Player Records",
+                    value="\n\n".join(
+                        player_lines
+                    )[:1024],
+                    inline=False,
+                )
+
+            ssh = item["ssh"]
+
+            if isinstance(ssh, dict):
+                usernames = (
+                    ssh.get("usernames")
+                    or {}
+                )
+
+                top_users = []
+
+                if isinstance(usernames, dict):
+                    sorted_users = sorted(
+                        usernames.items(),
+                        key=lambda kv: int(
+                            kv[1]
+                            or 0
+                        ),
+                        reverse=True,
+                    )
+
+                    for username, count in sorted_users[:8]:
+                        top_users.append(
+                            f"`{username}`: **{count}**"
+                        )
+
+                ssh_value = (
+                    f"Failed Attempts: "
+                    f"**{item['ssh_attempts']:,}**\n"
+                    f"Blocked: "
+                    f"**{bool(ssh.get('blocked', False))}**\n"
+                    f"First Seen: "
+                    f"`{ssh.get('first_seen') or 'Unknown'}`\n"
+                    f"Last Seen: "
+                    f"`{ssh.get('last_seen') or 'Unknown'}`"
+                )
+
+                if top_users:
+                    ssh_value += (
+                        "\n\n**Top Usernames**\n"
+                        + "\n".join(top_users)
+                    )
+
+                detail.add_field(
+                    name="🔐 SSH",
+                    value=ssh_value[:1024],
+                    inline=False,
+                )
+
+            rcon_entries = item["rcon"]
+
+            if rcon_entries:
+                rcon_lines = []
+
+                for entry in rcon_entries[:10]:
+                    record = (
+                        entry.get("record")
+                        or {}
+                    )
+
+                    if not isinstance(record, dict):
+                        record = {}
+
+                    count = (
+                        record.get(
+                            "failed_attempts"
+                        )
+                        or record.get(
+                            "attempts"
+                        )
+                        or record.get(
+                            "connections"
+                        )
+                        or record.get(
+                            "count"
+                        )
+                        or "Unknown"
+                    )
+
+                    rcon_lines.append(
+                        f"**{entry['server_id']}** "
+                        f"• `{entry['kind']}`\n"
+                        f"Attempts / Connections: "
+                        f"`{count}`"
+                    )
+
+                if len(rcon_entries) > 10:
+                    rcon_lines.append(
+                        f"…and **{len(rcon_entries) - 10}** more."
+                    )
+
+                detail.add_field(
+                    name="🎛️ RCON",
+                    value="\n\n".join(
+                        rcon_lines
+                    )[:1024],
+                    inline=False,
+                )
+
+            detail.set_footer(
+                text=(
+                    "JTWP • A shared IP hash does not prove the player "
+                    "performed SSH/RCON activity."
+                )
             )
 
             await ctx.send(
-                "❌ buildIt failed:\n"
-                f"```{error[-1500:]}```"
+                embed=detail
             )
-            return
 
-        built_file.write_bytes(
-            build.stdout
-        )
+        if len(shared) > max_detail_embeds:
+            await ctx.send(
+                f"ℹ️ **{len(shared) - max_detail_embeds:,}** additional "
+                "correlations were saved to "
+                "`global/ssh/connection_correlations.json`."
+            )
 
-        send = await asyncio.to_thread(
-            subprocess.run,
-            [
-                "bash",
-                str(discord_script),
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=180,
-            check=False,
-        )
+        if not shared:
+            await ctx.send(
+                "✅ No IP hashes were shared between two or more of "
+                "Player, SSH, and RCON data."
+            )
 
         bot.audit(
             ctx,
             "RUNssh",
-            send.returncode == 0,
-            returncode=send.returncode,
+            True,
+            player_hashes=len(
+                players_by_hash
+            ),
+            ssh_hashes=len(
+                ssh_hosts
+            ),
+            rcon_hashes=len(
+                rcon_by_hash
+            ),
+            shared_hashes=len(
+                shared
+            ),
+            player_ssh=player_ssh,
+            player_rcon=player_rcon,
+            ssh_rcon=ssh_rcon,
+            all_three=all_three,
         )
-
-        if send.returncode == 0:
-            await ctx.send(
-                "✅ SSH report generated "
-                "and `discordIt` executed."
-            )
-        else:
-            await ctx.send(
-                "❌ discordIt failed:\n"
-                f"```{send.stdout[-1500:]}```"
-            )
 
     @bot.group(
         name="loop",
@@ -1334,7 +2155,7 @@ def register_commands(
 
         await ctx.send(
             "```\n"
-            + result.stdout
+            + strip_ansi(result.stdout)
             + "\n```"
         )
 
@@ -1375,7 +2196,7 @@ def register_commands(
 
         await ctx.send(
             "```\n"
-            + result.stdout
+            + strip_ansi(result.stdout)
             + "\n```"
         )
 
@@ -1428,14 +2249,19 @@ async def async_main():
     )
     args = ap.parse_args()
 
-    cfg = json.loads(
-        Path(args.config).read_text(
-            encoding="utf-8"
-        )
-    )
+    cfg_path = Path(args.config).expanduser().resolve()
+    if not cfg_path.is_file():
+        raise SystemExit(f"Config not found: {cfg_path}")
+
+    load_env_file(cfg_path.parent / ".env")
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+
+    active_path = Path(args.active).expanduser()
+    if not active_path.is_absolute():
+        active_path = cfg_path.parent / active_path
 
     active = ActiveConfig(
-        args.active
+        active_path
     )
 
     if (
@@ -1474,12 +2300,15 @@ async def async_main():
 
     bot = JTWPBot(
         cfg,
-        Path(args.active),
+        active_path,
     )
 
     register_commands(bot)
 
+
     await bot.start(token)
+
+
 
 
 if __name__ == "__main__":

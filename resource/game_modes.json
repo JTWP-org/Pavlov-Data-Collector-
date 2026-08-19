@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "description": "JTWP Pavlov game-mode reference.",
   "game_modes": {
     "DM": "Death match",
     "KOTH": "King of the hill",
@@ -15,5 +17,6 @@
     "INFECTION": "Hidden infection",
     "PUSH": "Push",
     "PH": "Prop hunt"
-  }
+  },
+  "game_mode_count": 15
 }

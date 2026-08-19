@@ -33,12 +33,16 @@ Then log out/in or restart the service session.
 from __future__ import annotations
 
 import argparse
+import copy
 import ipaddress
 import json
 import os
 import re
 import subprocess
 import sys
+import threading
+import time
+from collections import Counter
 
 import requests
 from datetime import datetime, timezone
@@ -79,6 +83,55 @@ FAILED_PATTERNS = [
         "max_auth_attempts",
     ),
 ]
+
+
+
+def load_env_file(path: Path) -> None:
+    """
+    Load simple KEY=VALUE entries from an env file without overriding
+    variables that are already present in the process environment.
+    """
+    if not path.is_file():
+        return
+
+    try:
+        lines = path.read_text(
+            encoding="utf-8",
+            errors="replace",
+        ).splitlines()
+    except OSError as exc:
+        print(
+            f"Warning: could not read env file {path}: {exc}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return
+
+    for raw in lines:
+        line = raw.strip()
+
+        if (
+            not line
+            or line.startswith("#")
+            or "=" not in line
+        ):
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+
+        if not key:
+            continue
+
+        if (
+            len(value) >= 2
+            and value[0] == value[-1]
+            and value[0] in {"'", '"'}
+        ):
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
 
 
 def journal_timestamp() -> str:
@@ -150,6 +203,28 @@ class SSHWatcher:
             for value in raw_whitelist.split(",")
             if value.strip()
         }
+
+        # Persistent Discord SSH status embed.
+        self.status_channel_id = os.getenv(
+            "JTWP_SSH_STATUS_CHANNEL_ID",
+            "",
+        ).strip()
+        self.discord_bot_token = os.getenv(
+            "JTWP_DISCORD_BOT_TOKEN",
+            "",
+        ).strip()
+        self.status_interval = max(
+            15,
+            int(sw.get("discord_status_interval_seconds", 60)),
+        )
+        self.status_state_path = self.ssh_dir / "discord_status.json"
+        self.status_stop = threading.Event()
+        self.status_http = requests.Session()
+        self.status_http.headers.update({
+            "Authorization": f"Bot {self.discord_bot_token}",
+            "Content-Type": "application/json",
+            "User-Agent": "JTWP-SSH-Status/1.0",
+        })
 
     def save(self):
         atomic_write_json(self.failed_hosts_path, self.failed_hosts)
@@ -366,6 +441,305 @@ class SSHWatcher:
             )
 
     @staticmethod
+    def _sanitize_background(value):
+        if isinstance(value, dict):
+            out = dict(value)
+            out.pop("primary_failure", None)
+            out.pop("fallback_failure", None)
+            for key, child in list(out.items()):
+                out[key] = SSHWatcher._sanitize_background(child)
+            return out
+        if isinstance(value, list):
+            return [
+                SSHWatcher._sanitize_background(child)
+                for child in value
+            ]
+        return value
+
+    def build_status_embed(self) -> dict:
+        total_attempts = 0
+        blocked_hosts = 0
+        player_match_hosts = 0
+        lookup_success = 0
+        lookup_failed = 0
+        usernames = Counter()
+        ranked_hosts = []
+        newest_seen = None
+
+        for ip_hash, raw_host in self.failed_hosts.items():
+            if not isinstance(raw_host, dict):
+                continue
+
+            host = self._sanitize_background(raw_host)
+            attempts = int(host.get("failed_attempts", 0) or 0)
+            total_attempts += attempts
+
+            blocked = bool(host.get("blocked", False))
+            if blocked:
+                blocked_hosts += 1
+
+            players = host.get("players_seen_on_ip") or []
+            if players:
+                player_match_hosts += 1
+
+            bg = host.get("background") or {}
+            if isinstance(bg, dict):
+                lookup_status = bg.get("lookup_status")
+                if lookup_status == "success":
+                    lookup_success += 1
+                elif lookup_status == "failed":
+                    lookup_failed += 1
+
+            for username, count in (host.get("usernames") or {}).items():
+                try:
+                    usernames[str(username)] += int(count)
+                except (TypeError, ValueError):
+                    pass
+
+            last_seen = host.get("last_seen")
+            if isinstance(last_seen, str):
+                if newest_seen is None or last_seen > newest_seen:
+                    newest_seen = last_seen
+
+            ranked_hosts.append({
+                "hash": str(ip_hash),
+                "attempts": attempts,
+                "blocked": blocked,
+                "players": len(players),
+                "last_seen": last_seen,
+            })
+
+        ranked_hosts.sort(
+            key=lambda item: (
+                item["attempts"],
+                item.get("last_seen") or "",
+            ),
+            reverse=True,
+        )
+
+        unique_hosts = len(ranked_hosts)
+
+        if total_attempts >= 1000:
+            status_text = "🔴 HIGH SSH ATTACK TRAFFIC"
+            color = 0xED4245
+        elif total_attempts >= 250:
+            status_text = "🟠 ACTIVE SSH ATTACK TRAFFIC"
+            color = 0xF47B20
+        elif total_attempts >= 50:
+            status_text = "🟡 ELEVATED SSH ACTIVITY"
+            color = 0xFEE75C
+        else:
+            status_text = "🟢 LOW SSH ACTIVITY"
+            color = 0x57F287
+
+        top_hosts = []
+        for index, host in enumerate(ranked_hosts[:5], start=1):
+            state = "🛑 BLOCKED" if host["blocked"] else "👀 WATCHING"
+            player_text = ""
+            if host["players"] == 1:
+                player_text = " • 🎮 1 player match"
+            elif host["players"] > 1:
+                player_text = f" • 🎮 {host['players']} player matches"
+
+            top_hosts.append(
+                f"`#{index}` `{host['hash']}`\n"
+                f"**{host['attempts']:,}** attempts • {state}"
+                f"{player_text}"
+            )
+
+        top_users = [
+            f"`{username}` — **{count:,}**"
+            for username, count in usernames.most_common(10)
+        ]
+
+        blocked_percent = (
+            blocked_hosts / unique_hosts * 100.0
+            if unique_hosts
+            else 0.0
+        )
+
+        fields = [
+            {
+                "name": "📊 Current Statistics",
+                "value": (
+                    f"Failed Login Attempts: **{total_attempts:,}**\n"
+                    f"Unique Source Hashes: **{unique_hosts:,}**\n"
+                    f"Blocked Sources: **{blocked_hosts:,}** "
+                    f"({blocked_percent:.1f}%)\n"
+                    f"Player IP Matches: **{player_match_hosts:,}**"
+                ),
+                "inline": False,
+            },
+            {
+                "name": "🔥 Most Active Sources",
+                "value": (
+                    "\n".join(top_hosts)
+                    if top_hosts
+                    else "No failed SSH sources recorded."
+                ),
+                "inline": False,
+            },
+            {
+                "name": "👤 Most Targeted Usernames",
+                "value": (
+                    "\n".join(top_users)
+                    if top_users
+                    else "No usernames recorded."
+                ),
+                "inline": False,
+            },
+            {
+                "name": "🌐 IP Intelligence",
+                "value": (
+                    f"Successful lookups: **{lookup_success}**\n"
+                    f"Failed lookups: **{lookup_failed}**\n"
+                    "Raw IPs and verbose provider errors are not displayed."
+                ),
+                "inline": True,
+            },
+            {
+                "name": "🛡️ Protection State",
+                "value": (
+                    f"Auto-blocked: **{blocked_hosts}**\n"
+                    f"Still watching: **{max(0, unique_hosts - blocked_hosts)}**"
+                ),
+                "inline": True,
+            },
+        ]
+
+        if newest_seen:
+            fields.append({
+                "name": "🕒 Latest SSH Activity",
+                "value": f"`{newest_seen}`",
+                "inline": False,
+            })
+
+        updated = datetime.now(timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S UTC"
+        )
+
+        return {
+            "title": "🔐 JTWP SSH Security Report",
+            "description": (
+                f"### {status_text}\n"
+                "Continuously updated SSH authentication security summary."
+            ),
+            "color": color,
+            "fields": fields,
+            "footer": {
+                "text": f"JTWP SSH Watcher • Updated {updated}"
+            },
+            "timestamp": now_iso(),
+        }
+
+    def update_status_embed(self):
+        if not self.status_channel_id or not self.discord_bot_token:
+            return
+
+        embed = self.build_status_embed()
+        state = load_json(self.status_state_path, {})
+        message_id = str(state.get("message_id") or "").strip()
+        state_channel = str(state.get("channel_id") or "").strip()
+
+        if state_channel and state_channel != self.status_channel_id:
+            message_id = ""
+
+        if message_id:
+            url = (
+                "https://discord.com/api/v10/channels/"
+                f"{self.status_channel_id}/messages/{message_id}"
+            )
+            response = self.status_http.patch(
+                url,
+                json={"embeds": [embed]},
+                timeout=self.webhook_timeout,
+            )
+
+            if response.status_code == 200:
+                state["updated_at"] = now_iso()
+                atomic_write_json(self.status_state_path, state)
+                print(
+                    f"Updated SSH status embed message {message_id}",
+                    flush=True,
+                )
+                return
+
+            if response.status_code != 404:
+                print(
+                    "SSH status embed PATCH failed: "
+                    f"HTTP {response.status_code}: "
+                    f"{response.text[:300]}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return
+
+        url = (
+            "https://discord.com/api/v10/channels/"
+            f"{self.status_channel_id}/messages"
+        )
+        response = self.status_http.post(
+            url,
+            json={"embeds": [embed]},
+            timeout=self.webhook_timeout,
+        )
+
+        if not 200 <= response.status_code < 300:
+            print(
+                "SSH status embed POST failed: "
+                f"HTTP {response.status_code}: "
+                f"{response.text[:300]}",
+                file=sys.stderr,
+                flush=True,
+            )
+            return
+
+        payload = response.json()
+        message_id = str(payload["id"])
+
+        atomic_write_json(
+            self.status_state_path,
+            {
+                "channel_id": self.status_channel_id,
+                "message_id": message_id,
+                "created_at": now_iso(),
+                "updated_at": now_iso(),
+            },
+        )
+
+        print(
+            f"Created SSH status embed message {message_id}",
+            flush=True,
+        )
+
+    def status_loop(self):
+        print(
+            "SSH status embed thread started "
+            f"(interval={self.status_interval}s)",
+            flush=True,
+        )
+
+        while not self.status_stop.is_set():
+            try:
+                self.update_status_embed()
+            except requests.RequestException as exc:
+                print(
+                    "SSH status Discord request failed: "
+                    f"{type(exc).__name__}: {exc}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            except Exception as exc:
+                print(
+                    "SSH status embed error: "
+                    f"{type(exc).__name__}: {exc}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+
+            self.status_stop.wait(self.status_interval)
+
+    @staticmethod
     def _yn(v):
         return "Yes" if v is True else "No" if v is False else "Unknown"
 
@@ -497,8 +871,29 @@ class SSHWatcher:
         for unit in self.units:
             cmd.extend(["-u", unit])
 
-        print("JTWP SSH watcher started.")
-        print("Following:", ", ".join(self.units))
+        print("JTWP SSH watcher started.", flush=True)
+        print("Following:", ", ".join(self.units), flush=True)
+
+        if self.status_channel_id and self.discord_bot_token:
+            print(
+                "SSH status embed enabled for channel "
+                f"{self.status_channel_id}",
+                flush=True,
+            )
+            status_thread = threading.Thread(
+                target=self.status_loop,
+                name="ssh-discord-status",
+                daemon=True,
+            )
+            status_thread.start()
+        else:
+            print(
+                "SSH status embed disabled: "
+                "JTWP_SSH_STATUS_CHANNEL_ID or "
+                "JTWP_DISCORD_BOT_TOKEN missing.",
+                file=sys.stderr,
+                flush=True,
+            )
 
         try:
             proc = subprocess.Popen(
@@ -509,6 +904,7 @@ class SSHWatcher:
                 bufsize=1,
             )
         except FileNotFoundError:
+            self.status_stop.set()
             raise SystemExit("journalctl was not found.")
 
         assert proc.stdout is not None
@@ -517,7 +913,8 @@ class SSHWatcher:
                 self.record(line.rstrip("\n"))
         except KeyboardInterrupt:
             proc.terminate()
-            return
+        finally:
+            self.status_stop.set()
 
 
 def main():
@@ -525,13 +922,59 @@ def main():
     ap.add_argument("-c", "--config", default="config.json")
     args = ap.parse_args()
 
-    p = Path(args.config)
-    if not p.exists():
-        raise SystemExit(f"Config not found: {p}")
+    config_path = Path(
+        args.config
+    ).expanduser().resolve()
 
-    cfg = json.loads(p.read_text(encoding="utf-8"))
-    merged = dict(DEFAULT_CONFIG)
+    if not config_path.exists():
+        raise SystemExit(
+            f"Config not found: {config_path}"
+        )
+
+    # Prefer the .env beside config.json. If this script is ever launched
+    # from another location, also try the .env beside the script.
+    load_env_file(
+        config_path.parent / ".env"
+    )
+
+    script_env = (
+        Path(__file__).resolve().parent
+        / ".env"
+    )
+
+    if script_env != config_path.parent / ".env":
+        load_env_file(
+            script_env
+        )
+
+    try:
+        cfg = json.loads(
+            config_path.read_text(
+                encoding="utf-8"
+            )
+        )
+    except json.JSONDecodeError as exc:
+        raise SystemExit(
+            f"Invalid JSON in config file "
+            f"{config_path}: {exc}"
+        ) from exc
+    except OSError as exc:
+        raise SystemExit(
+            f"Could not read config file "
+            f"{config_path}: {exc}"
+        ) from exc
+
+    if not isinstance(cfg, dict):
+        raise SystemExit(
+            f"Config must contain a JSON object: "
+            f"{config_path}"
+        )
+
+    merged = copy.deepcopy(
+        DEFAULT_CONFIG
+    )
     merged.update(cfg)
+
     if "servers" in cfg:
         merged["servers"] = cfg["servers"]
 

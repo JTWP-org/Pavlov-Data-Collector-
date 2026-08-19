@@ -1,0 +1,14 @@
+[Unit]
+Description=JTWP Pavlov Data Collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=steam
+Group=steam
+WorkingDirectory=/home/steam/jtwp-collector/Pavlov-Data-Collector-
+EnvironmentFile=/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env
+ExecStart=/home/steam/jtwp-collector/venv/bin/python3 /home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py -c /home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json
+StandardOutput=journal
+StandardError=journal

@@ -1,6 +1,9 @@
 {
   "data_path": "/home/steam/jtwp-collector-data",
   "archive_path": "/home/steam/jtwp-log-archive",
+  "old_archive_paths": [
+    "/home/steam/logs"
+  ],
   "request_timeout_seconds": 8,
   "modio_game_id": 3959,
   "modio_cache_ttl_hours": 24,
@@ -81,10 +84,10 @@
   "rcon_bridge": {
     "enabled": true,
     "poll_interval_seconds": 0.25,
-    "command_file": "rcon_commands.json",
-    "game_modes_file": "game_modes.json",
-    "default_maps_file": "default_maps.json",
-    "limited_ammo_types_file": "limited_ammo_types.json",
+    "command_file": "resource/rcon_commands.json",
+    "game_modes_file": "resource/game_modes.json",
+    "default_maps_file": "resource/default_maps.json",
+    "limited_ammo_types_file": "resource/limited_ammo_types.json",
     "remove_input_on_error": true,
     "ppapi_trigger_enabled": true,
     "ppapi_trigger_file": "EXE_PPAPI.json",
@@ -94,8 +97,9 @@
     "rcon_resource_trigger_file": "IN-RCON.json",
     "rcon_resource_output_file": "OUT--RCON.json",
     "rcon_resource_url": "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
-    "rcon_resource_local_file": "rcon_commands.json",
-    "rcon_resource_timeout_seconds": 30
+    "rcon_resource_local_file": "resource/rcon_commands.json",
+    "rcon_resource_timeout_seconds": 30,
+    "custom_command_file": "custom_commands.json"
   },
   "active_file": "active.json",
   "data_tools": {
@@ -114,7 +118,7 @@
   },
   "admin_notifications": {
     "enabled": true,
-    "role_id": "ADMIN_DISCORD_ROLE_ID",
+    "role_id": "1539038732810854480",
     "webhook_env": "JTWP_ADMIN_WEBHOOK_URL",
     "loop_output_path": "/home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon/loopOutput.json",
     "poll_interval_seconds": 2,
@@ -126,7 +130,7 @@
   "discord_bot": {
     "enabled": true,
     "prefix": "!",
-    "control_channel_id": "1203848040432275516",
+    "control_channel_id": "1336837076066504808",
     "roles": {
       "admin": "1539038732810854480",
       "owner": "1539038572672327741"

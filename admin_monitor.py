@@ -25,6 +25,29 @@ def now_iso(dt: datetime | None = None) -> str:
     ).replace("+00:00", "Z")
 
 
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
+
+
 def load_json(path: Path, default: Any) -> Any:
     try:
         return json.loads(
@@ -35,26 +58,36 @@ def load_json(path: Path, default: Any) -> Any:
 
 
 def atomic_write_json(path: Path, data: Any) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    """Atomically write JSON using a unique temp file in the same directory.
 
-    temp = path.with_name(
-        path.name + ".tmp"
-    )
+    A unique temp file prevents concurrent JTWP services from colliding on a
+    shared ``filename.tmp`` path.
+    """
+    import tempfile
 
-    temp.write_text(
-        json.dumps(
-            data,
-            indent=2,
-            ensure_ascii=False,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    os.replace(temp, path)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=str(path.parent),
+    )
+    tmp_path = Path(tmp_name)
+
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(tmp_path, path)
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def append_jsonl(path: Path, data: dict) -> None:
@@ -1184,15 +1217,20 @@ def main():
     )
     args = ap.parse_args()
 
-    cfg = json.loads(
-        Path(args.config).read_text(
-            encoding="utf-8"
-        )
-    )
+    cfg_path = Path(args.config).expanduser().resolve()
+    if not cfg_path.is_file():
+        raise SystemExit(f"Config not found: {cfg_path}")
+
+    load_env_file(cfg_path.parent / ".env")
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+
+    active_path = Path(args.active).expanduser()
+    if not active_path.is_absolute():
+        active_path = cfg_path.parent / active_path
 
     AdminMonitor(
         cfg,
-        Path(args.active),
+        active_path,
     ).run()
 
 

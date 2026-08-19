@@ -58,8 +58,22 @@ def main() -> None:
     if script_env != cfg_path.parent / ".env":
         load_env_file(script_env)
 
-    with cfg_path.open("r", encoding="utf-8") as f:
-        cfg = json.load(f)
+    try:
+        with cfg_path.open("r", encoding="utf-8") as f:
+            cfg = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(
+            f"Invalid JSON in config file {cfg_path}: {exc}"
+        ) from exc
+    except OSError as exc:
+        raise SystemExit(
+            f"Could not read config file {cfg_path}: {exc}"
+        ) from exc
+
+    if not isinstance(cfg, dict):
+        raise SystemExit(
+            f"Config must contain a JSON object: {cfg_path}"
+        )
 
     merged = copy.deepcopy(DEFAULT_CONFIG)
     merged.update(cfg)

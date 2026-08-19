@@ -10,6 +10,7 @@ Major features:
 - Archives Pavlov-backup-*.log and Stats-*.log.
 - Copies/truncates active Pavlov.log and Stats.log safely.
 - Deduplicates processed archived files by SHA-256.
+- Can recursively index one or more read-only historical log archive roots.
 - Server, RCON, HTTP, runtime, custom gun/loot/mod, Game.ini, admins and bans.
 - Stats.log JSON-block parsing and per-round JSON output.
 - productId-keyed player records and name/uniqueId indexes.
@@ -89,13 +90,81 @@ def duration_seconds(a: Optional[str], b: Optional[str]) -> Optional[int]:
     return max(0, int((db - da).total_seconds()))
 
 
-def atomic_write_json(path: Path, data: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False, sort_keys=False)
-        f.write("\n")
-    os.replace(tmp, path)
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
+
+
+def atomic_write_json(
+    path: Path,
+    data: Any,
+) -> None:
+    import tempfile
+
+    path = Path(path)
+
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=str(path.parent),
+    )
+
+    tmp_path = Path(tmp_name)
+
+    try:
+        with os.fdopen(
+            fd,
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(
+                data,
+                f,
+                indent=2,
+                ensure_ascii=False,
+            )
+
+            f.write("\n")
+            f.flush()
+            os.fsync(
+                f.fileno()
+            )
+
+        os.replace(
+            tmp_path,
+            path,
+        )
+
+    finally:
+        try:
+            tmp_path.unlink(
+                missing_ok=True
+            )
+        except OSError:
+            pass
 
 
 def load_json(path: Path, default: Any) -> Any:
@@ -167,6 +236,7 @@ def json_get(d: dict, *keys: str, default=None):
 DEFAULT_CONFIG = {
     "data_path": "/home/steam/jtwp-collector-data",
     "archive_path": "/home/steam/jtwp-log-archive",
+    "old_archive_paths": [],
     "request_timeout_seconds": 8,
     "modio_game_id": 3959,
     "modio_cache_ttl_hours": 24,
@@ -313,24 +383,22 @@ class Enricher:
     def lookup_ip(self, ip: str) -> dict:
         cached = self.ip_cache.get(ip)
         if isinstance(cached, dict) and self._cache_fresh(cached, self.ip_ttl):
-            return {k: v for k, v in cached.items() if not k.startswith("_")}
+            clean_cached = {k: v for k, v in cached.items() if not k.startswith("_")}
+            clean_cached.pop("primary_failure", None)
+            clean_cached.pop("fallback_failure", None)
+            return clean_cached
 
-        primary_error = None
         try:
             result = self._proxycheck(ip)
-        except Exception as e:
-            primary_error = self._safe_error(e)
+        except Exception:
             try:
                 result = self._ipapi(ip)
                 result["fallback"] = True
-                result["primary_failure"] = primary_error
-            except Exception as e2:
+            except Exception:
                 result = {
                     "lookup_status": "failed",
                     "source": None,
                     "fallback": True,
-                    "primary_failure": primary_error,
-                    "fallback_failure": self._safe_error(e2),
                     "organisation": None,
                     "country_code": None,
                     "network_type": None,
@@ -341,6 +409,12 @@ class Enricher:
                     "risk": None,
                     "confidence": None,
                 }
+
+        # Never persist verbose provider/network failure details.
+        # Exception strings can include raw IPs, URLs, object addresses,
+        # API endpoints, or other data that should not leave private logs.
+        result.pop("primary_failure", None)
+        result.pop("fallback_failure", None)
 
         cache_entry = dict(result)
         cache_entry["_cached_unix"] = time.time()
@@ -414,24 +488,22 @@ class Enricher:
         """Richer public-host enrichment for Pavlov server-list IPs."""
         cached = self.server_host_cache.get(ip)
         if isinstance(cached, dict) and self._cache_fresh(cached, self.server_host_ttl):
-            return {k: v for k, v in cached.items() if not k.startswith("_")}
+            clean_cached = {k: v for k, v in cached.items() if not k.startswith("_")}
+            clean_cached.pop("primary_failure", None)
+            clean_cached.pop("fallback_failure", None)
+            return clean_cached
 
-        primary_error = None
         try:
             result = self._proxycheck_server(ip)
-        except Exception as e:
-            primary_error = self._safe_error(e)
+        except Exception:
             try:
                 result = self._ipapi_server(ip)
                 result["fallback"] = True
-                result["primary_failure"] = primary_error
-            except Exception as e2:
+            except Exception:
                 result = {
                     "lookup_status": "failed",
                     "source": None,
                     "fallback": True,
-                    "primary_failure": primary_error,
-                    "fallback_failure": self._safe_error(e2),
                     "provider": None,
                     "organisation": None,
                     "type": None,
@@ -448,6 +520,9 @@ class Enricher:
                     "vpn": None,
                 }
 
+        # Never persist verbose provider/network failure details.
+        result.pop("primary_failure", None)
+        result.pop("fallback_failure", None)
         result["looked_up_at"] = now_iso()
         cache_entry = dict(result)
         cache_entry["_cached_unix"] = time.time()
@@ -1048,6 +1123,26 @@ class Collector:
         self.cfg = cfg
         self.data_root = Path(cfg["data_path"]).expanduser()
         self.archive_root = Path(cfg["archive_path"]).expanduser()
+
+        # Historical archives are READ ONLY.  They are scanned recursively and
+        # fed through the same parsers / SHA-256 processing state as live archives.
+        raw_old_archives = cfg.get("old_archive_paths", [])
+        if isinstance(raw_old_archives, (str, Path)):
+            raw_old_archives = [raw_old_archives]
+
+        # Backwards-friendly singular spelling too.
+        singular_old_archive = cfg.get("old_archive_path")
+        if singular_old_archive:
+            raw_old_archives = list(raw_old_archives) + [singular_old_archive]
+
+        self.old_archive_roots: list[Path] = []
+        for value in raw_old_archives:
+            if not value:
+                continue
+            p = Path(str(value)).expanduser().resolve()
+            if p not in self.old_archive_roots:
+                self.old_archive_roots.append(p)
+
         self.data_root.mkdir(parents=True, exist_ok=True)
         self.archive_root.mkdir(parents=True, exist_ok=True)
         secret = os.getenv("JTWP_IP_HASH_SECRET")
@@ -1066,6 +1161,121 @@ class Collector:
         self.global_admins: set[str] = set()
         self.platforms: dict[str, str] = {}
 
+    @staticmethod
+    def _unique_paths(paths: Iterable[Path]) -> list[Path]:
+        """Return paths once, preserving deterministic sorted order."""
+        seen: set[str] = set()
+        out: list[Path] = []
+        for path in sorted(paths, key=lambda p: str(p)):
+            key = str(path.resolve())
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(path)
+        return out
+
+    def discover_old_archives(self) -> list[tuple[ServerCfg, list[Path], list[Path]]]:
+        """
+        Recursively discover historical Pavlov archives without modifying them.
+
+        Expected layouts can be deeply nested, for example:
+            /home/steam/logs/home/steam/pavlovserver005/Pavlov/Saved/Logs/*.log
+
+        A directory is considered a Pavlov server source when a directory named
+        "Pavlov" contains Saved/Logs and/or Saved/Stats.  The server_id is the
+        directory immediately before "Pavlov".
+        """
+        discovered: dict[tuple[str, str], dict[str, Any]] = {}
+
+        for root in self.old_archive_roots:
+            if not root.exists():
+                print(f"WARNING: old archive path does not exist: {root}", file=sys.stderr)
+                continue
+            if not root.is_dir():
+                print(f"WARNING: old archive path is not a directory: {root}", file=sys.stderr)
+                continue
+
+            for pavlov_dir in root.rglob("Pavlov"):
+                if not pavlov_dir.is_dir():
+                    continue
+
+                saved_dir = pavlov_dir / "Saved"
+                log_dir = saved_dir / "Logs"
+                stats_dir = saved_dir / "Stats"
+
+                if not log_dir.is_dir() and not stats_dir.is_dir():
+                    continue
+
+                server_id = pavlov_dir.parent.name or "historical"
+                source_key = (server_id, str(pavlov_dir.resolve()))
+
+                log_files: list[Path] = []
+                stat_files: list[Path] = []
+
+                if log_dir.is_dir():
+                    # Includes old Pavlov.log snapshots as well as backups.
+                    log_files = [
+                        p for p in log_dir.rglob("*.log")
+                        if p.is_file() and (
+                            p.name == "Pavlov.log"
+                            or p.name.startswith("Pavlov-backup-")
+                        )
+                    ]
+
+                if stats_dir.is_dir():
+                    stat_files = [
+                        p for p in stats_dir.rglob("*.log")
+                        if p.is_file() and (
+                            p.name == "Stats.log"
+                            or p.name.startswith("Stats-")
+                        )
+                    ]
+
+                server = ServerCfg(
+                    log_path=log_dir,
+                    server_id=server_id,
+                    platform_override="auto",
+                    stats_path=stats_dir,
+                    game_ini_path=None,
+                )
+
+                discovered[source_key] = {
+                    "server": server,
+                    "logs": self._unique_paths(log_files),
+                    "stats": self._unique_paths(stat_files),
+                }
+
+        result: list[tuple[ServerCfg, list[Path], list[Path]]] = []
+        report_sources: list[dict[str, Any]] = []
+
+        for (_, source_root), item in sorted(discovered.items()):
+            server = item["server"]
+            logs = item["logs"]
+            stats = item["stats"]
+            result.append((server, logs, stats))
+            report_sources.append({
+                "server_id": server.server_id,
+                "source_root": source_root,
+                "log_files": len(logs),
+                "stats_files": len(stats),
+            })
+
+        atomic_write_json(
+            self.data_root / "global" / "old_archive_index.json",
+            {
+                "indexed_at": now_iso(),
+                "configured_roots": [str(p) for p in self.old_archive_roots],
+                "sources_found": len(report_sources),
+                "log_files_found": sum(x["log_files"] for x in report_sources),
+                "stats_files_found": sum(x["stats_files"] for x in report_sources),
+                "sources": report_sources,
+                "read_only": True,
+                "dedupe": "SHA-256 processing state",
+            },
+        )
+
+        return result
+
     def run(self):
         # Public Pavlov server-list snapshot is independent of local log rotation.
         if bool(self.cfg.get("pavlov_api_enabled", True)):
@@ -1078,17 +1288,39 @@ class Collector:
             self.collect_bans(server)
             self.collect_systemd_service_metadata(server)
 
+        # Build one combined processing view. Live archives are still rotated into
+        # archive_root as before. Historical roots are read in-place and NEVER moved,
+        # deleted, copied, or truncated.
         archives: dict[str, tuple[list[Path], list[Path]]] = {}
+        processing_servers: dict[str, ServerCfg] = {}
+
         for server in self.servers:
-            archives[server.server_id] = archive_logs(
+            live_logs, live_stats = archive_logs(
                 server, self.archive_root, bool(self.cfg.get("rotate_active_logs", True))
             )
+            archives[server.server_id] = (
+                self._unique_paths(live_logs),
+                self._unique_paths(live_stats),
+            )
+            processing_servers[server.server_id] = server
 
-        # First pass Stats across every server: learn productId identity mappings
-        # before name-only KillData and connection lines are processed.
-        for server in self.servers:
-            _, stat_files = archives[server.server_id]
-            platform = self.detect_platform(server, archives[server.server_id][0])
+        for old_server, old_logs, old_stats in self.discover_old_archives():
+            sid = old_server.server_id
+            current_logs, current_stats = archives.get(sid, ([], []))
+            archives[sid] = (
+                self._unique_paths(current_logs + old_logs),
+                self._unique_paths(current_stats + old_stats),
+            )
+            # Prefer the live ServerCfg if this historical server_id still exists.
+            processing_servers.setdefault(sid, old_server)
+
+        all_processing_servers = list(processing_servers.values())
+
+        # First pass Stats across every live + historical server: learn productId
+        # identity mappings before name-only KillData and connection lines.
+        for server in all_processing_servers:
+            log_files, stat_files = archives.get(server.server_id, ([], []))
+            platform = self.detect_platform(server, log_files)
             self.platforms[server.server_id] = platform
             for p in stat_files:
                 if not self.state.done(p):
@@ -1098,22 +1330,28 @@ class Collector:
         self.players.flush_indexes()
         self.apply_admin_flags()
 
-        # Pavlov logs.
-        for server in self.servers:
-            log_files, _ = archives[server.server_id]
+        # Pavlov logs from both normal archives and configured historical archives.
+        for server in all_processing_servers:
+            log_files, _ = archives.get(server.server_id, ([], []))
             for p in log_files:
                 if not self.state.done(p):
-                    self.process_pavlov_log(server, self.platforms[server.server_id], p)
+                    self.process_pavlov_log(
+                        server,
+                        self.platforms.get(server.server_id, "PCVR"),
+                        p,
+                    )
                     self.state.mark(p)
 
-        # Second stats pass only for event-derived combat. Use a separate logical
-        # content marker because first pass already marked physical files.
-        # We store a stats_combat_state keyed by file SHA.
-        self.process_stats_combat_all(archives)
+        # Second stats pass only for event-derived combat. This has its own SHA
+        # state because the identity pass above already marks physical files.
+        self.process_stats_combat_all(archives, all_processing_servers)
 
         self.players.flush_indexes()
         self.apply_admin_flags()
         self.apply_ban_flags_from_snapshots()
+
+        # Rebuild player links after ALL current and historical player IP hashes
+        # have been learned.
         self.reconcile_rcon_player_links()
 
     def collect_pavlov_api(self) -> dict[str, Any]:
@@ -1348,8 +1586,17 @@ class Collector:
 
 
     def reconcile_rcon_player_links(self):
-        """Link every known RCON IP hash to any player ever observed on that same hash."""
+        """
+        Link every RCON IP hash (successful OR failed, on every indexed server)
+        to any player ever observed on that same stable IP hash.
+
+        This is deliberately rebuilt after historical archives are processed so
+        an older player connection can retroactively correlate with newer RCON data,
+        and vice versa. Shared IP/hash correlation is evidence of association only;
+        it is not proof that the player generated the RCON traffic.
+        """
         hash_players = defaultdict(list)
+
         for pdir in self.players.records.iterdir() if self.players.records.exists() else []:
             if not pdir.is_dir():
                 continue
@@ -1357,6 +1604,7 @@ class Collector:
             pid = player.get("product_id")
             if not pid:
                 continue
+
             ips = load_json(pdir / "ips.json", {"ips": {}}).get("ips", {})
             rec = {
                 "product_id": pid,
@@ -1367,18 +1615,32 @@ class Collector:
                 if rec not in hash_players[ih]:
                     hash_players[ih].append(rec)
 
-        for s in self.servers:
-            path = self.data_root / "servers" / s.server_id / "rcon" / "known_hosts.json"
-            hosts = load_json(path, {})
-            changed = False
-            for ih, host in hosts.items():
-                arr = host.setdefault("players_seen_on_ip", [])
-                for rec in hash_players.get(ih, []):
-                    if rec not in arr:
-                        arr.append(rec)
-                        changed = True
-            if changed:
-                atomic_write_json(path, hosts)
+        servers_root = self.data_root / "servers"
+        if not servers_root.exists():
+            return
+
+        for rcon_dir in sorted(servers_root.glob("*/rcon")):
+            if not rcon_dir.is_dir():
+                continue
+
+            for filename in ("known_hosts.json", "failed_hosts.json"):
+                path = rcon_dir / filename
+                hosts = load_json(path, {})
+                if not isinstance(hosts, dict) or not hosts:
+                    continue
+
+                changed = False
+                for ih, host in hosts.items():
+                    if not isinstance(host, dict):
+                        continue
+                    arr = host.setdefault("players_seen_on_ip", [])
+                    for rec in hash_players.get(ih, []):
+                        if rec not in arr:
+                            arr.append(rec)
+                            changed = True
+
+                if changed:
+                    atomic_write_json(path, hosts)
 
     # --------------------- systemd service metadata ----------------------
 
@@ -1716,11 +1978,12 @@ class Collector:
             )
             atomic_write_json(self.data_root / "servers" / server.server_id / "rounds" / fname, round_doc)
 
-    def process_stats_combat_all(self, archives):
+    def process_stats_combat_all(self, archives, servers: Optional[Iterable[ServerCfg]] = None):
         state_path = self.data_root / "global" / "stats_combat_state.json"
         state = load_json(state_path, {"processed": {}})
-        for server in self.servers:
-            _, stat_files = archives[server.server_id]
+        source_servers = list(servers) if servers is not None else self.servers
+        for server in source_servers:
+            _, stat_files = archives.get(server.server_id, ([], []))
             for p in stat_files:
                 h = sha256_file(p)
                 if h in state["processed"]:
@@ -2537,13 +2800,25 @@ class Collector:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-c", "--config", default="config.json")
+    ap.add_argument(
+        "--old-archive",
+        action="append",
+        default=[],
+        help=(
+            "Read-only historical archive root to index recursively. "
+            "May be supplied more than once. Values are added to old_archive_paths."
+        ),
+    )
     args = ap.parse_args()
 
-    cfg_path = Path(args.config)
+    cfg_path = Path(args.config).expanduser().resolve()
     if not cfg_path.exists():
         print(f"Config not found: {cfg_path}", file=sys.stderr)
         print(json.dumps(DEFAULT_CONFIG, indent=2), file=sys.stderr)
         raise SystemExit(2)
+
+    # Load .env beside config.json for manual runs; existing environment wins.
+    load_env_file(cfg_path.parent / ".env")
 
     with cfg_path.open("r", encoding="utf-8") as f:
         cfg = json.load(f)
@@ -2553,6 +2828,12 @@ def main():
     merged.update(cfg)
     if "servers" in cfg:
         merged["servers"] = cfg["servers"]
+
+    if args.old_archive:
+        configured_old = merged.get("old_archive_paths", [])
+        if isinstance(configured_old, (str, Path)):
+            configured_old = [configured_old]
+        merged["old_archive_paths"] = list(configured_old) + list(args.old_archive)
 
     Collector(merged).run()
     print("JTWP Pavlov collector completed successfully.")

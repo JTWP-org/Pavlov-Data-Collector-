@@ -472,3 +472,61 @@ Check cache settings such as:
 -   [ ] Discord webhook variables configured where needed
 -   [ ] systemd services load the environment file
 -   [ ] cache settings reviewed
+
+
+---
+
+# 🧩 Current Environment-Variable Naming
+
+Use the exact names referenced by the current scripts. Common variables include:
+
+```dotenv
+JTWP_IP_HASH_SECRET=
+MODIO_API_KEY=
+PROXYCHECK_API_KEY=
+IPAPI_API_KEY=
+PAVLOV_API=
+
+JTWP_DISCORD_BOT_TOKEN=
+JTWP_CMD_OUTPUT_WEBHOOK_URL=
+JTWP_ADMIN_WEBHOOK_URL=
+JTWP_SSH_WEBHOOK_URL=
+JTWP_SECURITY_WEBHOOK_URL=
+JTWP_SSH_STATUS_CHANNEL_ID=
+JTWP_SSH_AUTOBLOCK_WHITELIST=
+
+PAVLOVSERVER_RCON_PASSWORD=
+PAVLOVSERVER0_RCON_PASSWORD=
+PAVLOVSERVER1_RCON_PASSWORD=
+PAVLOVSERVER2_RCON_PASSWORD=
+```
+
+Older documentation may use generic webhook/fallback names. The source code's
+`os.getenv(...)` or a server's `password_env` setting is authoritative.
+
+Find every environment variable referenced by the Python source:
+
+```bash
+grep -RhoE 'os\.getenv\("[A-Za-z0-9_]+"' \
+    --include='*.py' . \
+    | sed -E 's/.*"([^"]+)".*/\1/' \
+    | sort -u
+```
+
+Check which expected variables are set **without printing their values**:
+
+```bash
+for v in \
+    JTWP_IP_HASH_SECRET \
+    MODIO_API_KEY \
+    PROXYCHECK_API_KEY \
+    PAVLOV_API \
+    JTWP_DISCORD_BOT_TOKEN
+do
+    if [[ -n "${!v:-}" ]]; then
+        echo "OK      $v"
+    else
+        echo "MISSING $v"
+    fi
+done
+```

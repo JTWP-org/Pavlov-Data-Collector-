@@ -1,3 +1,4 @@
+# Additional JTWP Python dependencies not supplied by async-pavlov.
 discord.py>=2.4,<3
 requests>=2.31
-# Keep the existing async-pavlov package used by rcon_trigger_watcher.py
+Pillow>=10

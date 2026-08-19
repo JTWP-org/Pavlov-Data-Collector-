@@ -168,7 +168,7 @@ sudo -n /usr/local/bin/block-ip <IP>
 See:
 
 ``` text
-Guides/SSHblocking.MD
+Guides/SSH_BLOCKING.md
 ```
 
 for the required sudo configuration and automatic-block setup.
@@ -434,5 +434,78 @@ ls -l \
 For SSH auto-block sudo configuration, follow:
 
 ``` text
-Guides/SSHblocking.MD
+Guides/SSH_BLOCKING.md
 ```
+
+
+---
+
+# 🧰 Additional Maintenance/Data Scripts
+
+Depending on the installed version, `scripts/` can also contain:
+
+```text
+clear-pavlov-mods.sh
+clear-data.sh
+export-data.py
+backup-data.py
+set-rcon-loop.py
+```
+
+Typical usage:
+
+```bash
+sudo scripts/clear-pavlov-mods.sh pavlovserver1
+sudo scripts/clear-data.sh --yes
+python3 scripts/export-data.py
+python3 scripts/backup-data.py
+python3 scripts/set-rcon-loop.py -c config.json status
+```
+
+`clear-data.sh` is destructive. Back up/export anything you need before using it.
+
+An export that contains `JTWP_IP_HASH_SECRET` must be treated as sensitive,
+because possession of that secret affects the privacy/security of the stored
+HMAC IP identifiers.
+
+# 🔎 Check Every Script
+
+```bash
+find scripts -maxdepth 1 -type f -printf '%f\n' | sort
+```
+
+Shell syntax:
+
+```bash
+for f in scripts/*.sh; do
+    bash -n "$f" || exit 1
+done
+```
+
+Python syntax:
+
+```bash
+for f in scripts/*.py; do
+    /home/steam/jtwp-collector/venv/bin/python3 -m py_compile "$f" || exit 1
+done
+```
+
+---
+
+# 🌐 `scripts/servers/`
+
+The live Pavlov server-list subsystem has its own preserved directory:
+
+```text
+scripts/servers/
+```
+
+It includes the server-data builder, image generator and Discord sender.
+
+See:
+
+```text
+LIVE_SERVERS.md
+```
+
+for the canonical setup and workflow.

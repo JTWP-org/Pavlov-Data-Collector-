@@ -1,0 +1,379 @@
+{
+  "version": 1,
+  "summary": {
+    "default_maps": 22,
+    "game_modes": 15,
+    "items": 154,
+    "items_added_from_balancing_table": [
+      "thompson_drum",
+      "ppsh_drum"
+    ],
+    "balancing_rows": 105,
+    "icon_keys": 129,
+    "gun_emoji_keys": 136,
+    "limited_ammo_types": 6,
+    "rcon_commands": 57,
+    "discord_response_codes": 14
+  },
+  "compatibility_fixes": [
+    {
+      "file": "limited_ammo_types.json",
+      "reason": "rcon_trigger_watcher.py expects the filename limited_ammo_types.json, the top-level key limited_ammo_types, and string keys such as \"0\" through \"5\"."
+    },
+    {
+      "file": "items.json",
+      "added_identifiers": [
+        "thompson_drum",
+        "ppsh_drum"
+      ],
+      "reason": "These exact identifiers occur in BalancingTable.csv but were missing from the supplied items list."
+    }
+  ],
+  "coverage_notes": {
+    "items_without_icon_key_case_insensitive": [
+      "adrenaline",
+      "ak",
+      "AMMO_OTHER",
+      "ammo_pistol",
+      "ammo_rifle",
+      "ammo_shotgun",
+      "ammo_smg",
+      "ammo_sniper",
+      "ammo_special",
+      "ammocrate",
+      "antipersonnelmine",
+      "antitankmine",
+      "autoshotgun",
+      "autosniper",
+      "ballisticsshield",
+      "bandage",
+      "bayonet_kar98",
+      "bayonet_leeenfield",
+      "bayonet_m1garand",
+      "bayonet_mosin",
+      "bayonet_springfield",
+      "bayonet_trenchgun",
+      "boltcutters",
+      "Canted_Reddot",
+      "crowbar",
+      "detectivesmg",
+      "dnascanner",
+      "drumshotgun",
+      "flaregun",
+      "flash_aurora",
+      "flash_ru",
+      "Flashlight_Rifle",
+      "galul",
+      "gas",
+      "Grenade",
+      "grenade_aurora",
+      "grenade_dis",
+      "grenade_ru",
+      "Grip_Angled",
+      "Grip_Vertical",
+      "handcuffs",
+      "healthstation",
+      "hypnotiser",
+      "kevlarhelmet",
+      "keycard",
+      "kross",
+      "lockpick",
+      "medkit",
+      "monocular",
+      "newtonlauncher",
+      "pickaxe",
+      "pipe",
+      "PushBomb",
+      "RepairTool",
+      "rl_rpg",
+      "scope_leeenfield",
+      "scur",
+      "shotgun",
+      "silentcet9",
+      "skinhelmet_ger",
+      "skinhelmet_svt",
+      "skinhelmet_us",
+      "smg",
+      "smoke_ger",
+      "smoke_ru",
+      "sock",
+      "supp_pistol",
+      "supp_rifle",
+      "tripalarm",
+      "tttc4",
+      "tttknife",
+      "vanas",
+      "vzz",
+      "ww2bandage",
+      "ww2knife",
+      "ww2medkit",
+      "ww2painkillers",
+      "ww2syringe",
+      "thompson_drum",
+      "ppsh_drum"
+    ],
+    "items_without_gunEmoji_key_case_insensitive": [
+      "ACOG",
+      "adrenaline",
+      "AMMO_OTHER",
+      "ammo_pistol",
+      "ammo_rifle",
+      "ammo_shotgun",
+      "ammo_smg",
+      "ammo_sniper",
+      "ammo_special",
+      "ammocrate",
+      "antipersonnelmine",
+      "antitankmine",
+      "Armour",
+      "ballisticsshield",
+      "bandage",
+      "bayonet_kar98",
+      "bayonet_leeenfield",
+      "bayonet_m1garand",
+      "bayonet_mosin",
+      "bayonet_springfield",
+      "bayonet_trenchgun",
+      "boltcutters",
+      "Canted_Reddot",
+      "crowbar",
+      "dnascanner",
+      "flash_aurora",
+      "Flashlight_Rifle",
+      "gas",
+      "grenade_aurora",
+      "grenade_dis",
+      "Grip_Angled",
+      "Grip_Vertical",
+      "handcuffs",
+      "healthstation",
+      "holo",
+      "hypnotiser",
+      "kevlarhelmet",
+      "keycard",
+      "Laser_Pistol",
+      "Laser_Rifle",
+      "lockpick",
+      "medkit",
+      "monocular",
+      "Painkillers",
+      "pickaxe",
+      "pipe",
+      "pkm",
+      "reddot",
+      "reddot_pistol",
+      "Scope",
+      "scope_kar98",
+      "scope_leeenfield",
+      "scope_mosin",
+      "scope_springfield",
+      "skinhelmet_ger",
+      "skinhelmet_svt",
+      "skinhelmet_us",
+      "skorpion",
+      "smoke",
+      "smoke_ger",
+      "smoke_ru",
+      "smoke_svt",
+      "smoke_us",
+      "supp_pistol",
+      "supp_rifle",
+      "Syringe",
+      "teleporter",
+      "tranqgun",
+      "tripalarm",
+      "ww2bandage",
+      "ww2medkit",
+      "ww2painkillers",
+      "ww2syringe",
+      "thompson_drum",
+      "ppsh_drum"
+    ],
+    "items_without_balancing_row_case_insensitive": [
+      "adrenaline",
+      "AMMO_OTHER",
+      "ammo_pistol",
+      "ammo_rifle",
+      "ammo_shotgun",
+      "ammo_smg",
+      "ammo_sniper",
+      "ammo_special",
+      "ammocrate",
+      "antipersonnelmine",
+      "antitankmine",
+      "bandage",
+      "bayonet_kar98",
+      "bayonet_leeenfield",
+      "bayonet_m1garand",
+      "bayonet_mosin",
+      "bayonet_springfield",
+      "bayonet_trenchgun",
+      "boltcutters",
+      "Canted_Reddot",
+      "crowbar",
+      "flash_aurora",
+      "grenade_aurora",
+      "handcuffs",
+      "hypnotiser",
+      "keycard",
+      "lockpick",
+      "medkit",
+      "pickaxe",
+      "pipe",
+      "Pliers",
+      "PushBomb",
+      "reddot_pistol",
+      "RepairTool",
+      "scope_kar98",
+      "scope_leeenfield",
+      "scope_mosin",
+      "scope_springfield",
+      "skinhelmet_ger",
+      "skinhelmet_svt",
+      "skinhelmet_us",
+      "Snowball",
+      "Syringe",
+      "tripalarm",
+      "ww2bandage",
+      "ww2knife",
+      "ww2medkit",
+      "ww2painkillers",
+      "ww2syringe"
+    ],
+    "gunEmoji_case_aliases": {
+      "ak": [
+        "ak",
+        "AK"
+      ],
+      "ak12": [
+        "AK12",
+        "ak12"
+      ],
+      "ak47": [
+        "AK47",
+        "ak47"
+      ],
+      "antitank": [
+        "AntiTank",
+        "antitank"
+      ],
+      "ar": [
+        "AR",
+        "ar"
+      ],
+      "aug": [
+        "AUG",
+        "aug"
+      ],
+      "autoshotgun": [
+        "AutoShotgun",
+        "autoshotgun"
+      ],
+      "autosniper": [
+        "AutoSniper",
+        "autosniper"
+      ],
+      "awp": [
+        "awp",
+        "AWP"
+      ],
+      "bar": [
+        "bar",
+        "BAR"
+      ],
+      "de": [
+        "DE",
+        "de"
+      ],
+      "drumshotgun": [
+        "DrumShotgun",
+        "drumshotgun"
+      ],
+      "g43": [
+        "G43",
+        "g43"
+      ],
+      "grenade": [
+        "Grenade",
+        "grenade"
+      ],
+      "hunting": [
+        "hunting",
+        "Hunting"
+      ],
+      "kar98": [
+        "kar98",
+        "Kar98"
+      ],
+      "knife": [
+        "Knife",
+        "knife"
+      ],
+      "lmga": [
+        "LMGA",
+        "lmga"
+      ],
+      "m16": [
+        "m16",
+        "M16"
+      ],
+      "mp5": [
+        "mp5",
+        "MP5"
+      ],
+      "none": [
+        "None",
+        "none"
+      ],
+      "p90": [
+        "p90",
+        "P90"
+      ],
+      "revolver": [
+        "Revolver",
+        "revolver"
+      ],
+      "repairtool": [
+        "repairtool",
+        "repairTool",
+        "RepairTool"
+      ],
+      "sawedoff": [
+        "sawedoff",
+        "Sawedoff"
+      ],
+      "shotgun": [
+        "shotgun",
+        "Shotgun"
+      ],
+      "smg": [
+        "smg",
+        "SMG"
+      ],
+      "trenchgun": [
+        "trenchgun",
+        "Trenchgun"
+      ],
+      "tokarev": [
+        "Tokarev",
+        "tokarev"
+      ]
+    }
+  },
+  "rcon_validation": {
+    "command_count_matches": true,
+    "missing_standard_fields": [],
+    "duplicate_input_or_output_files": {},
+    "argument_types": {
+      "string": 32,
+      "boolean": 8,
+      "integer": 17
+    }
+  },
+  "notes": [
+    "Missing icon/emoji coverage is reported but not guessed or auto-filled.",
+    "Many items are utilities, ammo, armor, attachments, or non-gun objects, so an absent gun emoji is not automatically an error.",
+    "No extra Discord HTTP status codes were invented beyond the supplied reference.",
+    "Case aliases in gunEmoji.json were preserved because callers may use exact Pavlov identifiers/casing."
+  ]
+}

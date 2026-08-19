@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "description": "Discord HTTP response-code reference used by JTWP webhook tooling.",
   "discordResponseCodes": [
     {
       "code": 200,
@@ -84,5 +86,6 @@
       "description": "Discord or an upstream service took too long to respond.",
       "success": false
     }
-  ]
+  ],
+  "response_code_count": 14
 }

@@ -8,6 +8,29 @@ import requests
 from collector import Collector, DEFAULT_CONFIG, NetSession, ServerCfg, TS_RE, load_json
 
 @dataclass
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
+
+
 class TailState:
     path: Path
     offset: int = 0
@@ -133,10 +156,23 @@ class LiveConnectionWatcher:
         self.post(self.connection_webhook,payload,"connection")
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument("-c","--config",default="config.json"); args=ap.parse_args()
-    p=Path(args.config)
-    if not p.exists(): raise SystemExit(f"Config not found: {p}")
-    cfg=json.loads(p.read_text(encoding="utf-8")); merged=dict(DEFAULT_CONFIG); merged.update(cfg)
-    if "servers" in cfg: merged["servers"]=cfg["servers"]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-c", "--config", default="config.json")
+    args = ap.parse_args()
+
+    p = Path(args.config).expanduser().resolve()
+    if not p.exists():
+        raise SystemExit(f"Config not found: {p}")
+
+    load_env_file(p.parent / ".env")
+    cfg = json.loads(p.read_text(encoding="utf-8"))
+    merged = dict(DEFAULT_CONFIG)
+    merged.update(cfg)
+    if "servers" in cfg:
+        merged["servers"] = cfg["servers"]
+
     LiveConnectionWatcher(merged).run()
-if __name__=="__main__": main()
+
+
+if __name__ == "__main__":
+    main()

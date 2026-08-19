@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "description": "JTWP Pavlov item identifiers. Includes identifiers observed in the supplied balancing table.",
   "items": [
     "57",
     "1911",
@@ -151,6 +153,8 @@
     "ww2knife",
     "ww2medkit",
     "ww2painkillers",
-    "ww2syringe"
+    "ww2syringe",
+    "thompson_drum",
+    "ppsh_drum"
   ]
 }

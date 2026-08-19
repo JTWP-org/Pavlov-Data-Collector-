@@ -17,18 +17,23 @@ class ActiveConfig:
     def __init__(self, path: str | Path = "active.json"):
         self.path = Path(path)
         self.data: dict[str, Any] = {}
+        self.last_error: str | None = None
         self.reload()
 
     def reload(self) -> None:
         if not self.path.exists():
             self.data = {}
+            self.last_error = f"Active config not found: {self.path}"
             return
 
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
             self.data = raw if isinstance(raw, dict) else {}
-        except Exception:
+            self.last_error = None
+        except Exception as exc:
+            # Preserve the historical fail-open behavior, but retain diagnostics.
             self.data = {}
+            self.last_error = f"{type(exc).__name__}: {exc}"
 
     def enabled(self, *keys: str, default: bool = True) -> bool:
         node: Any = self.data

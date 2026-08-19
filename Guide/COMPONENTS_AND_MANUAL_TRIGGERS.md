@@ -743,7 +743,7 @@ sudo /usr/local/bin/unblock-ip 203.0.113.123
 See:
 
 ``` text
-Guides/SSHblocking.MD
+Guides/SSH_BLOCKING.md
 ```
 
 for the full SSH auto-block setup.
@@ -1493,7 +1493,7 @@ Guides/API_SETUP.md
 Guides/RCON_COMMANDS.md
 Guides/SCRIPTS.md
 Guides/SERVICES.md
-Guides/SSHblocking.MD
+Guides/SSH_BLOCKING.md
 Guides/USEFUL_COMMANDS.md
 ```
 
@@ -1505,3 +1505,12 @@ component:
 and:
 
 > **How do I run or trigger it manually?**
+
+---
+
+## 📚 Documentation Ownership
+
+For installation/update order use `INSTALL_AND_UPDATE.md`. For systemd use
+`SERVICES.md`; secrets/API values use `API_SETUP.md`; helper installation uses
+`SCRIPTS.md`; quick commands use `USEFUL_COMMANDS.md`. This guide should remain
+focused on its named component so setup instructions do not drift between files.

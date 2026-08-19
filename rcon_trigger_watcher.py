@@ -18,17 +18,30 @@ DEFAULT_CONFIG = {
     "rcon_bridge": {
         "enabled": True,
         "poll_interval_seconds": 0.25,
-        "command_file": "rcon_commands.json",
-        "game_modes_file": "game_modes.json",
-        "default_maps_file": "default_maps.json",
-        "limited_ammo_types_file": "limited_ammo_types.json",
+        "command_file": "resource/rcon_commands.json",
+        "custom_command_file": "custom_commands.json",
+        "game_modes_file": "resource/game_modes.json",
+        "default_maps_file": "resource/default_maps.json",
+        "limited_ammo_types_file": "resource/limited_ammo_types.json",
         "remove_input_on_error": True,
 
         # Pavlov Public API updater trigger.
         "ppapi_trigger_enabled": True,
         "ppapi_trigger_file": "EXE_PPAPI.json",
         "ppapi_updater": "update_pavlov_api.py",
-        "ppapi_timeout_seconds": 300
+        "ppapi_timeout_seconds": 300,
+
+        # Resource refresh trigger.
+        "rcon_resource_trigger_enabled": True,
+        "rcon_resource_trigger_file": "IN-RCON.json",
+        "rcon_resource_output_file": "OUT--RCON.json",
+        "rcon_resource_url": "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
+        "rcon_resource_local_file": "resource/rcon_commands.json",
+        "rcon_resource_timeout_seconds": 30,
+
+        # Custom/local JTWP commands are loaded separately.
+        "custom_commands_enabled": True,
+        "custom_command_timeout_seconds": 600
     }
 }
 
@@ -37,22 +50,67 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
+
+
 def load_json(path: Path, default: Any):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
         return default
 
 
 def atomic_write_json(path: Path, data: Any):
+    """Atomically write JSON using a unique temp file in the same directory.
+
+    A unique temp file prevents concurrent JTWP services from colliding on a
+    shared ``filename.tmp`` path.
+    """
+    import tempfile
+
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(path.name + ".tmp")
 
-    with temp.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=str(path.parent),
+    )
+    tmp_path = Path(tmp_name)
 
-    os.replace(temp, path)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(tmp_path, path)
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def bool_arg(v: Any) -> str:
@@ -111,24 +169,82 @@ class RconBridge:
         self.ppapi_running = False
 
         # ----------------------------------------------------
+        # RCON command resource refresh trigger
+        # ----------------------------------------------------
+
+        self.rcon_resource_trigger_enabled = bool(
+            bcfg.get("rcon_resource_trigger_enabled", True)
+        )
+
+        self.rcon_resource_trigger_file = str(
+            bcfg.get("rcon_resource_trigger_file", "IN-RCON.json")
+        )
+
+        self.rcon_resource_output_file = str(
+            bcfg.get("rcon_resource_output_file", "OUT--RCON.json")
+        )
+
+        self.rcon_resource_url = str(
+            bcfg.get(
+                "rcon_resource_url",
+                "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
+            )
+        )
+
+        self.rcon_resource_local_file = self.project_root / str(
+            bcfg.get("rcon_resource_local_file", "resource/rcon_commands.json")
+        )
+
+        self.rcon_resource_timeout_seconds = int(
+            bcfg.get("rcon_resource_timeout_seconds", 30)
+        )
+
+        self.rcon_resource_running = False
+
+        # ----------------------------------------------------
+        # Custom/local JTWP commands
+        # ----------------------------------------------------
+
+        self.custom_commands_enabled = bool(
+            bcfg.get("custom_commands_enabled", True)
+        )
+
+        self.custom_command_timeout_seconds = int(
+            bcfg.get("custom_command_timeout_seconds", 600)
+        )
+
+        self.custom_command_file = (
+            self.project_root
+            / bcfg.get(
+                "custom_command_file",
+                "custom_commands.json",
+            )
+        )
+
+        self.custom_command_defs = load_json(
+            self.custom_command_file,
+            {"commands": {}},
+        )
+
+        # ----------------------------------------------------
         # RCON support/reference files
         # ----------------------------------------------------
 
         self.command_defs = load_json(
             self.project_root
-            / bcfg.get("command_file", "rcon_commands.json"),
+            / bcfg.get("command_file", "resource/rcon_commands.json"),
             {"commands": {}},
         )
 
         self.game_modes = load_json(
             self.project_root
-            / bcfg.get("game_modes_file", "game_modes.json"),
+            / bcfg.get("game_modes_file", "resource/game_modes.json"),
             {"game_modes": {}},
         ).get("game_modes", {})
 
         self.default_maps = load_json(
             self.project_root
-            / bcfg.get("default_maps_file", "default_maps.json"),
+            / bcfg.get("default_maps_file", "resource/default_maps.json"),
             {"default_maps": {}},
         ).get("default_maps", {})
 
@@ -136,7 +252,7 @@ class RconBridge:
             self.project_root
             / bcfg.get(
                 "limited_ammo_types_file",
-                "limited_ammo_types.json",
+                "resource/limited_ammo_types.json",
             ),
             {"limited_ammo_types": {}},
         ).get("limited_ammo_types", {})
@@ -163,7 +279,7 @@ class RconBridge:
                 rcon.get(
                     "trigger_path",
                     str(
-                        log_path.parents[1]
+                        log_path.parent
                         / "Config"
                         / "ModSave"
                         / "JTWP"
@@ -414,6 +530,649 @@ class RconBridge:
         )
 
     # ========================================================
+    # CUSTOM / LOCAL JTWP COMMANDS
+    # ========================================================
+
+    def _custom_commands(self) -> dict:
+        defs = self.custom_command_defs
+
+        if not isinstance(defs, dict):
+            return {}
+
+        commands = defs.get("commands", {})
+
+        return (
+            commands
+            if isinstance(commands, dict)
+            else {}
+        )
+
+    def _get_custom_command(
+        self,
+        key: str,
+    ) -> dict | None:
+        command = self._custom_commands().get(key)
+
+        if not isinstance(command, dict):
+            return None
+
+        return command
+
+    def _validate_custom_args(
+        self,
+        key: str,
+        definition: dict,
+        body: dict,
+        server: dict,
+    ) -> tuple[list[str], dict]:
+        """
+        Build a subprocess argv list without using shell=True.
+
+        User supplied values are appended as individual argv
+        elements. This prevents shell metacharacters in input
+        JSON from becoming shell syntax.
+        """
+
+        executable = str(
+            definition.get("command", "")
+        ).strip()
+
+        if not executable:
+            raise ValueError(
+                f"Custom command {key} has no executable"
+            )
+
+        command_path = Path(executable)
+
+        if not command_path.is_absolute():
+            raise ValueError(
+                f"Custom command {key} must use "
+                "an absolute executable path"
+            )
+
+        argv: list[str] = []
+
+        if bool(
+            definition.get("use_sudo", False)
+        ):
+            argv.extend(
+                [
+                    "sudo",
+                    "-n",
+                ]
+            )
+
+        argv.append(executable)
+
+        for static_arg in definition.get(
+            "command_args",
+            [],
+        ):
+            argv.append(str(static_arg))
+
+        normalized = {}
+
+        for arg in definition.get(
+            "args",
+            [],
+        ):
+            if not isinstance(arg, dict):
+                continue
+
+            name = str(
+                arg.get("name", "")
+            ).strip()
+
+            if not name:
+                continue
+
+            required = bool(
+                arg.get("required", False)
+            )
+
+            if name not in body:
+                if required:
+                    raise ValueError(
+                        f"Missing required field: {name}"
+                    )
+
+                continue
+
+            value = body[name]
+            typ = str(
+                arg.get("type", "string")
+            ).lower()
+
+            if typ == "integer":
+                try:
+                    value = int(value)
+                except Exception as exc:
+                    raise ValueError(
+                        f"{name} must be an integer"
+                    ) from exc
+
+                if (
+                    "minimum" in arg
+                    and value
+                    < int(arg["minimum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be >= "
+                        f"{arg['minimum']}"
+                    )
+
+                if (
+                    "maximum" in arg
+                    and value
+                    > int(arg["maximum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be <= "
+                        f"{arg['maximum']}"
+                    )
+
+                rendered = str(value)
+
+            elif typ == "boolean":
+                rendered = bool_arg(value)
+                value = rendered == "True"
+
+            else:
+                rendered = str(value).strip()
+
+                if required and not rendered:
+                    raise ValueError(
+                        f"{name} cannot be empty"
+                    )
+
+                allowed_values = arg.get(
+                    "allowed_values"
+                )
+
+                if (
+                    isinstance(
+                        allowed_values,
+                        list,
+                    )
+                    and rendered
+                    not in {
+                        str(x)
+                        for x
+                        in allowed_values
+                    }
+                ):
+                    raise ValueError(
+                        f"{name} must be one of: "
+                        + ", ".join(
+                            str(x)
+                            for x
+                            in allowed_values
+                        )
+                    )
+
+                value = rendered
+
+            # Special server selector validation.
+            if name == "server_id":
+                known_servers = {
+                    s["server_id"]
+                    for s
+                    in self.servers
+                }
+
+                if rendered not in known_servers:
+                    raise ValueError(
+                        f"Unknown server_id: "
+                        f"{rendered}"
+                    )
+
+            normalized[name] = value
+            argv.append(rendered)
+
+        return argv, normalized
+
+    def _run_custom_sync(
+        self,
+        key: str,
+        definition: dict,
+        argv: list[str],
+    ) -> dict:
+        timeout_seconds = int(
+            definition.get(
+                "timeout_seconds",
+                self.custom_command_timeout_seconds,
+            )
+        )
+
+        try:
+            completed = subprocess.run(
+                argv,
+                cwd=str(self.project_root),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+
+        except subprocess.TimeoutExpired as exc:
+            return {
+                "success": False,
+                "error": (
+                    f"Custom command {key} timed out "
+                    f"after {timeout_seconds} seconds"
+                ),
+                "stdout": (
+                    exc.stdout.decode(
+                        errors="replace"
+                    )
+                    if isinstance(
+                        exc.stdout,
+                        bytes,
+                    )
+                    else (exc.stdout or "")
+                ),
+                "stderr": (
+                    exc.stderr.decode(
+                        errors="replace"
+                    )
+                    if isinstance(
+                        exc.stderr,
+                        bytes,
+                    )
+                    else (exc.stderr or "")
+                ),
+            }
+
+        except Exception as exc:
+            return {
+                "success": False,
+                "error": str(exc),
+            }
+
+        return {
+            "success": (
+                completed.returncode == 0
+            ),
+            "returncode": (
+                completed.returncode
+            ),
+            "stdout": (
+                completed.stdout.strip()
+            ),
+            "stderr": (
+                completed.stderr.strip()
+            ),
+        }
+
+    def _run_ssh_report_sync(
+        self,
+        definition: dict,
+    ) -> dict:
+        """
+        Preserve the existing SSH report workflow:
+
+          bash buildIt > built.txt
+          bash discordIt
+        """
+
+        ssh_root = Path(
+            definition.get(
+                "ssh_root",
+                "/home/steam/"
+                "jtwp-collector-data/"
+                "global/ssh",
+            )
+        )
+
+        build_script = (
+            ssh_root / "buildIt"
+        )
+        built_file = (
+            ssh_root / "built.txt"
+        )
+        discord_script = (
+            ssh_root / "discordIt"
+        )
+
+        if not build_script.is_file():
+            return {
+                "success": False,
+                "error": (
+                    "SSH build script not found: "
+                    f"{build_script}"
+                ),
+            }
+
+        if not discord_script.is_file():
+            return {
+                "success": False,
+                "error": (
+                    "SSH Discord script not found: "
+                    f"{discord_script}"
+                ),
+            }
+
+        timeout_seconds = int(
+            definition.get(
+                "timeout_seconds",
+                self.custom_command_timeout_seconds,
+            )
+        )
+
+        try:
+            build = subprocess.run(
+                [
+                    "bash",
+                    str(build_script),
+                ],
+                cwd=str(ssh_root),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=timeout_seconds,
+                check=False,
+            )
+
+        except Exception as exc:
+            return {
+                "success": False,
+                "error": (
+                    f"buildIt failed to run: "
+                    f"{exc}"
+                ),
+            }
+
+        if build.returncode != 0:
+            return {
+                "success": False,
+                "returncode": (
+                    build.returncode
+                ),
+                "error": "buildIt failed",
+                "stderr": build.stderr.decode(
+                    errors="replace"
+                ).strip(),
+            }
+
+        built_file.write_bytes(
+            build.stdout
+        )
+
+        try:
+            send = subprocess.run(
+                [
+                    "bash",
+                    str(discord_script),
+                ],
+                cwd=str(ssh_root),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+
+        except Exception as exc:
+            return {
+                "success": False,
+                "error": (
+                    f"discordIt failed to run: "
+                    f"{exc}"
+                ),
+            }
+
+        return {
+            "success": (
+                send.returncode == 0
+            ),
+            "returncode": (
+                send.returncode
+            ),
+            "built_file": (
+                str(built_file)
+            ),
+            "stdout": (
+                send.stdout.strip()
+            ),
+            "stderr": (
+                send.stderr.strip()
+            ),
+        }
+
+    async def _process_custom_command(
+        self,
+        server: dict,
+        key: str,
+        body: dict,
+        output_path: Path,
+        input_path: Path,
+    ) -> bool:
+        """
+        Return True when `key` was recognized as a custom
+        command, otherwise False.
+        """
+
+        definition = (
+            self._get_custom_command(key)
+        )
+
+        if definition is None:
+            return False
+
+        if not self.custom_commands_enabled:
+            raise RuntimeError(
+                "Custom commands are disabled "
+                "in config.json"
+            )
+
+        if not bool(
+            definition.get(
+                "enabled",
+                True,
+            )
+        ):
+            raise RuntimeError(
+                f"Custom command is disabled: "
+                f"{key}"
+            )
+
+        if not bool(
+            definition.get(
+                "allow_file_bridge",
+                True,
+            )
+        ):
+            raise PermissionError(
+                f"Custom command {key} is not "
+                "allowed through the file bridge"
+            )
+
+        argv, normalized_args = (
+            self._validate_custom_args(
+                key,
+                definition,
+                body,
+                server,
+            )
+            if definition.get(
+                "handler"
+            )
+            != "run_ssh_report"
+            else (
+                [],
+                {},
+            )
+        )
+
+        detached = bool(
+            definition.get(
+                "detached",
+                False,
+            )
+        )
+
+        # Detached custom commands are acknowledged BEFORE
+        # launch. This is required for restartJTWP because the
+        # command can restart this bridge's related services.
+        if detached:
+            accepted = {
+                "timestamp": now_iso(),
+                "server_id": (
+                    server["server_id"]
+                ),
+                "platform": (
+                    server["platform"]
+                ),
+                "request": key,
+                "type": "custom",
+                "owner_only": bool(
+                    definition.get(
+                        "owner_only",
+                        False,
+                    )
+                ),
+                "success": True,
+                "args": normalized_args,
+                "response": {
+                    "status": "accepted",
+                    "message": (
+                        definition.get(
+                            "accepted_message"
+                        )
+                        or (
+                            f"Custom command "
+                            f"{key} accepted."
+                        )
+                    ),
+                },
+            }
+
+            atomic_write_json(
+                output_path,
+                accepted,
+            )
+
+            input_path.unlink(
+                missing_ok=True
+            )
+
+            try:
+                subprocess.Popen(
+                    argv,
+                    cwd=str(
+                        self.project_root
+                    ),
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+
+            except Exception as exc:
+                accepted["success"] = False
+                accepted["response"] = None
+                accepted["error"] = str(exc)
+
+                atomic_write_json(
+                    output_path,
+                    accepted,
+                )
+
+                raise
+
+            print(
+                f"[{server['server_id']}] "
+                f"CUSTOM {key} -> ACCEPTED",
+                flush=True,
+            )
+
+            return True
+
+        handler = definition.get(
+            "handler"
+        )
+
+        if handler == "run_ssh_report":
+            execution = await asyncio.to_thread(
+                self._run_ssh_report_sync,
+                definition,
+            )
+
+        else:
+            execution = await asyncio.to_thread(
+                self._run_custom_sync,
+                key,
+                definition,
+                argv,
+            )
+
+        result = {
+            "timestamp": now_iso(),
+            "server_id": (
+                server["server_id"]
+            ),
+            "platform": (
+                server["platform"]
+            ),
+            "request": key,
+            "type": "custom",
+            "owner_only": bool(
+                definition.get(
+                    "owner_only",
+                    False,
+                )
+            ),
+            "success": bool(
+                execution.get(
+                    "success",
+                    False,
+                )
+            ),
+            "args": normalized_args,
+            "response": execution,
+        }
+
+        if not result["success"]:
+            result["error"] = (
+                execution.get(
+                    "error"
+                )
+                or execution.get(
+                    "stderr"
+                )
+                or (
+                    f"Custom command {key} "
+                    "returned a failure"
+                )
+            )
+
+        atomic_write_json(
+            output_path,
+            result,
+        )
+
+        input_path.unlink(
+            missing_ok=True
+        )
+
+        status = (
+            "OK"
+            if result["success"]
+            else "ERROR"
+        )
+
+        print(
+            f"[{server['server_id']}] "
+            f"CUSTOM {key} -> {status}",
+            flush=True,
+        )
+
+        return True
+
+    # ========================================================
     # RCON
     # ========================================================
 
@@ -618,6 +1377,261 @@ class RconBridge:
             self.ppapi_running = False
 
     # ========================================================
+    # RCON COMMAND RESOURCE TRIGGER
+    # ========================================================
+
+    def _find_rcon_resource_triggers(self) -> list[Path]:
+        if not self.rcon_resource_trigger_enabled:
+            return []
+
+        triggers = []
+
+        for server in self.servers:
+            p = (
+                server["trigger_path"]
+                / self.rcon_resource_trigger_file
+            )
+
+            if p.is_file():
+                triggers.append(p)
+
+        return triggers
+
+    def _consume_rcon_resource_triggers(
+        self,
+        triggers: list[Path],
+    ) -> None:
+        for trigger in triggers:
+            try:
+                trigger.unlink()
+                print(
+                    "[RCON-RESOURCE] Removed trigger: "
+                    f"{trigger}",
+                    flush=True,
+                )
+            except FileNotFoundError:
+                pass
+            except Exception as exc:
+                print(
+                    "[RCON-RESOURCE] Could not remove "
+                    f"{trigger}: {exc}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+
+    def _download_rcon_resource_sync(self) -> dict:
+        temp_path = self.rcon_resource_local_file.with_name(
+            self.rcon_resource_local_file.name + ".download"
+        )
+
+        temp_path.unlink(missing_ok=True)
+
+        cmd = [
+            "wget",
+            "-q",
+            "--timeout",
+            str(self.rcon_resource_timeout_seconds),
+            "--tries",
+            "1",
+            "-O",
+            str(temp_path),
+            self.rcon_resource_url,
+        ]
+
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.project_root),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=self.rcon_resource_timeout_seconds + 5,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            temp_path.unlink(missing_ok=True)
+
+            return {
+                "success": False,
+                "error": (
+                    "wget timed out while downloading "
+                    "rcon_commands.json"
+                ),
+            }
+        except Exception as exc:
+            temp_path.unlink(missing_ok=True)
+
+            return {
+                "success": False,
+                "error": str(exc),
+            }
+
+        if result.returncode != 0:
+            temp_path.unlink(missing_ok=True)
+
+            return {
+                "success": False,
+                "error": (
+                    result.stderr.strip()
+                    or result.stdout.strip()
+                    or f"wget exited with code {result.returncode}"
+                ),
+            }
+
+        try:
+            downloaded = json.loads(
+                temp_path.read_text(encoding="utf-8")
+            )
+        except Exception as exc:
+            temp_path.unlink(missing_ok=True)
+
+            return {
+                "success": False,
+                "error": (
+                    "Downloaded rcon_commands.json is invalid JSON: "
+                    f"{exc}"
+                ),
+            }
+
+        if not isinstance(downloaded, dict):
+            temp_path.unlink(missing_ok=True)
+
+            return {
+                "success": False,
+                "error": (
+                    "Downloaded rcon_commands.json "
+                    "must contain a JSON object"
+                ),
+            }
+
+        # Replace the local resource only after the download
+        # has successfully parsed as JSON.
+        os.replace(
+            temp_path,
+            self.rcon_resource_local_file,
+        )
+
+        # Reload definitions immediately so subsequent RCON
+        # requests use the new command resource without a
+        # watcher restart.
+        self.command_defs = downloaded
+
+        return {
+            "success": True,
+            "data": downloaded,
+        }
+
+    async def process_rcon_resource_trigger(
+        self,
+        triggers: list[Path],
+    ) -> None:
+        if not triggers:
+            return
+
+        if self.rcon_resource_running:
+            self._consume_rcon_resource_triggers(
+                triggers
+            )
+
+            print(
+                "[RCON-RESOURCE] Refresh already running; "
+                "duplicate trigger consumed.",
+                flush=True,
+            )
+
+            return
+
+        # Capture every directory that requested the resource
+        # so each caller receives OUT--RCON.json.
+        output_paths = [
+            trigger.with_name(
+                self.rcon_resource_output_file
+            )
+            for trigger in triggers
+        ]
+
+        # Remove stale output before beginning.
+        for output_path in output_paths:
+            output_path.unlink(missing_ok=True)
+
+        # Consume the trigger first so it cannot be executed
+        # repeatedly while wget is running.
+        self._consume_rcon_resource_triggers(
+            triggers
+        )
+
+        self.rcon_resource_running = True
+
+        print(
+            "[RCON-RESOURCE] IN-RCON.json detected.",
+            flush=True,
+        )
+
+        print(
+            "[RCON-RESOURCE] Downloading latest command "
+            "resource with wget...",
+            flush=True,
+        )
+
+        try:
+            result = await asyncio.to_thread(
+                self._download_rcon_resource_sync
+            )
+
+            if result.get("success"):
+                data = result["data"]
+
+                # OUT--RCON.json intentionally contains the
+                # resource JSON itself, not a response wrapper.
+                for output_path in output_paths:
+                    atomic_write_json(
+                        output_path,
+                        data,
+                    )
+
+                print(
+                    "[RCON-RESOURCE] Local "
+                    "rcon_commands.json updated.",
+                    flush=True,
+                )
+
+                print(
+                    "[RCON-RESOURCE] Wrote "
+                    f"{self.rcon_resource_output_file}.",
+                    flush=True,
+                )
+            else:
+                error = result.get(
+                    "error",
+                    "Unknown resource refresh error",
+                )
+
+                # On failure, return a small valid JSON error
+                # so the ModKit does not wait forever for a
+                # response file.
+                error_response = {
+                    "success": False,
+                    "error": error,
+                    "timestamp": now_iso(),
+                }
+
+                for output_path in output_paths:
+                    atomic_write_json(
+                        output_path,
+                        error_response,
+                    )
+
+                print(
+                    "[RCON-RESOURCE] Refresh failed: "
+                    f"{error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+
+        finally:
+            self.rcon_resource_running = False
+
+    # ========================================================
     # RCON TRIGGER PROCESSING
     # ========================================================
 
@@ -656,6 +1670,31 @@ class RconBridge:
                 raise ValueError(
                     "Input JSON must be an object"
                 )
+
+            # ------------------------------------------------
+            # CUSTOM / LOCAL JTWP COMMANDS
+            # ------------------------------------------------
+            #
+            # If the key exists in custom_commands.json,
+            # execute it locally and do NOT forward it to the
+            # Pavlov RCON socket.
+            #
+            # Otherwise continue into the normal Pavlov RCON
+            # command validation below.
+            # ------------------------------------------------
+
+            custom_handled = (
+                await self._process_custom_command(
+                    server,
+                    key,
+                    body,
+                    output_path,
+                    input_path,
+                )
+            )
+
+            if custom_handled:
+                return
 
             command, normalized_args = (
                 self._validate_and_build(
@@ -786,6 +1825,26 @@ class RconBridge:
                 flush=True,
             )
 
+        if self.rcon_resource_trigger_enabled:
+            print(
+                "  RCON resource trigger: "
+                f"{self.rcon_resource_trigger_file} "
+                f"-> {self.rcon_resource_output_file}",
+                flush=True,
+            )
+
+        if self.custom_commands_enabled:
+            custom_count = len(
+                self._custom_commands()
+            )
+
+            print(
+                "  Custom commands: "
+                f"{self.custom_command_file} "
+                f"({custom_count} loaded)",
+                flush=True,
+            )
+
         while True:
             did_work = False
 
@@ -805,6 +1864,21 @@ class RconBridge:
                 )
 
             # ------------------------------------------------
+            # RCON command resource refresh trigger
+            # ------------------------------------------------
+
+            resource_triggers = (
+                self._find_rcon_resource_triggers()
+            )
+
+            if resource_triggers:
+                did_work = True
+
+                await self.process_rcon_resource_trigger(
+                    resource_triggers
+                )
+
+            # ------------------------------------------------
             # Normal RCON IN-*.json triggers
             # ------------------------------------------------
 
@@ -814,6 +1888,12 @@ class RconBridge:
                         "trigger_path"
                     ].glob("IN-*.json")
                 ):
+                    if (
+                        p.name
+                        == self.rcon_resource_trigger_file
+                    ):
+                        continue
+
                     did_work = True
 
                     await self.process_file(
@@ -838,12 +1918,14 @@ def main():
 
     args = ap.parse_args()
 
-    p = Path(args.config)
+    p = Path(args.config).expanduser().resolve()
 
     if not p.exists():
         raise SystemExit(
             f"Config not found: {p}"
         )
+
+    load_env_file(p.parent / ".env")
 
     cfg = json.loads(
         p.read_text(

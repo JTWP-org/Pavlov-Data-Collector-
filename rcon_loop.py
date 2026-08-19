@@ -19,15 +19,60 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+
+def load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE entries without overriding existing variables."""
+    if not path.is_file():
+        return
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+
+        os.environ.setdefault(key, value)
+
+
 def atomic_write_json(path: Path, data: Any) -> None:
+    """Atomically write JSON using a unique temp file in the same directory.
+
+    A unique temp file prevents concurrent JTWP services from colliding on a
+    shared ``filename.tmp`` path.
+    """
+    import tempfile
+
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(path.name + ".tmp")
 
-    with temp.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=str(path.parent),
+    )
+    tmp_path = Path(tmp_name)
 
-    os.replace(temp, path)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(tmp_path, path)
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 class RconLoopWatcher:
@@ -304,14 +349,21 @@ def main():
     ap.add_argument("-a", "--active", default="active.json")
     args = ap.parse_args()
 
-    cfg = json.loads(
-        Path(args.config).read_text(encoding="utf-8")
-    )
+    cfg_path = Path(args.config).expanduser().resolve()
+    if not cfg_path.is_file():
+        raise SystemExit(f"Config not found: {cfg_path}")
+
+    load_env_file(cfg_path.parent / ".env")
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+
+    active_path = Path(args.active).expanduser()
+    if not active_path.is_absolute():
+        active_path = cfg_path.parent / active_path
 
     asyncio.run(
         RconLoopWatcher(
             cfg,
-            Path(args.active),
+            active_path,
         ).run()
     )
 

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "resource_directory": "resource",
+  "files": {
+    "rcon_commands.json": {
+      "purpose": "RCON command definitions",
+      "required_by": "rcon_trigger_watcher.py"
+    },
+    "game_modes.json": {
+      "purpose": "Allowed Pavlov game mode identifiers",
+      "required_by": "rcon_trigger_watcher.py"
+    },
+    "default_maps.json": {
+      "purpose": "Default Pavlov map identifiers/platform availability",
+      "required_by": "rcon_trigger_watcher.py"
+    },
+    "limited_ammo_types.json": {
+      "purpose": "LimitedAmmoType lookup keyed by 0-5",
+      "required_by": "rcon_trigger_watcher.py"
+    },
+    "items.json": {
+      "purpose": "Known Pavlov item identifiers"
+    },
+    "BalancingTable.csv": {
+      "purpose": "Supplied balancing values keyed by item/weapon identifier"
+    },
+    "gunEmoji.json": {
+      "purpose": "Discord custom-emoji lookup aliases"
+    },
+    "icon.json": {
+      "purpose": "JTWP image URL lookup"
+    },
+    "WebhookResponseCodes.json": {
+      "purpose": "Discord HTTP response-code descriptions"
+    },
+    "resource_audit.json": {
+      "purpose": "Cross-resource consistency/coverage report"
+    }
+  }
+}

@@ -1,1 +1,4 @@
 async-pavlov
+discord.py>=2.4,<3
+requests>=2.31
+Pillow>=10

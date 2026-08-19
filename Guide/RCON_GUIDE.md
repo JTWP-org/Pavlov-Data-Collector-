@@ -29,7 +29,7 @@
     > password in `.env`. Do not pre-hash it for
     > `rcon_trigger_watcher.py`.**
 
-    \## 🔐 RCON Passwords
+    ## 🔐 RCON Passwords
 
     Example `.env`:
 
@@ -47,7 +47,7 @@
 
     `async-pavlov` hashes the password internally before authentication.
 
-    \## 🧮 Manual MD5 Helper
+    ## 🧮 Manual MD5 Helper
 
     The repository can include:
 
@@ -91,7 +91,7 @@
 
     ------------------------------------------------------------------------
 
-    \## 📁 ModSave Trigger Paths
+    ## 📁 ModSave Trigger Paths
 
     ``` text
     /home/steam/pavlovserver/Pavlov/Saved/Config/ModSave/JTWP/Rcon
@@ -101,7 +101,7 @@
 
     The folder determines which Pavlov server receives the command.
 
-    \## 🔄 RCON File Trigger Flow
+    ## 🔄 RCON File Trigger Flow
 
     The ModKit creates an input file:
 
@@ -128,7 +128,7 @@
     OUT-serverinfo.json
     ```
 
-    \## 🧾 RCON Response Examples
+    ## 🧾 RCON Response Examples
 
     ``` json
     {
@@ -154,7 +154,7 @@
     }
     ```
 
-    \## 📚 Supported RCON Commands
+    ## 📚 Supported RCON Commands
 
     All commands below are currently marked `"supported": true`.
 
@@ -477,7 +477,7 @@
                                                                                                                                name.
       -----------------------------------------------------------------------------------------------------------------------------------------
 
-    \## 📥 `IN-RCON.json` --- RCON Resource Trigger
+    ## 📥 `IN-RCON.json` --- RCON Resource Trigger
 
     `IN-RCON.json` is a **special file trigger** handled by
     `rcon_trigger_watcher.py`. Unlike normal `IN-*.json` files, it does
@@ -682,7 +682,7 @@
 
     ------------------------------------------------------------------------
 
-    \## 🧪 RCON Input Examples
+    ## 🧪 RCON Input Examples
 
     \### `SetBotsEnabled`
 
@@ -726,7 +726,7 @@
     }
     ```
 
-    \## ⚙️ RCON Configuration
+    ## ⚙️ RCON Configuration
 
     ``` json
     {
@@ -741,14 +741,14 @@
     }
     ```
 
-    \## 📦 Install Dependencies
+    ## 📦 Install Dependencies
 
     ``` bash
     source /home/steam/jtwp-collector/venv/bin/activate
     pip install -r requirements.txt
     ```
 
-    \## ⚡ RCON Watcher Service
+    ## ⚡ RCON Watcher Service
 
     ``` bash
     sudo install -m 644 jtwp-rcon-trigger-watcher.service /etc/systemd/system/jtwp-rcon-trigger-watcher.service
@@ -805,3 +805,48 @@ sudo journalctl -u jtwp-rcon-trigger-watcher -f
     - Restrict RCON ports with the firewall where possible.
     - The bridge only executes commands defined in `rcon_commands.json`.
     - Commands such as `ShutdownServer`, `Ban`, `Kick`, `SetPin`, and map/mod mutation commands are administrative operations.
+
+
+---
+
+# 🖥️ Adding Another Pavlov Server
+
+For another server such as `pavlovserver2`, add its server entry to
+`config.json`, use its own RCON port, and give it its own password variable:
+
+```dotenv
+PAVLOVSERVER2_RCON_PASSWORD=YOUR_RCON_PASSWORD
+```
+
+The ModSave trigger directory follows the same structure:
+
+```text
+/home/steam/pavlovserver2/Pavlov/Saved/Config/ModSave/JTWP/Rcon
+```
+
+After changing server definitions:
+
+```bash
+sudo systemctl restart jtwp-rcon-trigger-watcher.service
+sudo journalctl -u jtwp-rcon-trigger-watcher.service -n 100 -f
+```
+
+# 🔌 Basic Connectivity Test
+
+Before debugging the bridge, verify that something is listening on the RCON
+port:
+
+```bash
+ss -lntp | grep ':9000'
+```
+
+Replace `9000` with the configured server's RCON port.
+
+A local raw connection can be opened with:
+
+```bash
+nc 127.0.0.1 PORT
+```
+
+The Python watcher should still receive the normal plaintext RCON password from
+its configured environment variable; do not pre-hash that value.

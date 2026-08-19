@@ -209,7 +209,7 @@ sudo journalctl -u jtwp-ssh-watcher -f
 For SSH auto-block setup and sudo permissions, see:
 
 ``` text
-Guides/SSHblocking.MD
+Guides/SSH_BLOCKING.md
 ```
 
 ------------------------------------------------------------------------
@@ -617,3 +617,101 @@ jtwp-pavlov-api-update.service
 
 This keeps scheduled collection separate from the always-running
 monitoring services.
+
+
+---
+
+# 🧯 Safe Stop / Disable Procedures
+
+Stopping the collector service alone does not stop its timer. To prevent it from
+being started again by the timer:
+
+```bash
+sudo systemctl stop jtwp-collector.timer
+sudo systemctl disable jtwp-collector.timer
+sudo systemctl stop jtwp-collector.service
+```
+
+To stop and disable the JTWP long-running services:
+
+```bash
+sudo systemctl disable --now \
+    jtwp-admin-monitor.service \
+    jtwp-connection-watcher.service \
+    jtwp-ddos-watcher.service \
+    jtwp-discord-bot.service \
+    jtwp-rcon-loop.service \
+    jtwp-rcon-trigger-watcher.service \
+    jtwp-ssh-watcher.service
+```
+
+This does not stop Pavlov game-server services unless you explicitly name them.
+
+# 🧪 Validate Unit Files
+
+```bash
+sudo systemd-analyze verify /etc/systemd/system/jtwp-*.service
+sudo systemd-analyze verify /etc/systemd/system/jtwp-*.timer
+```
+
+After editing a unit:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart UNIT.service
+```
+
+# 🔎 Show the Exact Installed Unit
+
+```bash
+sudo systemctl cat UNIT.service
+```
+
+Useful runtime properties:
+
+```bash
+systemctl show UNIT.service \
+    -p User \
+    -p Group \
+    -p WorkingDirectory \
+    -p ExecStart \
+    -p EnvironmentFiles \
+    -p ActiveState \
+    -p SubState
+```
+
+# 🧾 Full JTWP Service Inventory
+
+```bash
+systemctl list-units --type=service --all | grep -E 'jtwp|pavlov'
+systemctl list-unit-files | grep -E 'jtwp|pavlov'
+systemctl list-timers --all | grep -E 'jtwp|pavlov'
+```
+
+# ⚠️ Permissions
+
+A service running as `steam` must be able to write its data/output directories.
+For failures involving `.tmp` files or `os.replace`, inspect the whole path:
+
+```bash
+namei -l /home/steam/jtwp-collector-data/private/ip_lookup_cache.json
+ls -ld \
+    /home/steam/jtwp-collector-data \
+    /home/steam/jtwp-collector-data/private
+```
+
+Avoid fixing collector permissions with broad `chmod 777`.
+
+---
+
+# 🔐 Privileged Service Actions
+
+For `sudo -n`, SSH auto-blocking, packet capture, Discord OWNER host controls,
+root-owned wrappers and `/etc/sudoers.d/` configuration, use:
+
+```text
+SECURITY_AND_SUDOERS.md
+```
+
+Do not solve a permission problem by granting the `steam` account unrestricted
+passwordless sudo.

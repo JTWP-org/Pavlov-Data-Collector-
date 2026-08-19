@@ -1023,3 +1023,25 @@ find /home/steam/jtwp-collector-data -type f -mmin -10 -ls
 
 > [!CAUTION]
 > Do not paste the unfiltered output of `.env`, raw-IP files, API secrets, RCON passwords, or webhook URLs into public issues or Discord channels.
+
+
+---
+
+## 🩺 One-Pass JTWP Health Check
+
+```bash
+cd /home/steam/jtwp-collector/Pavlov-Data-Collector- && \
+jq empty config.json && \
+jq empty active.json && \
+/home/steam/jtwp-collector/venv/bin/python3 -m compileall -q . && \
+systemctl list-units --type=service --all | grep -E 'jtwp|pavlov' && \
+systemctl list-timers --all | grep jtwp
+```
+
+Recursive grep examples:
+
+```bash
+grep -Rni "SEARCH_TEXT" /home/steam/jtwp-collector/Pavlov-Data-Collector-
+grep -Rni --include='*.py' "SEARCH_TEXT" .
+grep -Rni --include='*.json' "SEARCH_TEXT" /home/steam/jtwp-collector-data
+```

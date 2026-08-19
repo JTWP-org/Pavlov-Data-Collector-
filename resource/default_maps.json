@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "description": "JTWP Pavlov default-map reference.",
   "default_maps": {
     "datacenter": {
       "name": "Datacenter",
@@ -145,5 +147,6 @@
         "PCVR"
       ]
     }
-  }
+  },
+  "map_count": 22
 }

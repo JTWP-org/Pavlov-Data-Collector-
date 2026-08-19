@@ -1,31 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATA_ROOT="${JTWP_DATA_ROOT:-/home/steam/jtwp-collector-data}"
+DATA_ROOT="/home/steam/jtwp-collector-data"
+OWNER="steam"
+GROUP="steam"
 
 if [[ "${1:-}" != "--yes" ]]; then
-    echo "⚠️ This permanently deletes everything INSIDE:"
-    echo "   $DATA_ROOT"
+    echo "⚠️  This will remove all collector data under:"
+    echo "    $DATA_ROOT"
     echo
-    echo "Run:"
-    echo "   sudo $0 --yes"
-    exit 2
-fi
+    read -r -p "ARE YOU SURE YOU WANT TO REMOVE ALL THE DATA? Type YES: " confirm
 
-[[ -d "$DATA_ROOT" ]] || {
-    echo "Data folder does not exist: $DATA_ROOT"
-    exit 1
-}
-
-REAL="$(realpath -m "$DATA_ROOT")"
-
-if [[ "$REAL" != "/home/steam/jtwp-collector-data" ]]; then
-    echo "Refusing unexpected data path: $REAL"
-    exit 1
+    if [[ "$confirm" != "YES" ]]; then
+        echo "❌ Cancelled."
+        exit 1
+    fi
 fi
 
 echo "🧹 Clearing collector data..."
-find "$REAL" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+
+rm -rf "${DATA_ROOT:?}/"*
+
+mkdir -p \
+    "$DATA_ROOT/global" \
+    "$DATA_ROOT/private" \
+    "$DATA_ROOT/players/records" \
+    "$DATA_ROOT/players/index" \
+    "$DATA_ROOT/servers"
+
+chown -R "$OWNER:$GROUP" "$DATA_ROOT"
+
+chmod 755 "$DATA_ROOT"
+chmod 700 "$DATA_ROOT/private"
 
 echo "✅ Collector data cleared."
-echo "📁 Root folder preserved: $REAL"
+echo "📁 Root folder preserved: $DATA_ROOT"
+echo "👤 Ownership restored to: $OWNER:$GROUP"

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run JTWP Pavlov Data Collector nightly
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=jtwp-collector.service
+
+[Install]
+WantedBy=timers.target

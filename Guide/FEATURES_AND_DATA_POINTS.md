@@ -906,3 +906,12 @@ The goal is to turn raw Pavlov/server/network activity into long-term
 structured JSON/JSONL datasets that can be consumed by mods, websites,
 Discord bots, administration tools, authentication systems, and other
 server-side automation.
+
+---
+
+## 📚 Documentation Ownership
+
+For installation/update order use `INSTALL_AND_UPDATE.md`. For systemd use
+`SERVICES.md`; secrets/API values use `API_SETUP.md`; helper installation uses
+`SCRIPTS.md`; quick commands use `USEFUL_COMMANDS.md`. This guide should remain
+focused on its named component so setup instructions do not drift between files.

@@ -30,7 +30,7 @@
       "arguments": [],
       "requires_arguments": false,
       "example": "!exportdata",
-      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/export-data.sh",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/export-data.py",
       "sudo": false,
       "file_bridge": {
         "enabled": true,
@@ -42,14 +42,14 @@
     },
 
     "backupdata": {
-      "working": false,
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Creates a timestamped compressed backup of JTWP collector data.",
       "arguments": [],
       "requires_arguments": false,
       "example": "!backupdata",
-      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/backup-data.sh",
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/backup-data.py",
       "sudo": false,
       "file_bridge": {
         "enabled": true,
@@ -61,7 +61,7 @@
     },
 
     "cleardata": {
-      "working": false,
+      "working": true,
       "enabled": true,
       "permission": "OWNER",
       "description": "Clears JTWP collector data using the clear-data maintenance script.",

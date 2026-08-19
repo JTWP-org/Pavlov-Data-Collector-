@@ -18,11 +18,11 @@ DEFAULT_CONFIG = {
     "rcon_bridge": {
         "enabled": True,
         "poll_interval_seconds": 0.25,
-        "command_file": "resource/rcon_commands.json",
+        "command_file": "rcon_commands.json",
         "custom_command_file": "custom_commands.json",
-        "game_modes_file": "resource/game_modes.json",
-        "default_maps_file": "resource/default_maps.json",
-        "limited_ammo_types_file": "resource/limited_ammo_types.json",
+        "game_modes_file": "game_modes.json",
+        "default_maps_file": "default_maps.json",
+        "limited_ammo_types_file": "limited_ammo_types.json",
         "remove_input_on_error": True,
 
         # Pavlov Public API updater trigger.
@@ -36,7 +36,7 @@ DEFAULT_CONFIG = {
         "rcon_resource_trigger_file": "IN-RCON.json",
         "rcon_resource_output_file": "OUT--RCON.json",
         "rcon_resource_url": "https://raw.githubusercontent.com/JTWP-org/Pavlov-Data-Collector-/refs/heads/main/resource/rcon_commands.json",
-        "rcon_resource_local_file": "resource/rcon_commands.json",
+        "rcon_resource_local_file": "rcon_commands.json",
         "rcon_resource_timeout_seconds": 30,
 
         # Custom/local JTWP commands are loaded separately.
@@ -50,67 +50,22 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-
-def load_env_file(path: Path) -> None:
-    """Load simple KEY=VALUE entries without overriding existing variables."""
-    if not path.is_file():
-        return
-
-    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip()
-        if not key:
-            continue
-
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
-            value = value[1:-1]
-
-        os.environ.setdefault(key, value)
-
-
 def load_json(path: Path, default: Any):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
+    except FileNotFoundError:
         return default
 
 
 def atomic_write_json(path: Path, data: Any):
-    """Atomically write JSON using a unique temp file in the same directory.
-
-    A unique temp file prevents concurrent JTWP services from colliding on a
-    shared ``filename.tmp`` path.
-    """
-    import tempfile
-
-    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_name(path.name + ".tmp")
 
-    fd, tmp_name = tempfile.mkstemp(
-        prefix=f".{path.name}.",
-        suffix=".tmp",
-        dir=str(path.parent),
-    )
-    tmp_path = Path(tmp_name)
+    with temp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        f.write("\n")
 
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            f.write("\n")
-            f.flush()
-            os.fsync(f.fileno())
-
-        os.replace(tmp_path, path)
-    finally:
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+    os.replace(temp, path)
 
 
 def bool_arg(v: Any) -> str:
@@ -192,7 +147,7 @@ class RconBridge:
         )
 
         self.rcon_resource_local_file = self.project_root / str(
-            bcfg.get("rcon_resource_local_file", "resource/rcon_commands.json")
+            bcfg.get("rcon_resource_local_file", "rcon_commands.json")
         )
 
         self.rcon_resource_timeout_seconds = int(
@@ -232,19 +187,19 @@ class RconBridge:
 
         self.command_defs = load_json(
             self.project_root
-            / bcfg.get("command_file", "resource/rcon_commands.json"),
+            / bcfg.get("command_file", "rcon_commands.json"),
             {"commands": {}},
         )
 
         self.game_modes = load_json(
             self.project_root
-            / bcfg.get("game_modes_file", "resource/game_modes.json"),
+            / bcfg.get("game_modes_file", "game_modes.json"),
             {"game_modes": {}},
         ).get("game_modes", {})
 
         self.default_maps = load_json(
             self.project_root
-            / bcfg.get("default_maps_file", "resource/default_maps.json"),
+            / bcfg.get("default_maps_file", "default_maps.json"),
             {"default_maps": {}},
         ).get("default_maps", {})
 
@@ -252,7 +207,7 @@ class RconBridge:
             self.project_root
             / bcfg.get(
                 "limited_ammo_types_file",
-                "resource/limited_ammo_types.json",
+                "limited_ammo_types.json",
             ),
             {"limited_ammo_types": {}},
         ).get("limited_ammo_types", {})
@@ -447,6 +402,35 @@ class RconBridge:
 
                 rendered = str(iv)
                 normalized[name] = iv
+
+            elif typ in {"number", "float"}:
+                try:
+                    fv = float(value)
+                except Exception:
+                    raise ValueError(
+                        f"{name} must be a number"
+                    )
+
+                if (
+                    "minimum" in arg
+                    and fv < float(arg["minimum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be >= "
+                        f"{arg['minimum']}"
+                    )
+
+                if (
+                    "maximum" in arg
+                    and fv > float(arg["maximum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be <= "
+                        f"{arg['maximum']}"
+                    )
+
+                rendered = format(fv, "g")
+                normalized[name] = fv
 
             else:
                 rendered = str(value).strip()
@@ -676,6 +660,34 @@ class RconBridge:
             elif typ == "boolean":
                 rendered = bool_arg(value)
                 value = rendered == "True"
+
+            elif typ in {"number", "float"}:
+                try:
+                    value = float(value)
+                except Exception as exc:
+                    raise ValueError(
+                        f"{name} must be a number"
+                    ) from exc
+
+                if (
+                    "minimum" in arg
+                    and value < float(arg["minimum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be >= "
+                        f"{arg['minimum']}"
+                    )
+
+                if (
+                    "maximum" in arg
+                    and value > float(arg["maximum"])
+                ):
+                    raise ValueError(
+                        f"{name} must be <= "
+                        f"{arg['maximum']}"
+                    )
+
+                rendered = format(value, "g")
 
             else:
                 rendered = str(value).strip()
@@ -1918,14 +1930,12 @@ def main():
 
     args = ap.parse_args()
 
-    p = Path(args.config).expanduser().resolve()
+    p = Path(args.config)
 
     if not p.exists():
         raise SystemExit(
             f"Config not found: {p}"
         )
-
-    load_env_file(p.parent / ".env")
 
     cfg = json.loads(
         p.read_text(

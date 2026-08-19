@@ -5,257 +5,16 @@
   "output_prefix": "OUT-",
   "file_extension": ".json",
   "commands": {
-    "addmaprotation": {
-      "rcon_command": "AddMapRotation",
-      "supported": true,
-      "description": "Adds the specified map with the specified game mode to the bottom of the map rotation.",
-      "args": [
-        {
-          "name": "map_name_or_id",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "game_mode",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Writes the map to Game.ini."
-      ],
-      "example": "AddMapRotation sand snd",
-      "requires_args": true,
-      "input_file": "IN-addmaprotation.json",
-      "output_file": "OUT-addmaprotation.json"
-    },
-    "addmod": {
-      "rcon_command": "AddMod",
-      "supported": true,
-      "description": "Adds the specified player to the moderator list, making them an admin.",
-      "args": [
-        {
-          "name": "unique_id",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Allows the player to use the admin menu in the pause menu.",
-        "Makes the player immune to being vote-kicked.",
-        "Writes the player to mods.txt."
-      ],
-      "example": "AddMod 12345678901234567",
-      "requires_args": true,
-      "input_file": "IN-addmod.json",
-      "output_file": "OUT-addmod.json"
-    },
-    "ban": {
-      "rcon_command": "Ban",
-      "supported": true,
-      "description": "Kicks and permanently bans the specified player from the server.",
-      "args": [
-        {
-          "name": "unique_id",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Writes the player to blacklist.txt."
-      ],
-      "example": "Ban 12345678901234567",
-      "requires_args": true,
-      "input_file": "IN-ban.json",
-      "output_file": "OUT-ban.json"
-    },
-    "banlist": {
-      "rcon_command": "Banlist",
-      "supported": true,
-      "description": "Lists the currently banned player UniqueIDs from blacklist.txt.",
-      "args": [],
-      "notes": [],
-      "example": "Banlist",
-      "requires_args": false,
-      "input_file": "IN-banlist.json",
-      "output_file": "OUT-banlist.json"
-    },
-    "clearemptyvehicles": {
-      "rcon_command": "ClearEmptyVehicles",
-      "supported": true,
-      "description": "Removes all vehicles that are not occupied by a player.",
-      "args": [],
-      "notes": [],
-      "example": "ClearEmptyVehicles",
-      "requires_args": false,
-      "input_file": "IN-clearemptyvehicles.json",
-      "output_file": "OUT-clearemptyvehicles.json"
-    },
-    "disconnect": {
-      "rcon_command": "Disconnect",
-      "supported": true,
-      "description": "Forces the server to close the RCON connection.",
-      "args": [],
-      "notes": [
-        "Expected response is Goodbye."
-      ],
-      "example": "Disconnect",
-      "requires_args": false,
-      "input_file": "IN-disconnect.json",
-      "output_file": "OUT-disconnect.json"
-    },
-    "enablecompmode": {
-      "rcon_command": "EnableCompMode",
-      "supported": true,
-      "description": "Enables or disables competitive mode.",
-      "args": [
-        {
-          "name": "enabled",
-          "type": "boolean",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Competitive mode is changed on map rotation; this command updates the config value.",
-        "Writes to bCompetitive in Game.ini."
-      ],
-      "example": "EnableCompMode true",
-      "requires_args": true,
-      "input_file": "IN-enablecompmode.json",
-      "output_file": "OUT-enablecompmode.json"
-    },
-    "enableverboselogging": {
-      "rcon_command": "EnableVerboseLogging",
-      "supported": true,
-      "description": "Enables or disables verbose logging.",
-      "args": [
-        {
-          "name": "enabled",
-          "type": "boolean",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Writes to bVerboseLogging in Game.ini."
-      ],
-      "example": "EnableVerboseLogging false",
-      "requires_args": true,
-      "input_file": "IN-enableverboselogging.json",
-      "output_file": "OUT-enableverboselogging.json"
-    },
-    "enablewhitelist": {
-      "rcon_command": "EnableWhitelist",
-      "supported": true,
-      "description": "Enables or disables whitelist usage.",
-      "args": [
-        {
-          "name": "enabled",
-          "type": "boolean",
-          "required": true
-        }
-      ],
-      "notes": [
-        "When enabled, only players listed in whitelist.txt can join the server.",
-        "Writes to bWhitelist in Game.ini."
-      ],
-      "example": "EnableWhitelist true",
-      "requires_args": true,
-      "input_file": "IN-enablewhitelist.json",
-      "output_file": "OUT-enablewhitelist.json"
-    },
-    "gag": {
-      "rcon_command": "Gag",
-      "supported": true,
-      "description": "Gags or ungags the specified player.",
-      "args": [
-        {
-          "name": "unique_id",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "enabled",
-          "type": "boolean",
-          "required": true
-        }
-      ],
-      "notes": [
-        "When gagged, the player cannot use voice chat."
-      ],
-      "example": "Gag 12345678901234567 true",
-      "requires_args": true,
-      "input_file": "IN-gag.json",
-      "output_file": "OUT-gag.json"
-    },
-    "giveall": {
-      "rcon_command": "GiveAll",
-      "supported": true,
-      "description": "Gives an item to all players on a team.",
-      "args": [
-        {
-          "name": "team_id",
-          "type": "integer",
-          "required": true
-        },
-        {
-          "name": "item_id",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "notes": [
-        "Item placement follows the same behavior described for GiveItem."
-      ],
-      "example": "GiveAll 1 galul",
-      "requires_args": true,
-      "input_file": "IN-giveall.json",
-      "output_file": "OUT-giveall.json"
-    },
-    "givecash": {
-      "rcon_command": "GiveCash",
-      "supported": true,
-      "description": "Gives the specified amount of cash to the specified player.",
-      "args": [
-        {
-          "name": "unique_id",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "cash_amount",
-          "type": "integer",
-          "required": true
-        }
-      ],
-      "notes": [],
-      "example": "GiveCash 12345678901234567 200",
-      "requires_args": true,
-      "input_file": "IN-givecash.json",
-      "output_file": "OUT-givecash.json"
-    },
     "giveitem": {
       "rcon_command": "GiveItem",
       "supported": true,
-      "description": "Equips the specified item to the specified player in the corresponding item slot.",
-      "args": [
-        {
-          "name": "unique_id",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "item_id",
-          "type": "string",
-          "required": true
-        }
-      ],
+      "description": null,
+      "args": [],
       "notes": [
-        "Primary guns are placed into the player's main hand, replacing and dropping the held gun.",
-        "Secondary guns are placed onto the player's hip, replacing and dropping the holstered gun.",
-        "Utilities are placed into chest slots until full; additional items are dropped."
+        "The provided source begins mid-command, so the GiveItem argument/description metadata is incomplete."
       ],
-      "example": "GiveItem 12345678901234567 syringe",
-      "requires_args": true,
+      "example": null,
+      "requires_args": false,
       "input_file": "IN-giveitem.json",
       "output_file": "OUT-giveitem.json"
     },
@@ -280,17 +39,6 @@
       "requires_args": true,
       "input_file": "IN-giveteamcash.json",
       "output_file": "OUT-giveteamcash.json"
-    },
-    "help": {
-      "rcon_command": "Help",
-      "supported": true,
-      "description": "Returns the full list of commands and their parameters.",
-      "args": [],
-      "notes": [],
-      "example": "Help",
-      "requires_args": false,
-      "input_file": "IN-help.json",
-      "output_file": "OUT-help.json"
     },
     "inspectall": {
       "rcon_command": "InspectAll",
@@ -408,28 +156,6 @@
       "input_file": "IN-moderatorlist.json",
       "output_file": "OUT-moderatorlist.json"
     },
-    "pausematch": {
-      "rcon_command": "PauseMatch",
-      "supported": true,
-      "description": "Pauses the currently running match for the specified amount of seconds.",
-      "args": [
-        {
-          "name": "amount",
-          "type": "integer",
-          "required": false,
-          "minimum": 0,
-          "maximum": 3600
-        }
-      ],
-      "notes": [
-        "The game is unpaused when amount is not specified or 0.",
-        "Unpausing starts a 15 second countdown timer."
-      ],
-      "example": "PauseMatch 60",
-      "requires_args": true,
-      "input_file": "IN-pausematch.json",
-      "output_file": "OUT-pausematch.json"
-    },
     "refreshlist": {
       "rcon_command": "RefreshList",
       "supported": true,
@@ -500,6 +226,28 @@
       "input_file": "IN-resetsnd.json",
       "output_file": "OUT-resetsnd.json"
     },
+    "pausematch": {
+      "rcon_command": "PauseMatch",
+      "supported": true,
+      "description": "Pauses the currently running match for the specified amount of seconds.",
+      "args": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 3600
+        }
+      ],
+      "notes": [
+        "The game is unpaused when amount is not specified or 0.",
+        "Unpausing starts a 15 second countdown timer."
+      ],
+      "example": "PauseMatch 60",
+      "requires_args": true,
+      "input_file": "IN-pausematch.json",
+      "output_file": "OUT-pausematch.json"
+    },
     "rotatemap": {
       "rcon_command": "RotateMap",
       "supported": true,
@@ -544,25 +292,6 @@
       "requires_args": true,
       "input_file": "IN-setbalancetableurl.json",
       "output_file": "OUT-setbalancetableurl.json"
-    },
-    "setbotsenabled": {
-      "rcon_command": "SetBotsEnabled",
-      "supported": true,
-      "description": "Enables bots in the server and fills the server to the player limit with bots.",
-      "args": [
-        {
-          "name": "enabled",
-          "type": "boolean",
-          "required": true
-        }
-      ],
-      "notes": [
-        "The source marks response data as missing."
-      ],
-      "example": "SetBotsEnabled True",
-      "requires_args": true,
-      "input_file": "IN-setbotsenabled.json",
-      "output_file": "OUT-setbotsenabled.json"
     },
     "setcash": {
       "rcon_command": "SetCash",
@@ -954,6 +683,44 @@
       "input_file": "IN-tttsetrole.json",
       "output_file": "OUT-tttsetrole.json"
     },
+    "unban": {
+      "rcon_command": "Unban",
+      "supported": true,
+      "description": "Unbans the specified player so that they can join again.",
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [
+        "Writes the change to blacklist.txt."
+      ],
+      "example": "Unban 12345678901234567",
+      "requires_args": true,
+      "input_file": "IN-unban.json",
+      "output_file": "OUT-unban.json"
+    },
+    "updateservername": {
+      "rcon_command": "UpdateServerName",
+      "supported": true,
+      "description": "Changes the server name to the specified name.",
+      "args": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [
+        "Writes to ServerName in Game.ini."
+      ],
+      "example": "UpdateServerName My server name",
+      "requires_args": true,
+      "input_file": "IN-updateservername.json",
+      "output_file": "OUT-updateservername.json"
+    },
     "ugcaddmod": {
       "rcon_command": "UGCAddMod",
       "supported": true,
@@ -1018,44 +785,666 @@
       "input_file": "IN-ugcremovemod.json",
       "output_file": "OUT-ugcremovemod.json"
     },
-    "unban": {
-      "rcon_command": "Unban",
+    "setbotsenabled": {
+      "rcon_command": "SetBotsEnabled",
       "supported": true,
-      "description": "Unbans the specified player so that they can join again.",
+      "description": "Enables bots in the server and fills the server to the player limit with bots.",
       "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [
+        "The source marks response data as missing."
+      ],
+      "example": "SetBotsEnabled True",
+      "requires_args": true,
+      "input_file": "IN-setbotsenabled.json",
+      "output_file": "OUT-setbotsenabled.json"
+    },
+    "notify": {
+      "rcon_command": "Notify",
+      "supported": true,
+      "description": "Displays text in front of the target player through RCON.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "Notify PlayerName Server restart in 5 minutes",
+      "requires_args": true,
+      "input_file": "IN-notify.json",
+      "output_file": "OUT-notify.json"
+    },
+    "dropitems": {
+      "rcon_command": "DropItems",
+      "supported": true,
+      "description": "Forces the target player to drop all items they are holding.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "DropItems PlayerName",
+      "requires_args": true,
+      "input_file": "IN-dropitems.json",
+      "output_file": "OUT-dropitems.json"
+    },
+    "disablepickup": {
+      "rcon_command": "DisablePickup",
+      "supported": true,
+      "description": "Prevents or allows the target player from picking up items.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "DisablePickup PlayerName True",
+      "requires_args": true,
+      "input_file": "IN-disablepickup.json",
+      "output_file": "OUT-disablepickup.json"
+    },
+    "movementspeed": {
+      "rcon_command": "MovementSpeed",
+      "supported": true,
+      "description": "Sets the movement-speed multiplier for the target player.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "multiplier",
+          "type": "number",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "MovementSpeed PlayerName 1.5",
+      "requires_args": true,
+      "input_file": "IN-movementspeed.json",
+      "output_file": "OUT-movementspeed.json"
+    },
+    "cleanup": {
+      "rcon_command": "CleanUp",
+      "supported": true,
+      "description": "Destroys all idle objects of the specified object type.",
+      "args": [
+        {
+          "name": "object",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "CleanUp grenade",
+      "requires_args": true,
+      "input_file": "IN-cleanup.json",
+      "output_file": "OUT-cleanup.json"
+    },
+    "godmode": {
+      "rcon_command": "Godmode",
+      "supported": true,
+      "description": "Makes the target player immune to damage when enabled.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "Godmode PlayerName True",
+      "requires_args": true,
+      "input_file": "IN-godmode.json",
+      "output_file": "OUT-godmode.json"
+    },
+    "warp": {
+      "rcon_command": "Warp",
+      "supported": true,
+      "description": "Teleports the target player to the player with the matching UniqueID.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
         {
           "name": "unique_id",
           "type": "string",
           "required": true
         }
       ],
-      "notes": [
-        "Writes the change to blacklist.txt."
-      ],
-      "example": "Unban 12345678901234567",
+      "notes": [],
+      "example": "Warp PlayerName 12345678901234567",
       "requires_args": true,
-      "input_file": "IN-unban.json",
-      "output_file": "OUT-unban.json"
+      "input_file": "IN-warp.json",
+      "output_file": "OUT-warp.json"
     },
-    "updateservername": {
-      "rcon_command": "UpdateServerName",
+    "addbot": {
+      "rcon_command": "AddBot",
       "supported": true,
-      "description": "Changes the server name to the specified name.",
+      "description": "Adds the specified number of bots, optionally to a selected team.",
       "args": [
         {
-          "name": "name",
+          "name": "amount",
+          "type": "integer",
+          "required": true,
+          "minimum": 0
+        },
+        {
+          "name": "team",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "notes": [],
+      "example": "AddBot 5 0",
+      "requires_args": true,
+      "input_file": "IN-addbot.json",
+      "output_file": "OUT-addbot.json"
+    },
+    "removebot": {
+      "rcon_command": "RemoveBot",
+      "supported": true,
+      "description": "Removes bots from the selected team. Amount 0 removes all bots on that team.",
+      "args": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": true,
+          "minimum": 0
+        },
+        {
+          "name": "team",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "notes": [
+        "Amount 0 removes all bots on the selected team."
+      ],
+      "example": "RemoveBot 0 0",
+      "requires_args": true,
+      "input_file": "IN-removebot.json",
+      "output_file": "OUT-removebot.json"
+    },
+    "ignite": {
+      "rcon_command": "Ignite",
+      "supported": true,
+      "description": "Sets the target player on fire.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "Ignite PlayerName",
+      "requires_args": true,
+      "input_file": "IN-ignite.json",
+      "output_file": "OUT-ignite.json"
+    },
+    "disableitems": {
+      "rcon_command": "DisableItems",
+      "supported": true,
+      "description": "Disables or enables item use for the target player.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [
+        "Includes actions such as firing a gun."
+      ],
+      "example": "DisableItems PlayerName True",
+      "requires_args": true,
+      "input_file": "IN-disableitems.json",
+      "output_file": "OUT-disableitems.json"
+    },
+    "detonate": {
+      "rcon_command": "Detonate",
+      "supported": true,
+      "description": "Makes the target player explode.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "Detonate PlayerName",
+      "requires_args": true,
+      "input_file": "IN-detonate.json",
+      "output_file": "OUT-detonate.json"
+    },
+    "gamespeed": {
+      "rcon_command": "GameSpeed",
+      "supported": true,
+      "description": "Changes game speed to the specified multiplier.",
+      "args": [
+        {
+          "name": "multiplier",
+          "type": "number",
+          "required": true
+        }
+      ],
+      "notes": [
+        "1 is the default multiplier."
+      ],
+      "example": "GameSpeed 1.0",
+      "requires_args": true,
+      "input_file": "IN-gamespeed.json",
+      "output_file": "OUT-gamespeed.json"
+    },
+    "setgravity": {
+      "rcon_command": "SetGravity",
+      "supported": true,
+      "description": "Changes gravity for all objects to the specified multiplier.",
+      "args": [
+        {
+          "name": "multiplier",
+          "type": "number",
+          "required": true
+        }
+      ],
+      "notes": [
+        "1 is the default multiplier."
+      ],
+      "example": "SetGravity 0.5",
+      "requires_args": true,
+      "input_file": "IN-setgravity.json",
+      "output_file": "OUT-setgravity.json"
+    },
+    "enableprone": {
+      "rcon_command": "EnableProne",
+      "supported": true,
+      "description": "Allows or prevents players from entering prone in any game mode.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "EnableProne True",
+      "requires_args": true,
+      "input_file": "IN-enableprone.json",
+      "output_file": "OUT-enableprone.json"
+    },
+    "falldamage": {
+      "rcon_command": "FallDamage",
+      "supported": true,
+      "description": "Sets whether players can take damage from falling.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "FallDamage False",
+      "requires_args": true,
+      "input_file": "IN-falldamage.json",
+      "output_file": "OUT-falldamage.json"
+    },
+    "enablebuymenu": {
+      "rcon_command": "EnableBuyMenu",
+      "supported": true,
+      "description": "Enables or disables the buy menu for the target player.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "EnableBuyMenu PlayerName True",
+      "requires_args": true,
+      "input_file": "IN-enablebuymenu.json",
+      "output_file": "OUT-enablebuymenu.json"
+    },
+    "noclip": {
+      "rcon_command": "NoClip",
+      "supported": true,
+      "description": "Allows or prevents the target player from flying and moving through objects.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "NoClip PlayerName True",
+      "requires_args": true,
+      "input_file": "IN-noclip.json",
+      "output_file": "OUT-noclip.json"
+    },
+    "supply": {
+      "rcon_command": "Supply",
+      "supported": true,
+      "description": "Gives the target player an infinite amount of an item. Use Clear to remove supplied items.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "item_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "notes": [
+        "Set item_id to Clear to remove all supplied items."
+      ],
+      "example": "Supply PlayerName rifle",
+      "requires_args": true,
+      "input_file": "IN-supply.json",
+      "output_file": "OUT-supply.json"
+    },
+    "visibility": {
+      "rcon_command": "Visibility",
+      "supported": true,
+      "description": "Sets the target player's visibility to other players.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [
+        "Does not hide TTT nametags."
+      ],
+      "example": "Visibility PlayerName False",
+      "requires_args": true,
+      "input_file": "IN-visibility.json",
+      "output_file": "OUT-visibility.json"
+    },
+    "revive": {
+      "rcon_command": "Revive",
+      "supported": true,
+      "description": "Revives the target player if they still have a body.",
+      "args": [
+        {
+          "name": "player",
           "type": "string",
           "required": true
         }
       ],
       "notes": [
-        "Writes to ServerName in Game.ini."
+        "A player without a body will not be brought back to life."
       ],
-      "example": "UpdateServerName My server name",
+      "example": "Revive PlayerName",
       "requires_args": true,
-      "input_file": "IN-updateservername.json",
-      "output_file": "OUT-updateservername.json"
+      "input_file": "IN-revive.json",
+      "output_file": "OUT-revive.json"
+    },
+    "disablevoting": {
+      "rcon_command": "DisableVoting",
+      "supported": true,
+      "description": "Prevents or allows players to vote to end the match or kick players.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "DisableVoting True",
+      "requires_args": true,
+      "input_file": "IN-disablevoting.json",
+      "output_file": "OUT-disablevoting.json"
+    },
+    "attachmentmode": {
+      "rcon_command": "AttachmentMode",
+      "supported": true,
+      "description": "Sets whether players can add or remove gun attachments.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "AttachmentMode True",
+      "requires_args": true,
+      "input_file": "IN-attachmentmode.json",
+      "output_file": "OUT-attachmentmode.json"
+    },
+    "utilitytrails": {
+      "rcon_command": "UtilityTrails",
+      "supported": true,
+      "description": "Enables or disables trails on utility items.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "UtilityTrails True",
+      "requires_args": true,
+      "input_file": "IN-utilitytrails.json",
+      "output_file": "OUT-utilitytrails.json"
+    },
+    "killfeedback": {
+      "rcon_command": "KillFeedback",
+      "supported": true,
+      "description": "Sets whether kills are displayed in the killfeed.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "KillFeedback False",
+      "requires_args": true,
+      "input_file": "IN-killfeedback.json",
+      "output_file": "OUT-killfeedback.json"
+    },
+    "setteamskin": {
+      "rcon_command": "SetTeamSkin",
+      "supported": true,
+      "description": "Sets the default skin for the target team.",
+      "args": [
+        {
+          "name": "team",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "skin_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "notes": [],
+      "example": "SetTeamSkin 0 skin_id",
+      "requires_args": true,
+      "input_file": "IN-setteamskin.json",
+      "output_file": "OUT-setteamskin.json"
+    },
+    "spawnlootcrate": {
+      "rcon_command": "SpawnLootCrate",
+      "supported": true,
+      "description": "Spawns a loot crate at a random location, optionally using a specified loot-crate ID.",
+      "args": [
+        {
+          "name": "loot_crate_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "notes": [],
+      "example": "SpawnLootCrate crate_id",
+      "requires_args": false,
+      "input_file": "IN-spawnlootcrate.json",
+      "output_file": "OUT-spawnlootcrate.json"
+    },
+    "spawnchickens": {
+      "rcon_command": "SpawnChickens",
+      "supported": true,
+      "description": "Spawns the specified number of chickens at random player spawn points.",
+      "args": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": true,
+          "minimum": 0
+        }
+      ],
+      "notes": [],
+      "example": "SpawnChickens 5",
+      "requires_args": true,
+      "input_file": "IN-spawnchickens.json",
+      "output_file": "OUT-spawnchickens.json"
+    },
+    "spawnzombies": {
+      "rcon_command": "SpawnZombies",
+      "supported": true,
+      "description": "Spawns zombies at random player spawn points.",
+      "args": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 20
+        }
+      ],
+      "notes": [
+        "Maximum is 20 total zombies."
+      ],
+      "example": "SpawnZombies 10",
+      "requires_args": true,
+      "input_file": "IN-spawnzombies.json",
+      "output_file": "OUT-spawnzombies.json"
+    },
+    "removezombies": {
+      "rcon_command": "RemoveZombies",
+      "supported": true,
+      "description": "Removes all zombies from the map.",
+      "args": [],
+      "notes": [],
+      "example": "RemoveZombies",
+      "requires_args": false,
+      "input_file": "IN-removezombies.json",
+      "output_file": "OUT-removezombies.json"
+    },
+    "setvitality": {
+      "rcon_command": "SetVitality",
+      "supported": true,
+      "description": "Sets player health, armor, and helmet values. -1 leaves an optional value unchanged.",
+      "args": [
+        {
+          "name": "player",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "health",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "armor",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "helmet",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "notes": [
+        "Use -1 for an optional vitality value to leave it unchanged."
+      ],
+      "example": "SetVitality PlayerName 100 50 -1",
+      "requires_args": true,
+      "input_file": "IN-setvitality.json",
+      "output_file": "OUT-setvitality.json"
+    },
+    "teamswitching": {
+      "rcon_command": "TeamSwitching",
+      "supported": true,
+      "description": "Toggles whether players can switch teams.",
+      "args": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": true
+        }
+      ],
+      "notes": [],
+      "example": "TeamSwitching False",
+      "requires_args": true,
+      "input_file": "IN-teamswitching.json",
+      "output_file": "OUT-teamswitching.json"
     }
   },
-  "command_count": 57
+  "command_count": 76
 }

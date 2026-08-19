@@ -1,717 +1,969 @@
-# JTWP Server Rules & Moderation Guide
+# 🛡️ JTWP Server Rules & Moderation Guide
 
-> These rules are the human-readable companion to `rules_and_punishments_expanded.json`.
-> Suggested punishments are advisory. Final bans require senior-admin approval, and senior administration sets temporary-ban duration.
+> ⚖️ **Suggested punishments are advisory.** Final bans require senior-admin approval. Senior administration sets temporary-ban duration.
 
-## Moderation Policy
+## 📋 Moderation Policy
 
-- Admins select the category and the closest matching rule when reviewing a case.
-- More than one rule may be associated with a case when appropriate.
-- If no existing rule adequately covers the conduct, the case is **not invalid**.
-- Use **Other / No Matching Rule** and explain why the existing rules do not fit.
-- Unmatched cases are flagged **NEEDS_RULE_REVIEW** so administration can consider adding or clarifying a rule later.
-- Admin voting is advisory; senior administration makes the final ban decision.
+- 👮 Admins select the closest category and rule during case review.
+- 📚 Multiple rules may be attached to one case when appropriate.
+- ❓ If no rule fits, the case remains valid and is flagged **NEEDS_RULE_REVIEW**.
+- 🗳️ Admin votes are advisory; senior administration makes the final ban decision.
+- 🛡️ Staff are subject to the same rules and may also face staff-specific discipline.
 
-## Rule Categories
+## 🗂️ Rule Categories
 
-- Hate Speech
-- Harassment
-- Conduct
-- Gameplay
-- Server Integrity
-- Privacy
-- Cheating
-- Content
-- Exploiting
-- Disruption
-- Communication
-- Other
+- 🚫 **Hate Speech**
+- 🛑 **Harassment**
+- 🤝 **Conduct**
+- 🎮 **Gameplay**
+- 🖥️ **Server Integrity**
+- 🔒 **Privacy**
+- ⛔ **Cheating**
+- 🔞 **Content**
+- ⚠️ **Exploiting**
+- 📢 **Disruption**
+- 💬 **Communication**
+- ❓ **Other**
+- 🛡️ **Staff Conduct**
 
 ---
 
-## R001 — No Racism
+## 🚫 R001 — No Racism
 
-**Category:** Hate Speech  
-**Severity:** High
+**🗂️ Category:** Hate Speech  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Racist language, behavior, imagery, or harassment is prohibited.
 
-### Details
+### 📖 Details
 Players may not target, insult, demean, exclude, or harass another person or group based on race, ethnicity, nationality, or perceived racial background.
 
-### Examples
-- Racial insults or derogatory comments
-- Racist stereotypes directed at another player
-- Racist usernames, signs, images, voice content, or messages
-- Encouraging discrimination or hostility toward a racial or ethnic group
+### 💡 Examples
+• Racial insults or derogatory comments
+• Racist stereotypes directed at another player
+• Racist usernames, signs, images, voice content, or messages
+• Encouraging discrimination or hostility toward a racial or ethnic group
 
-### Not Normally a Violation
-- Good-faith discussion of race or ethnicity that is not used to attack or demean others
-- Quoting prohibited language strictly for reporting it to staff, when necessary and not repeated beyond that purpose
+### ✅ Not Normally a Violation
+• Good-faith discussion of race or ethnicity that is not used to attack or demean others
+• Quoting prohibited language strictly for reporting it to staff, when necessary and not repeated beyond that purpose
 
-### Evidence to Consider
-- Exact chat messages or screenshots
-- Voice recordings where available and permitted
-- Moderator observation
-- Multiple consistent witness reports
+### 🔎 Evidence to Consider
+• Exact chat messages or screenshots
+• Voice recordings where available and permitted
+• Moderator observation
+• Multiple consistent witness reports
 
-### Aggravating Factors
-- Repeated conduct after a warning
-- Targeting a specific player
-- Encouraging others to join in
-- Threats or coordinated harassment accompanying the conduct
+### ⬆️ Aggravating Factors
+• Repeated conduct after a warning
+• Targeting a specific player
+• Encouraging others to join in
+• Threats or coordinated harassment accompanying the conduct
 
-### Mitigating Factors
-- Evidence is incomplete or context is genuinely ambiguous
-- The language was quoted only to report an incident and was not used abusively
+### ⬇️ Mitigating Factors
+• Evidence is incomplete or context is genuinely ambiguous
+• The language was quoted only to report an incident and was not used abusively
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Consider the exact context and whether the conduct was targeted, repeated, or intended to demean.
-- Severe or coordinated racist harassment may justify escalation beyond the normal first-offense suggestion.
+### 👮 Admin Review Notes
+• Consider the exact context and whether the conduct was targeted, repeated, or intended to demean.
+• Severe or coordinated racist harassment may justify escalation beyond the normal first-offense suggestion.
 
 ---
 
-## R002 — No Sexist Behavior
+## 🛑 R002 — No Sexist Behavior
 
-**Category:** Harassment  
-**Severity:** High
+**🗂️ Category:** Harassment  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Sexist, misogynistic, or gender-based harassment is prohibited.
 
-### Details
+### 📖 Details
 Players may not demean, harass, threaten, or target others because of sex, gender, or perceived gender.
 
-### Examples
-- Sexist insults
-- Gender-based harassment
-- Repeated unwanted sexual comments directed at another player
-- Targeting someone because of their gender
+### 💡 Examples
+• Sexist insults
+• Gender-based harassment
+• Repeated unwanted sexual comments directed at another player
+• Targeting someone because of their gender
 
-### Not Normally a Violation
-- Good-faith discussion of sex or gender that is not directed at or used to demean another player
-- A single non-targeted comment that does not amount to harassment, depending on context
+### ✅ Not Normally a Violation
+• Good-faith discussion of sex or gender that is not directed at or used to demean another player
+• A single non-targeted comment that does not amount to harassment, depending on context
 
-### Evidence to Consider
-- Exact messages or screenshots
-- Voice evidence where available
-- Moderator observation
-- Consistent witness statements
+### 🔎 Evidence to Consider
+• Exact messages or screenshots
+• Voice evidence where available
+• Moderator observation
+• Consistent witness statements
 
-### Aggravating Factors
-- Repeated targeted harassment
-- Sexual threats
-- Continuing after being asked or ordered to stop
-- Coordinated harassment
+### ⬆️ Aggravating Factors
+• Repeated targeted harassment
+• Sexual threats
+• Continuing after being asked or ordered to stop
+• Coordinated harassment
 
-### Mitigating Factors
-- Ambiguous context
-- Insufficient evidence that the conduct was targeted
+### ⬇️ Mitigating Factors
+• Ambiguous context
+• Insufficient evidence that the conduct was targeted
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Distinguish general disagreement from conduct aimed at someone because of sex or gender.
-- Repeated unwanted sexual comments may warrant stronger action than a single low-level incident.
+### 👮 Admin Review Notes
+• Distinguish general disagreement from conduct aimed at someone because of sex or gender.
+• Repeated unwanted sexual comments may warrant stronger action than a single low-level incident.
 
 ---
 
-## R003 — Treat Other Players With Respect
+## 🤝 R003 — Treat Other Players With Respect
 
-**Category:** Conduct  
-**Severity:** Medium
+**🗂️ Category:** Conduct  
+**🟡 Severity:** Medium
 
-### Summary
+### 📝 Summary
 Players are expected to interact with others respectfully.
 
-### Details
+### 📖 Details
 Disagreements are allowed, but repeated hostility, personal attacks, targeted insults, or deliberately disruptive behavior toward another player may result in moderation action.
 
-### Examples
-- Repeated personal insults
-- Aggressive harassment after being asked to stop
-- Deliberately provoking another player
-- Targeting a player across multiple rounds or sessions
+### 💡 Examples
+• Repeated personal insults
+• Aggressive harassment after being asked to stop
+• Deliberately provoking another player
+• Targeting a player across multiple rounds or sessions
 
-### Not Normally a Violation
-- Normal competitive trash talk that is not targeted, threatening, discriminatory, or persistent
-- A single ordinary disagreement
-- Good-faith criticism of gameplay or decisions
+### ✅ Not Normally a Violation
+• Normal competitive trash talk that is not targeted, threatening, discriminatory, or persistent
+• A single ordinary disagreement
+• Good-faith criticism of gameplay or decisions
 
-### Evidence to Consider
-- Full conversation context
-- Repeated incidents
-- Moderator observation
-- Consistent witness reports
+### 🔎 Evidence to Consider
+• Full conversation context
+• Repeated incidents
+• Moderator observation
+• Consistent witness reports
 
-### Aggravating Factors
-- Targeting the same player repeatedly
-- Continuing after moderator instruction
-- Escalating into threats, discrimination, or bullying
-- Following the target across rounds or sessions
+### ⬆️ Aggravating Factors
+• Targeting the same player repeatedly
+• Continuing after moderator instruction
+• Escalating into threats, discrimination, or bullying
+• Following the target across rounds or sessions
 
-### Mitigating Factors
-- Mutual low-level argument
-- Single isolated incident
-- Lack of evidence showing deliberate targeting
+### ⬇️ Mitigating Factors
+• Mutual low-level argument
+• Single isolated incident
+• Lack of evidence showing deliberate targeting
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `temporary_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
 
-### Admin Review Notes
-- Use this rule for general conduct problems when a more specific harassment, hate-speech, threat, or disruption rule does not fit better.
+### 👮 Admin Review Notes
+• Use this rule for general conduct problems when a more specific harassment, hate-speech, threat, or disruption rule does not fit better.
 
 ---
 
-## R004 — No Bullying
+## 🛑 R004 — No Bullying
 
-**Category:** Harassment  
-**Severity:** High
+**🗂️ Category:** Harassment  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Repeated or coordinated bullying of another player is prohibited.
 
-### Details
+### 📖 Details
 Players may not repeatedly target, humiliate, intimidate, isolate, or encourage others to gang up on another player.
 
-### Examples
-- Repeatedly mocking or humiliating one player
-- Following a player between sessions to harass them
-- Encouraging a group to target one person
-- Using voice or text chat to repeatedly intimidate someone
+### 💡 Examples
+• Repeatedly mocking or humiliating one player
+• Following a player between sessions to harass them
+• Encouraging a group to target one person
+• Using voice or text chat to repeatedly intimidate someone
 
-### Not Normally a Violation
-- A single disagreement without a pattern of targeting
-- Mutual joking where all involved are clearly participating willingly
+### ✅ Not Normally a Violation
+• A single disagreement without a pattern of targeting
+• Mutual joking where all involved are clearly participating willingly
 
-### Evidence to Consider
-- Evidence showing a pattern across multiple incidents
-- Chat logs or screenshots
-- Voice evidence
-- Witness statements
-- Prior reports involving the same target
+### 🔎 Evidence to Consider
+• Evidence showing a pattern across multiple incidents
+• Chat logs or screenshots
+• Voice evidence
+• Witness statements
+• Prior reports involving the same target
 
-### Aggravating Factors
-- Multiple offenders coordinating against one player
-- Long-term or cross-session targeting
-- Continuing after the target asks them to stop
-- Encouraging others to isolate or humiliate the target
+### ⬆️ Aggravating Factors
+• Multiple offenders coordinating against one player
+• Long-term or cross-session targeting
+• Continuing after the target asks them to stop
+• Encouraging others to isolate or humiliate the target
 
-### Mitigating Factors
-- No evidence of repetition
-- Mutual conflict without a clear aggressor or target
+### ⬇️ Mitigating Factors
+• No evidence of repetition
+• Mutual conflict without a clear aggressor or target
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Bullying normally involves a pattern, repeated targeting, or a power/group imbalance rather than one isolated rude comment.
+### 👮 Admin Review Notes
+• Bullying normally involves a pattern, repeated targeting, or a power/group imbalance rather than one isolated rude comment.
 
 ---
 
-## R005 — No Intentional Team Killing
+## 🎮 R005 — No Intentional Team Killing
 
-**Category:** Gameplay  
-**Severity:** Medium
+**🗂️ Category:** Gameplay  
+**🟡 Severity:** Medium
 
-### Summary
+### 📝 Summary
 Intentionally killing or repeatedly damaging teammates is prohibited.
 
-### Details
+### 📖 Details
 Accidental team damage may occur during normal gameplay. Moderation action should focus on deliberate, repeated, retaliatory, or clearly reckless team killing.
 
-### Examples
-- Deliberately shooting a teammate
-- Repeatedly damaging teammates after being warned
-- Killing teammates in retaliation
-- Using explosives specifically to kill teammates
+### 💡 Examples
+• Deliberately shooting a teammate
+• Repeatedly damaging teammates after being warned
+• Killing teammates in retaliation
+• Using explosives specifically to kill teammates
 
-### Not Normally a Violation
-- Accidental crossfire
-- An accidental explosive kill
-- A single incident where intent cannot reasonably be established
-- Normal gameplay situations where friendly fire was unavoidable
+### ✅ Not Normally a Violation
+• Accidental crossfire
+• An accidental explosive kill
+• A single incident where intent cannot reasonably be established
+• Normal gameplay situations where friendly fire was unavoidable
 
-### Evidence to Consider
-- Server kill logs
-- Team-kill counts
-- Video evidence
-- Moderator observation
-- Previous warnings for similar behavior
+### 🔎 Evidence to Consider
+• Server kill logs
+• Team-kill counts
+• Video evidence
+• Moderator observation
+• Previous warnings for similar behavior
 
-### Aggravating Factors
-- Multiple intentional team kills
-- Targeting the same teammate repeatedly
-- Continuing after an admin warning
-- Retaliatory team killing
-- Organizing other players to participate
+### ⬆️ Aggravating Factors
+• Multiple intentional team kills
+• Targeting the same teammate repeatedly
+• Continuing after an admin warning
+• Retaliatory team killing
+• Organizing other players to participate
 
-### Mitigating Factors
-- Clearly accidental team damage
-- Confusing gameplay situation
-- Insufficient evidence of intent
+### ⬇️ Mitigating Factors
+• Clearly accidental team damage
+• Confusing gameplay situation
+• Insufficient evidence of intent
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `temporary_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
 
-### Admin Review Notes
-- Intent is important. Do not treat every team kill as misconduct merely because it appears in the logs.
+### 👮 Admin Review Notes
+• Intent is important. Do not treat every team kill as misconduct merely because it appears in the logs.
 
 ---
 
-## R006 — Do Not Intentionally Impact Server Performance
+## 🖥️ R006 — Do Not Intentionally Impact Server Performance
 
-**Category:** Server Integrity  
-**Severity:** Critical
+**🗂️ Category:** Server Integrity  
+**🔴 Severity:** Critical
 
-### Summary
+### 📝 Summary
 Players may not knowingly attempt to degrade server stability or performance.
 
-### Details
+### 📖 Details
 Deliberately creating excessive load, abusing objects, exploiting map mechanics, or repeatedly performing actions known to cause lag, crashes, or instability is prohibited.
 
-### Examples
-- Intentionally creating excessive physics objects
-- Repeatedly triggering a known lag-producing exploit
-- Attempting to crash the server
-- Continuing behavior known to cause severe server performance problems after being warned
+### 💡 Examples
+• Intentionally creating excessive physics objects
+• Repeatedly triggering a known lag-producing exploit
+• Attempting to crash the server
+• Continuing behavior known to cause severe server performance problems after being warned
 
-### Not Normally a Violation
-- Normal gameplay that unexpectedly exposes a server bug
-- Unintentional performance impact where the player stops after being informed
+### ✅ Not Normally a Violation
+• Normal gameplay that unexpectedly exposes a server bug
+• Unintentional performance impact where the player stops after being informed
 
-### Evidence to Consider
-- Server logs
-- Performance/network monitoring data
-- DDoS watcher data when relevant
-- Video evidence
-- Moderator observation
+### 🔎 Evidence to Consider
+• Server logs
+• Performance/network monitoring data
+• DDoS watcher data when relevant
+• Video evidence
+• Moderator observation
 
-### Aggravating Factors
-- Clear intent to crash or overload the server
-- Repeated attempts
-- Large impact on active players
-- Continuing after warning
-- Attempting to hide or evade detection
+### ⬆️ Aggravating Factors
+• Clear intent to crash or overload the server
+• Repeated attempts
+• Large impact on active players
+• Continuing after warning
+• Attempting to hide or evade detection
 
-### Mitigating Factors
-- Unknown bug triggered during ordinary gameplay
-- Player immediately stops after being informed
+### ⬇️ Mitigating Factors
+• Unknown bug triggered during ordinary gameplay
+• Player immediately stops after being informed
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `permanent_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- 🔨 **Repeat offense:** `Permanent Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- The rule requires knowing or intentional behavior. A player discovering a bug accidentally should not automatically be treated as attacking the server.
+### 👮 Admin Review Notes
+• The rule requires knowing or intentional behavior. A player discovering a bug accidentally should not automatically be treated as attacking the server.
 
 ---
 
-## R007 — Do Not Disclose Private Information
+## 🔒 R007 — Do Not Disclose Private Information
 
-**Category:** Privacy  
-**Severity:** Critical
+**🗂️ Category:** Privacy  
+**🔴 Severity:** Critical
 
-### Summary
+### 📝 Summary
 Players may not disclose another person's private or identifying information without permission.
 
-### Details
+### 📖 Details
 Posting, sharing, threatening to share, or encouraging others to obtain private information about another player is prohibited.
 
-### Examples
-- Posting someone's home address
-- Sharing private phone numbers or email addresses
-- Posting private identifying information
-- Threatening to expose private information
+### 💡 Examples
+• Posting someone's home address
+• Sharing private phone numbers or email addresses
+• Posting private identifying information
+• Threatening to expose private information
 
-### Not Normally a Violation
-- Information the person intentionally made public, when it is not being weaponized for harassment
-- Sharing one's own personal information
+### ✅ Not Normally a Violation
+• Information the person intentionally made public, when it is not being weaponized for harassment
+• Sharing one's own personal information
 
-### Evidence to Consider
-- Screenshots or message logs
-- Moderator observation
-- Preserved evidence with sensitive information redacted from normal admin displays
-- Evidence of threats to disclose information
+### 🔎 Evidence to Consider
+• Screenshots or message logs
+• Moderator observation
+• Preserved evidence with sensitive information redacted from normal admin displays
+• Evidence of threats to disclose information
 
-### Aggravating Factors
-- Actual disclosure of highly sensitive information
-- Threatening disclosure to intimidate someone
-- Repeated disclosure
-- Encouraging others to locate or harass the person
+### ⬆️ Aggravating Factors
+• Actual disclosure of highly sensitive information
+• Threatening disclosure to intimidate someone
+• Repeated disclosure
+• Encouraging others to locate or harass the person
 
-### Mitigating Factors
-- The information was already intentionally public and not used to harass
-- Evidence does not establish that the accused person disclosed it
+### ⬇️ Mitigating Factors
+• The information was already intentionally public and not used to harass
+• Evidence does not establish that the accused person disclosed it
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `permanent_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- 🔨 **Repeat offense:** `Permanent Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Do not unnecessarily copy private information into moderation embeds or public logs. Record only what is necessary and redact sensitive values.
+### 👮 Admin Review Notes
+• Do not unnecessarily copy private information into moderation embeds or public logs. Record only what is necessary and redact sensitive values.
 
 ---
 
-## R008 — No Cheating or Unfair-Advantage Software
+## ⛔ R008 — No Cheating or Unfair-Advantage Software
 
-**Category:** Cheating  
-**Severity:** Critical
+**🗂️ Category:** Cheating  
+**🔴 Severity:** Critical
 
-### Summary
+### 📝 Summary
 Software, modifications, or tools that provide an unfair gameplay advantage are prohibited.
 
-### Details
+### 📖 Details
 Players may not knowingly use external software, cheats, unauthorized modifications, automation, or similar tools to gain an unfair advantage over other players.
 
-### Examples
-- Aimbots
-- Wallhacks
-- Unauthorized movement or weapon assistance
-- External automation intended to gain a gameplay advantage
+### 💡 Examples
+• Aimbots
+• Wallhacks
+• Unauthorized movement or weapon assistance
+• External automation intended to gain a gameplay advantage
 
-### Not Normally a Violation
-- Approved accessibility tools that do not provide an unfair gameplay advantage
-- Normal hardware/software features that do not alter competitive gameplay
+### ✅ Not Normally a Violation
+• Approved accessibility tools that do not provide an unfair gameplay advantage
+• Normal hardware/software features that do not alter competitive gameplay
 
-### Evidence to Consider
-- Anti-cheat evidence
-- Server logs
-- Video evidence
-- Repeated consistent moderator observations
-- Relevant technical evidence
+### 🔎 Evidence to Consider
+• Anti-cheat evidence
+• Server logs
+• Video evidence
+• Repeated consistent moderator observations
+• Relevant technical evidence
 
-### Aggravating Factors
-- Clear intentional use
-- Distribution or promotion of cheat tools
-- Ban evasion
-- Repeated cheating
-- Attempting to conceal the software or activity
+### ⬆️ Aggravating Factors
+• Clear intentional use
+• Distribution or promotion of cheat tools
+• Ban evasion
+• Repeated cheating
+• Attempting to conceal the software or activity
 
-### Mitigating Factors
-- Insufficient technical evidence
-- Legitimate hardware or accessibility behavior was incorrectly suspected
+### ⬇️ Mitigating Factors
+• Insufficient technical evidence
+• Legitimate hardware or accessibility behavior was incorrectly suspected
 
-### Suggested Punishment
-- **First offense:** `permanent_ban`
-- **Repeat offense:** `permanent_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- 🔨 **First offense:** `Permanent Ban`
+- 🔨 **Repeat offense:** `Permanent Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Permanent-ban recommendations should be based on reliable evidence, not unusual skill alone.
+### 👮 Admin Review Notes
+• Permanent-ban recommendations should be based on reliable evidence, not unusual skill alone.
 
 ---
 
-## R009 — No Gore or Sexually Explicit Material
+## 🔞 R009 — No Gore or Sexually Explicit Material
 
-**Category:** Content  
-**Severity:** High
+**🗂️ Category:** Content  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Graphic gore and sexually explicit material may not be posted or displayed through JTWP servers.
 
-### Details
+### 📖 Details
 Players may not upload, display, transmit, link, or deliberately expose others to graphic gore or sexually explicit content through server-supported communication or content systems.
 
-### Examples
-- Sexually explicit images
-- Pornographic material
-- Graphic real-world gore
-- Links deliberately directing players to prohibited material
+### 💡 Examples
+• Sexually explicit images
+• Pornographic material
+• Graphic real-world gore
+• Links deliberately directing players to prohibited material
 
-### Not Normally a Violation
-- Ordinary in-game fictional violence
-- Non-explicit discussion of mature topics that does not include prohibited material
+### ✅ Not Normally a Violation
+• Ordinary in-game fictional violence
+• Non-explicit discussion of mature topics that does not include prohibited material
 
-### Evidence to Consider
-- Screenshots with explicit material safely redacted where possible
-- Message or link logs
-- Moderator observation
+### 🔎 Evidence to Consider
+• Screenshots with explicit material safely redacted where possible
+• Message or link logs
+• Moderator observation
 
-### Aggravating Factors
-- Repeated posting
-- Deliberately exposing unwilling users
-- Targeting minors or vulnerable users
-- Attempting to evade moderation
+### ⬆️ Aggravating Factors
+• Repeated posting
+• Deliberately exposing unwilling users
+• Targeting minors or vulnerable users
+• Attempting to evade moderation
 
-### Mitigating Factors
-- Accidental or mistaken link
-- Content was reviewed and was not actually explicit or graphic
+### ⬇️ Mitigating Factors
+• Accidental or mistaken link
+• Content was reviewed and was not actually explicit or graphic
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `permanent_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- 🔨 **Repeat offense:** `Permanent Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Avoid redistributing prohibited content while preserving evidence. Store references or redacted evidence where possible.
+### 👮 Admin Review Notes
+• Avoid redistributing prohibited content while preserving evidence. Store references or redacted evidence where possible.
 
 ---
 
-## R010 — No Game-Mode Manipulation for Unfair Advantage
+## ⚠️ R010 — No Game-Mode Manipulation for Unfair Advantage
 
-**Category:** Exploiting  
-**Severity:** High
+**🗂️ Category:** Exploiting  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Players may not intentionally manipulate game-mode systems to gain an unfair advantage.
 
-### Details
+### 📖 Details
 Using bugs, unintended mechanics, role systems, team systems, economy systems, or game-mode logic in a knowingly abusive way to gain an unfair advantage is prohibited.
 
-### Examples
-- Exploiting a role mechanic to bypass intended restrictions
-- Manipulating team assignment for an unfair advantage
-- Abusing economy or scoring systems
-- Repeatedly using a known game-mode exploit
+### 💡 Examples
+• Exploiting a role mechanic to bypass intended restrictions
+• Manipulating team assignment for an unfair advantage
+• Abusing economy or scoring systems
+• Repeatedly using a known game-mode exploit
 
-### Not Normally a Violation
-- Accidentally triggering a bug once
-- Using an intended strategy that is strong but still within normal game-mode rules
+### ✅ Not Normally a Violation
+• Accidentally triggering a bug once
+• Using an intended strategy that is strong but still within normal game-mode rules
 
-### Evidence to Consider
-- Video evidence
-- Server/game-mode logs
-- Moderator observation
-- Evidence showing repeated use after the player knew the behavior was unintended
+### 🔎 Evidence to Consider
+• Video evidence
+• Server/game-mode logs
+• Moderator observation
+• Evidence showing repeated use after the player knew the behavior was unintended
 
-### Aggravating Factors
-- Repeated exploit use
-- Teaching or distributing the exploit to others
-- Large competitive impact
-- Continuing after being warned
+### ⬆️ Aggravating Factors
+• Repeated exploit use
+• Teaching or distributing the exploit to others
+• Large competitive impact
+• Continuing after being warned
 
-### Mitigating Factors
-- Player could not reasonably know the behavior was unintended
-- One accidental trigger without continued abuse
+### ⬇️ Mitigating Factors
+• Player could not reasonably know the behavior was unintended
+• One accidental trigger without continued abuse
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- The important distinction is knowingly abusing unintended behavior, not simply discovering a bug.
+### 👮 Admin Review Notes
+• The important distinction is knowingly abusing unintended behavior, not simply discovering a bug.
 
 ---
 
-## R011 — Do Not Threaten Other Players
+## 🛑 R011 — Do Not Threaten Other Players
 
-**Category:** Harassment  
-**Severity:** Critical
+**🗂️ Category:** Harassment  
+**🔴 Severity:** Critical
 
-### Summary
+### 📝 Summary
 Serious threats toward other players are prohibited.
 
-### Details
+### 📖 Details
 Players may not make credible or targeted threats of violence, harm, stalking, doxxing, or other serious harmful conduct.
 
-### Examples
-- Threatening physical violence
-- Threatening to find or stalk another player
-- Threatening to expose private information
-- Repeated targeted threats intended to intimidate
+### 💡 Examples
+• Threatening physical violence
+• Threatening to find or stalk another player
+• Threatening to expose private information
+• Repeated targeted threats intended to intimidate
 
-### Not Normally a Violation
-- Obviously fictional or non-targeted joking that a reasonable person would not understand as a serious threat
-- Ordinary competitive statements that do not threaten real-world harm
+### ✅ Not Normally a Violation
+• Obviously fictional or non-targeted joking that a reasonable person would not understand as a serious threat
+• Ordinary competitive statements that do not threaten real-world harm
 
-### Evidence to Consider
-- Exact messages
-- Voice evidence
-- Screenshots
-- Context showing the target, wording, repetition, and seriousness
+### 🔎 Evidence to Consider
+• Exact messages
+• Voice evidence
+• Screenshots
+• Context showing the target, wording, repetition, and seriousness
 
-### Aggravating Factors
-- Specific or credible threat
-- References to private information or location
-- Repeated threats
-- Threats continuing outside the game/server
+### ⬆️ Aggravating Factors
+• Specific or credible threat
+• References to private information or location
+• Repeated threats
+• Threats continuing outside the game/server
 
-### Mitigating Factors
-- Clearly non-targeted joking context
-- Insufficient evidence of the actual wording
+### ⬇️ Mitigating Factors
+• Clearly non-targeted joking context
+• Insufficient evidence of the actual wording
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `permanent_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- 🔨 **Repeat offense:** `Permanent Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- Evaluate context and credibility, but credible threats of violence, stalking, or doxxing should be treated seriously.
+### 👮 Admin Review Notes
+• Evaluate context and credibility, but credible threats of violence, stalking, or doxxing should be treated seriously.
 
 ---
 
-## R012 — Do Not Deliberately Ruin Other Players' Experience
+## 📢 R012 — Do Not Deliberately Ruin Other Players' Experience
 
-**Category:** Disruption  
-**Severity:** Medium
+**🗂️ Category:** Disruption  
+**🟡 Severity:** Medium
 
-### Summary
+### 📝 Summary
 Players may not intentionally and repeatedly prevent others from reasonably enjoying the server.
 
-### Details
+### 📖 Details
 This rule applies to deliberate disruptive behavior that may not fit another specific rule but is clearly intended to interfere with other players.
 
-### Examples
-- Repeatedly blocking another player purely to disrupt them
-- Following someone solely to interfere with their gameplay
-- Deliberately sabotaging normal gameplay without a legitimate game-mode purpose
-- Repeated disruption after being warned
+### 💡 Examples
+• Repeatedly blocking another player purely to disrupt them
+• Following someone solely to interfere with their gameplay
+• Deliberately sabotaging normal gameplay without a legitimate game-mode purpose
+• Repeated disruption after being warned
 
-### Not Normally a Violation
-- Legitimate game-mode strategy
-- Ordinary competitive interference that is part of the objective
-- A single accidental obstruction
+### ✅ Not Normally a Violation
+• Legitimate game-mode strategy
+• Ordinary competitive interference that is part of the objective
+• A single accidental obstruction
 
-### Evidence to Consider
-- Pattern of conduct
-- Video evidence
-- Moderator observation
-- Multiple consistent reports
+### 🔎 Evidence to Consider
+• Pattern of conduct
+• Video evidence
+• Moderator observation
+• Multiple consistent reports
 
-### Aggravating Factors
-- Repeated behavior
-- Multiple victims
-- Continuing after warning
-- Following a specific player solely to interfere with them
+### ⬆️ Aggravating Factors
+• Repeated behavior
+• Multiple victims
+• Continuing after warning
+• Following a specific player solely to interfere with them
 
-### Mitigating Factors
-- Behavior had a legitimate game-mode purpose
-- Single isolated incident
+### ⬇️ Mitigating Factors
+• Behavior had a legitimate game-mode purpose
+• Single isolated incident
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `temporary_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
 
-### Admin Review Notes
-- Use this as a general anti-griefing rule when the behavior clearly exists to ruin gameplay but no more specific rule fits.
+### 👮 Admin Review Notes
+• Use this as a general anti-griefing rule when the behavior clearly exists to ruin gameplay but no more specific rule fits.
 
 ---
 
-## R013 — No Spam or Deliberate Annoyance
+## 💬 R013 — No Spam or Deliberate Annoyance
 
-**Category:** Communication  
-**Severity:** Low
+**🗂️ Category:** Communication  
+**🟢 Severity:** Low
 
-### Summary
+### 📝 Summary
 Repeated spam or deliberate communication disruption is prohibited.
 
-### Details
+### 📖 Details
 Players may not repeatedly flood text, voice, commands, sounds, or other communication systems in a way intended to disrupt or annoy others.
 
-### Examples
-- Repeated message flooding
-- Repeated microphone spam
-- Repeated command spam
-- Continuing disruptive spam after being asked to stop
+### 💡 Examples
+• Repeated message flooding
+• Repeated microphone spam
+• Repeated command spam
+• Continuing disruptive spam after being asked to stop
 
-### Not Normally a Violation
-- Brief accidental message duplication
-- Normal enthusiastic voice communication
-- Legitimate repeated messages during an emergency or admin interaction
+### ✅ Not Normally a Violation
+• Brief accidental message duplication
+• Normal enthusiastic voice communication
+• Legitimate repeated messages during an emergency or admin interaction
 
-### Evidence to Consider
-- Chat logs
-- Voice evidence
-- Message/command frequency
-- Moderator observation
+### 🔎 Evidence to Consider
+• Chat logs
+• Voice evidence
+• Message/command frequency
+• Moderator observation
 
-### Aggravating Factors
-- High-volume or sustained disruption
-- Continuing after warning
-- Targeted spam against one player
-- Using multiple methods to continue after being muted or restricted
+### ⬆️ Aggravating Factors
+• High-volume or sustained disruption
+• Continuing after warning
+• Targeted spam against one player
+• Using multiple methods to continue after being muted or restricted
 
-### Mitigating Factors
-- Brief accidental repetition
-- No meaningful disruption
+### ⬇️ Mitigating Factors
+• Brief accidental repetition
+• No meaningful disruption
 
-### Suggested Punishment
-- **First offense:** `warning`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `temporary_ban`
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
 
-### Admin Review Notes
-- Focus on repeated disruptive conduct rather than isolated duplicate messages.
+### 👮 Admin Review Notes
+• Focus on repeated disruptive conduct rather than isolated duplicate messages.
 
 ---
 
-## R014 — No Slurs or Hate Speech
+## 🚫 R014 — No Slurs or Hate Speech
 
-**Category:** Hate Speech  
-**Severity:** High
+**🗂️ Category:** Hate Speech  
+**🟠 Severity:** High
 
-### Summary
+### 📝 Summary
 Slurs and hate speech targeting protected or marginalized groups are prohibited.
 
-### Details
+### 📖 Details
 Players may not use slurs, degrading group-based language, or content that promotes hatred or hostility toward people based on identity or perceived identity.
 
-### Examples
-- Racial slurs
-- Homophobic or transphobic slurs
-- Religious or ethnic hate speech
-- Repeated use of dehumanizing group-based language
+### 💡 Examples
+• Racial slurs
+• Homophobic or transphobic slurs
+• Religious or ethnic hate speech
+• Repeated use of dehumanizing group-based language
 
-### Not Normally a Violation
-- Quoting prohibited language only as necessary to report it to staff
-- Good-faith discussion about hate speech that does not endorse or direct it at others
+### ✅ Not Normally a Violation
+• Quoting prohibited language only as necessary to report it to staff
+• Good-faith discussion about hate speech that does not endorse or direct it at others
 
-### Evidence to Consider
-- Exact chat messages
-- Voice evidence
-- Screenshots
-- Moderator observation
-- Context showing whether the language was targeted
+### 🔎 Evidence to Consider
+• Exact chat messages
+• Voice evidence
+• Screenshots
+• Moderator observation
+• Context showing whether the language was targeted
 
-### Aggravating Factors
-- Repeated slurs
-- Targeting a particular player
-- Encouraging others to participate
-- Using hate speech alongside threats or harassment
+### ⬆️ Aggravating Factors
+• Repeated slurs
+• Targeting a particular player
+• Encouraging others to participate
+• Using hate speech alongside threats or harassment
 
-### Mitigating Factors
-- Evidence is unclear about the exact wording
-- The language was quoted strictly to report an incident
+### ⬇️ Mitigating Factors
+• Evidence is unclear about the exact wording
+• The language was quoted strictly to report an incident
 
-### Suggested Punishment
-- **First offense:** `temporary_ban`
-- **Repeat offense:** `temporary_ban`
-- **Severe offense:** `permanent_ban`
+### ⚖️ Suggested Punishment
+- ⏳ **First offense:** `Temporary Ban`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- 🔨 **Severe offense:** `Permanent Ban`
 
-### Admin Review Notes
-- This overlaps with R001 for racism. Use the most specific applicable rule, or record multiple related rule IDs in the case if appropriate.
+### 👮 Admin Review Notes
+• This overlaps with R001 for racism. Use the most specific applicable rule, or record multiple related rule IDs in the case if appropriate.
 
 ---
 
-## No Matching Rule / Rules Gap
+## 🤝 R015 — No Impersonation
 
-If an incident appears to justify moderation but no existing rule adequately describes it:
+**🗂️ Category:** Conduct  
+**🟠 Severity:** High
 
-1. Select the closest category, or **Other** if no category fits.
-2. Leave the matched rule empty when necessary.
-3. Describe the incident and evidence.
-4. Explain why the existing rules do not adequately cover the conduct.
-5. Continue the normal case, admin-vote, and senior-review process.
-6. Flag the case **NEEDS_RULE_REVIEW**.
+### 📝 Summary
+Do not impersonate another player, staff member, administrator, or JTWP representative.
 
-A missing rule or category does **not** automatically invalidate the case or an otherwise approved punishment.
+### 📖 Details
+Players may not intentionally pretend to be another person or falsely represent themselves as JTWP staff or administration. This includes misleading names, claims of authority, copied identities, or other behavior intended to deceive players about who someone is or what authority they have.
+
+### 💡 Examples
+• Pretending to be a JTWP administrator
+• Using another player's identity with the intent to deceive
+• Claiming staff authority that you do not have
+• Giving fake staff instructions while pretending to represent JTWP
+
+### ✅ Not Normally a Violation
+• Obvious parody that a reasonable player would not mistake for a real person or staff member
+• Using a similar name without intent to deceive
+
+### 🔎 Evidence to Consider
+• Screenshots of names or messages
+• Chat logs
+• Voice evidence where available
+• Moderator observation
+• Evidence showing the person claimed authority or another identity
+
+### ⬆️ Aggravating Factors
+• Impersonating staff to issue fake instructions
+• Using impersonation to harass or deceive players
+• Repeated impersonation after being warned
+• Impersonation connected to fraud, threats, or moderation interference
+
+### ⬇️ Mitigating Factors
+• No reasonable evidence of intent to deceive
+• Clearly identifiable parody
+
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
+
+### 👮 Admin Review Notes
+• Intent to deceive is important. Similar names alone should not automatically be treated as impersonation.
+
+---
+
+## 🤝 R016 — Follow Staff Instructions
+
+**🗂️ Category:** Conduct  
+**🟡 Severity:** Medium
+
+### 📝 Summary
+Players must follow reasonable instructions given by authorized JTWP staff while they are performing moderation duties.
+
+### 📖 Details
+When a staff member gives a reasonable instruction to stop prohibited or disruptive behavior, players are expected to comply. Staff instructions do not override the rules, do not give staff unlimited authority, and must be related to legitimate moderation or server operations.
+
+### 💡 Examples
+• Continuing prohibited behavior after staff tells you to stop
+• Refusing a reasonable instruction intended to restore normal gameplay
+• Deliberately interfering with an active moderation situation
+• Repeatedly ignoring legitimate staff instructions
+
+### ✅ Not Normally a Violation
+• Politely asking why an instruction was given
+• Disagreeing with a staff decision without disrupting moderation
+• Refusing an instruction that is clearly unrelated to legitimate staff duties or conflicts with JTWP rules
+
+### 🔎 Evidence to Consider
+• The exact staff instruction
+• Context showing why the instruction was given
+• Chat or voice logs
+• Moderator observation
+• Evidence showing the player knowingly refused or continued the behavior
+
+### ⬆️ Aggravating Factors
+• Repeated refusal
+• Interfering with staff handling another incident
+• Encouraging others to ignore staff
+• Escalating the situation after a clear warning
+
+### ⬇️ Mitigating Factors
+• Instruction was unclear
+• Player did not reasonably know the person was staff
+• Instruction was unrelated to legitimate moderation or server operations
+
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
+
+### 👮 Admin Review Notes
+• Only reasonable and legitimate staff instructions are covered by this rule.
+• Staff authority is also limited by R017 and R019.
+
+---
+
+## 🛡️ R017 — Staff Must Follow the Rules Too
+
+**🗂️ Category:** Staff Conduct  
+**🟠 Severity:** High
+
+### 📝 Summary
+Staff members are subject to the same server rules as everyone else.
+
+### 📖 Details
+Being a moderator, administrator, or other staff member does not exempt someone from JTWP rules. Staff are expected to follow the rules while playing and while exercising staff authority.
+
+### 💡 Examples
+• A staff member engaging in behavior that would result in action against a normal player
+• Using staff status as justification for breaking a server rule
+• Harassing players while acting as staff
+• Ignoring server rules because of administrative rank
+
+### ✅ Not Normally a Violation
+• Legitimate staff actions performed within authorized duties
+• Good-faith moderation decisions that are later changed on review
+
+### 🔎 Evidence to Consider
+• Case logs
+• RCON or moderation audit logs
+• Chat or voice evidence
+• Moderator observation
+• Previous staff-conduct cases
+
+### ⬆️ Aggravating Factors
+• Using staff status to avoid accountability
+• Repeated violations
+• Retaliation against reporters or other staff
+• Abuse involving privileged tools
+
+### ⬇️ Mitigating Factors
+• Good-faith mistake
+• Unclear policy or conflicting staff instructions
+
+### ⚖️ Suggested Punishment
+- 🔎 **First offense:** `Staff Review`
+- 🚫 **Repeat offense:** `Staff Privileges Removed`
+- 🚫 **Severe offense:** `Staff Privileges Removed`
+
+### 👮 Admin Review Notes
+• A game ban and staff discipline are separate decisions. Senior admins may apply one, both, or neither depending on the conduct.
+
+---
+
+## 🤝 R018 — Report Problems — Don't Escalate Them
+
+**🗂️ Category:** Conduct  
+**🟡 Severity:** Medium
+
+### 📝 Summary
+Report rule violations to staff instead of retaliating or escalating the situation.
+
+### 📖 Details
+Another player's misconduct does not give someone permission to break the rules in response. Players should preserve evidence when possible, report the problem, and allow staff to handle it.
+
+### 💡 Examples
+• Team killing someone because they team killed you
+• Harassing someone because they harassed you first
+• Threatening another player in retaliation
+• Starting a larger disruption instead of reporting the original problem
+
+### ✅ Not Normally a Violation
+• Defending yourself within normal game mechanics
+• Leaving the area or disengaging from the incident
+• Reporting the conduct to staff
+• Preserving evidence without continuing the conflict
+
+### 🔎 Evidence to Consider
+• Timeline of the original incident and retaliation
+• Kill or event logs
+• Chat or voice evidence
+• Moderator observation
+
+### ⬆️ Aggravating Factors
+• Escalation after staff involvement
+• Retaliatory team killing or harassment
+• Recruiting others to retaliate
+• Continuing after being told to disengage
+
+### ⬇️ Mitigating Factors
+• Immediate defensive action within normal gameplay
+• Player disengaged quickly once staff became involved
+
+### ⚖️ Suggested Punishment
+- ⚠️ **First offense:** `Warning`
+- ⏳ **Repeat offense:** `Temporary Ban`
+- ⏳ **Severe offense:** `Temporary Ban`
+
+### 👮 Admin Review Notes
+• Moderate retaliatory conduct separately from the original offense. Both players may have valid cases for different rules.
+
+---
+
+## 🛡️ R019 — No Abuse of Admin or Staff Privileges
+
+**🗂️ Category:** Staff Conduct  
+**🔴 Severity:** Critical
+
+### 📝 Summary
+Staff permissions and administrative tools may only be used for legitimate authorized purposes.
+
+### 📖 Details
+Staff may not use administrative permissions, RCON commands, moderation tools, privileged information, or their position for personal advantage, retaliation, harassment, favoritism, or other unauthorized purposes.
+
+### 💡 Examples
+• Using RCON commands against a player for personal reasons
+• Kicking or banning someone as retaliation
+• Using administrative abilities to gain a gameplay advantage
+• Changing server settings without authorization
+• Using privileged information for personal purposes
+• Protecting friends from legitimate moderation because of personal relationships
+• Using staff permissions to interfere with another administrator's legitimate action
+
+### ✅ Not Normally a Violation
+• Authorized moderation actions taken in good faith
+• Testing administrative tools in an approved testing environment
+• Emergency actions reasonably taken to protect server stability or players
+
+### 🔎 Evidence to Consider
+• RCON audit logs
+• Discord moderation logs
+• System/service logs
+• Case history
+• Screenshots or recordings
+• Statements from other staff members
+
+### ⬆️ Aggravating Factors
+• Retaliation
+• Using privileged tools for personal gameplay advantage
+• Hiding or deleting evidence
+• Repeated unauthorized actions
+• Favoritism or selective enforcement
+• Interfering with another legitimate moderation case
+
+### ⬇️ Mitigating Factors
+• Good-faith emergency action
+• Unclear authorization boundaries
+• Immediate self-reporting of an accidental misuse
+
+### ⚖️ Suggested Punishment
+- 🔎 **First offense:** `Staff Review`
+- 🚫 **Repeat offense:** `Staff Privileges Removed`
+- 🚫 **Severe offense:** `Staff Privileges Removed`
+
+### 👮 Admin Review Notes
+• Senior administration should review all alleged privilege-abuse cases.
+• Removing staff privileges does not automatically mean a game ban, and a game ban does not automatically replace staff discipline.
+
+---
+
+## ❓ No Matching Rule / Rules Gap
+
+If conduct appears to justify moderation but no current rule adequately describes it:
+
+1. 🗂️ Select the closest category, or **Other**.
+2. ❓ Leave the matched rule empty if necessary.
+3. 📝 Record the incident summary and evidence.
+4. 🔎 Explain why the existing rules do not fit.
+5. 🗳️ Continue the normal case, voting, and senior-review process.
+6. 🚩 Flag the case **NEEDS_RULE_REVIEW**.
+
+> ⚠️ A missing rule or category does **not** automatically invalidate the case or an otherwise approved punishment.

@@ -6,6 +6,10 @@
       "purpose": "RCON command definitions",
       "required_by": "rcon_trigger_watcher.py"
     },
+    "rcon-plus_commands.json": {
+      "purpose": "RCON command definitions",
+      "required_by": "rcon_trigger_watcher.py"
+    },
     "game_modes.json": {
       "purpose": "Allowed Pavlov game mode identifiers",
       "required_by": "rcon_trigger_watcher.py"

@@ -1,0 +1,87 @@
+# JTWP Discord bot sudoers rules
+#
+# Review before installing:
+#   sudo visudo -cf jtwp-discord-bot
+#
+# Install:
+#   sudo install -o root -g root -m 0440 \
+#       jtwp-discord-bot \
+#       /etc/sudoers.d/jtwp-discord-bot
+#
+# The bot runs as:
+#   steam
+#
+# systemctl path on this server:
+#   /usr/bin/systemctl
+#
+# Do NOT replace these rules with:
+#   steam ALL=(ALL) NOPASSWD: ALL
+
+# ------------------------------------------------------------
+# Pavlov server status
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl status pavlovserver.service --no-pager
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl status pavlovserver0.service --no-pager
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl status pavlovserver1.service --no-pager
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl status pavlovserver2.service --no-pager
+
+# ------------------------------------------------------------
+# Pavlov server start
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl start pavlovserver.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl start pavlovserver0.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl start pavlovserver1.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl start pavlovserver2.service
+
+# ------------------------------------------------------------
+# Pavlov server stop
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl stop pavlovserver.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl stop pavlovserver0.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl stop pavlovserver1.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl stop pavlovserver2.service
+
+# ------------------------------------------------------------
+# Pavlov server restart
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl restart pavlovserver.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl restart pavlovserver0.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl restart pavlovserver1.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl restart pavlovserver2.service
+
+# ------------------------------------------------------------
+# Pavlov server enable
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl enable pavlovserver.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl enable pavlovserver0.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl enable pavlovserver1.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl enable pavlovserver2.service
+
+# ------------------------------------------------------------
+# Pavlov server disable
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl disable pavlovserver.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl disable pavlovserver0.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl disable pavlovserver1.service
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl disable pavlovserver2.service
+
+# ------------------------------------------------------------
+# JTWP collector
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/bin/systemctl start jtwp-collector.service
+
+# ------------------------------------------------------------
+# Pavlov mod cleanup helper
+# ------------------------------------------------------------
+
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver0
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver1
+steam ALL=(root) NOPASSWD: /usr/local/bin/clear-pavlov-mods pavlovserver2

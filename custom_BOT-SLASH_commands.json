@@ -1,0 +1,551 @@
+{
+  "metadata": {
+    "name": "JTWP Discord Slash Commands",
+    "source": "current discord_bot.py",
+    "top_level_command_roots": 11,
+    "total_commands": 37,
+    "permission_notes": {
+      "EVERYONE": "No JTWP ADMIN/OWNER role required.",
+      "ADMIN_OR_OWNER": "Requires configured ADMIN or OWNER role.",
+      "SENIOR_ADMIN_OR_OWNER": "Requires configured Senior Admin role or OWNER; OWNER always qualifies.",
+      "OWNER": "Requires configured OWNER role.",
+      "control_channel": "Every command with control_channel_required=true must be used in discord_bot.control_channel_id when configured."
+    },
+    "status_notes": {
+      "working": "true means implemented with no known blocker in the current bot.",
+      "tested": "true means explicitly confirmed during this setup."
+    }
+  },
+  "commands": {
+    "/report player": {
+      "working": true,
+      "tested": false,
+      "group": "report",
+      "permission": "EVERYONE",
+      "control_channel_required": false,
+      "arguments": [],
+      "how_it_works": "Opens a player-report modal, resolves the target, creates a moderation report case, saves it, and posts it to the moderation channel."
+    },
+    "/moderation case": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Loads and displays an existing moderation case."
+    },
+    "/moderation vote": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "choice",
+          "type": "choice: approve|reject|escalate",
+          "required": true
+        }
+      ],
+      "how_it_works": "Records or changes the admin's vote and refreshes the case message."
+    },
+    "/moderation classify": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "rule_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "how_it_works": "Assigns or updates the case category and optional rule ID."
+    },
+    "/moderation tempban": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "SENIOR_ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "days",
+          "type": "integer 1-3650",
+          "required": true
+        }
+      ],
+      "how_it_works": "Applies a temporary RCON ban from an existing case, persists expiry, and schedules automatic unban."
+    },
+    "/moderation tempban-player": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "SENIOR_ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "player",
+          "type": "name/ProductID/UniqueID",
+          "required": true
+        },
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "days",
+          "type": "integer 1-3650",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "target_discord_id",
+          "type": "numeric string",
+          "required": false
+        }
+      ],
+      "how_it_works": "Creates a ban case and immediately applies a temporary RCON ban."
+    },
+    "/moderation permban": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "SENIOR_ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Applies a permanent RCON ban from an existing moderation case."
+    },
+    "/moderation reject": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "SENIOR_ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Rejects and closes a moderation case while preserving the review history."
+    },
+    "/moderation active-bans": {
+      "working": true,
+      "tested": false,
+      "group": "moderation",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Displays global/moderation/active_bans.json."
+    },
+    "/rcon": {
+      "working": true,
+      "tested": false,
+      "group": "rcon",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Sends RCON to a configured server. ADMIN is limited to admin_allowed_rcon_commands; OWNER is unrestricted by that allow-list."
+    },
+    "/player productid": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "player",
+          "type": "name/ProductID/UniqueID",
+          "required": true
+        }
+      ],
+      "how_it_works": "Resolves a player through the JTWP player indexes."
+    },
+    "/player network": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Returns the player's ips.json."
+    },
+    "/player names": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Returns the player's names.json."
+    },
+    "/player stats": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Returns the player's stats.json."
+    },
+    "/player weapons": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Returns the player's weapons.json."
+    },
+    "/player profile": {
+      "working": true,
+      "tested": false,
+      "group": "player",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Returns player.json, or profile.json if player.json is unavailable."
+    },
+    "/index names": {
+      "working": true,
+      "tested": false,
+      "group": "index",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Downloads every key in by_name.json as a text file."
+    },
+    "/index iphashes": {
+      "working": true,
+      "tested": false,
+      "group": "index",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Downloads every key in by_ip_hash.json as a text file."
+    },
+    "/index productids": {
+      "working": true,
+      "tested": false,
+      "group": "index",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Downloads every key in by_product_id.json as a text file."
+    },
+    "/index uniqueids": {
+      "working": true,
+      "tested": false,
+      "group": "index",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Downloads every key in by_unique_id.json as a text file."
+    },
+    "/account link": {
+      "working": true,
+      "tested": true,
+      "group": "account",
+      "permission": "EVERYONE",
+      "control_channel_required": false,
+      "arguments": [
+        {
+          "name": "player",
+          "type": "name/ProductID/UniqueID",
+          "required": true
+        },
+        {
+          "name": "steam_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "how_it_works": "Links the caller's Discord identity to a JTWP player, optionally enriches Steam data, and marks the profile link pending_admin_review."
+    },
+    "/account steam": {
+      "working": true,
+      "tested": false,
+      "group": "account",
+      "permission": "EVERYONE",
+      "control_channel_required": false,
+      "arguments": [
+        {
+          "name": "steam_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Adds or refreshes Steam Web API data on the caller's linked JTWP profile."
+    },
+    "/account info": {
+      "working": true,
+      "tested": false,
+      "group": "account",
+      "permission": "EVERYONE",
+      "control_channel_required": false,
+      "arguments": [],
+      "how_it_works": "Shows the caller's linked account information."
+    },
+    "/account approve": {
+      "working": true,
+      "tested": false,
+      "group": "account",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Marks a pending profile link verified and records the approving staff member."
+    },
+    "/account unlink": {
+      "working": true,
+      "tested": false,
+      "group": "account",
+      "permission": "EVERYONE",
+      "control_channel_required": false,
+      "arguments": [],
+      "how_it_works": "Removes the caller's Discord/Steam links from their JTWP player profile."
+    },
+    "/network ddos": {
+      "working": true,
+      "tested": false,
+      "group": "network",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Reads the root-owned network_stats.json through the narrow sudo helper and displays DDoS/network stats."
+    },
+    "/data indexstats": {
+      "working": true,
+      "tested": false,
+      "group": "data",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Shows counts for player indexes plus before/after rebuild folders, rebuild_status.json, and timestamp."
+    },
+    "/data export": {
+      "working": true,
+      "tested": false,
+      "group": "data",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs scripts/export-data.py and returns its output."
+    },
+    "/data backup": {
+      "working": true,
+      "tested": false,
+      "group": "data",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs scripts/backup-data.py and returns its output."
+    },
+    "/jtwp restart": {
+      "working": true,
+      "tested": false,
+      "group": "jtwp",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs sudo -n /usr/local/bin/restart-jtwp."
+    },
+    "/jtwp runcollector": {
+      "working": true,
+      "tested": false,
+      "group": "jtwp",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs collector.py -c config.json manually."
+    },
+    "/jtwp runpavlovapi": {
+      "working": true,
+      "tested": false,
+      "group": "jtwp",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs update_pavlov_api.py -c config.json manually."
+    },
+    "/server service": {
+      "working": true,
+      "tested": false,
+      "group": "server",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "action",
+          "type": "status|start|stop|restart|enable|disable (configurable)",
+          "required": true
+        }
+      ],
+      "how_it_works": "Runs an allowed systemctl action against <server_id>.service."
+    },
+    "/server clear-mods": {
+      "working": true,
+      "tested": false,
+      "group": "server",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "how_it_works": "Runs /usr/local/bin/clear-pavlov-mods <server_id>."
+    },
+    "/loop start": {
+      "working": true,
+      "tested": false,
+      "group": "loop",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [
+        {
+          "name": "server_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "seconds",
+          "type": "integer 1-3600",
+          "required": true
+        }
+      ],
+      "how_it_works": "Runs set-rcon-loop.py start for the selected server and interval."
+    },
+    "/loop stop": {
+      "working": true,
+      "tested": false,
+      "group": "loop",
+      "permission": "OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Runs set-rcon-loop.py stop."
+    },
+    "/loop status": {
+      "working": true,
+      "tested": false,
+      "group": "loop",
+      "permission": "ADMIN_OR_OWNER",
+      "control_channel_required": true,
+      "arguments": [],
+      "how_it_works": "Shows the configured RCON loop control and output JSON."
+    }
+  },
+  "known_gaps": {
+    "/account pending": {
+      "working": false,
+      "implemented": false,
+      "reason": "Discussed but not present in the current bot."
+    },
+    "/account reject": {
+      "working": false,
+      "implemented": false,
+      "reason": "Discussed but not present in the current bot."
+    }
+  }
+}

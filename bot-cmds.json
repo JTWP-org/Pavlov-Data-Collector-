@@ -1,0 +1,161 @@
+{
+  "commands": {
+    "!exportdata": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/export-data.py",
+      "service": null
+    },
+    "!backupdata": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/backup-data.py",
+      "service": null
+    },
+    "!cleardata YES": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/clear-data.sh",
+      "service": null
+    },
+    "!restartjtwp": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/usr/local/bin/restart-jtwp",
+      "service": null
+    },
+    "!rcon <server_id> <command>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null,
+      "notes": "Admins are restricted to the configured admin_allowed_rcon_commands list."
+     },
+     "!systemCtl <server_id> <status|start|stop|restart|enable|disable>": {
+      "working": true,
+      "permission": "OWNER",
+      "bridge_rcon": false,
+      "script": "/usr/bin/systemctl",
+      "service": "<selected Pavlov server service>"
+    },
+    "!getProductID <playername>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getNETWORK <ProductID>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getNAMES <ProductID>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getSTATS <ProductID>": {
+      "working": false,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getGUNS <ProductID>": {
+      "working": false,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getPLAYER <ProductID>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!getDUMP <ProductID>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!checkCONS <playername>": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": null
+    },
+    "!server clear-pavlov-mods <server_id>": {
+      "working": true,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/usr/local/bin/clear-pavlov-mods",
+      "service": null
+    },
+    "!clearpavlovmods <server_id>": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/usr/local/bin/clear-pavlov-mods",
+      "service": null,
+      "notes": "Alias for !server clear-pavlov-mods."
+    },
+    "!RUNcollector": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py",
+      "service": "jtwp-collector.service"
+    },
+    "!RUNpavlovApi": {
+      "working": true,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/update_pavlov_api.py",
+      "service": null
+    },
+    "!RUNssh": {
+      "working": true,
+      "permission": "OWNER",
+      "bridge_rcon": true,
+      "script": "/home/steam/jtwp-collector-data/global/ssh/buildIt",
+      "secondary_script": "/home/steam/jtwp-collector-data/global/ssh/discordIt",
+      "service": null
+    },
+    "!loop start <server> <seconds>": {
+      "working": false,
+      "permission": "OWNER",
+      "bridge_rcon": false,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/set-rcon-loop.py",
+      "service": "jtwp-rcon-loop.service"
+    },
+    "!loop stop": {
+      "working": true,
+      "permission": "OWNER",
+      "bridge_rcon": false,
+      "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/set-rcon-loop.py",
+      "service": "jtwp-rcon-loop.service"
+    },
+    "!loop status": {
+      "working": true,
+      "permission": "ADMIN_OR_OWNER",
+      "bridge_rcon": false,
+      "script": null,
+      "service": "jtwp-rcon-loop.service"
+    }
+  }
+}

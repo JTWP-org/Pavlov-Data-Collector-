@@ -19,7 +19,7 @@
   "commands": {
     "/report player": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "report",
       "permission": "EVERYONE",
       "control_channel_required": false,
@@ -28,7 +28,7 @@
     },
     "/moderation case": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "moderation",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -43,7 +43,7 @@
     },
     "/moderation vote": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "moderation",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -63,7 +63,7 @@
     },
     "/moderation classify": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "moderation",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -158,7 +158,7 @@
     },
     "/moderation reject": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "moderation",
       "permission": "SENIOR_ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -178,7 +178,7 @@
     },
     "/moderation active-bans": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "moderation",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -187,7 +187,7 @@
     },
     "/rcon": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "rcon",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -207,7 +207,7 @@
     },
     "/player productid": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -222,7 +222,7 @@
     },
     "/player network": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -237,7 +237,7 @@
     },
     "/player names": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -252,7 +252,7 @@
     },
     "/player stats": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -266,8 +266,8 @@
       "how_it_works": "Returns the player's stats.json."
     },
     "/player weapons": {
-      "working": true,
-      "tested": false,
+      "working": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -282,7 +282,7 @@
     },
     "/player profile": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "player",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -297,7 +297,7 @@
     },
     "/index names": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "index",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -306,7 +306,7 @@
     },
     "/index iphashes": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "index",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -315,7 +315,7 @@
     },
     "/index productids": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "index",
       "permission": "ADMIN_OR_OWNER",
       "control_channel_required": true,
@@ -353,7 +353,7 @@
     },
     "/account steam": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "account",
       "permission": "EVERYONE",
       "control_channel_required": false,
@@ -368,7 +368,7 @@
     },
     "/account info": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "account",
       "permission": "EVERYONE",
       "control_channel_required": false,
@@ -446,7 +446,7 @@
     },
     "/jtwp runcollector": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "jtwp",
       "permission": "OWNER",
       "control_channel_required": true,
@@ -455,7 +455,7 @@
     },
     "/jtwp runpavlovapi": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "jtwp",
       "permission": "OWNER",
       "control_channel_required": true,
@@ -463,7 +463,7 @@
       "how_it_works": "Runs update_pavlov_api.py -c config.json manually."
     },
     "/server service": {
-      "working": true,
+      "working": false,
       "tested": false,
       "group": "server",
       "permission": "OWNER",
@@ -484,7 +484,7 @@
     },
     "/server clear-mods": {
       "working": true,
-      "tested": false,
+      "tested": true,
       "group": "server",
       "permission": "OWNER",
       "control_channel_required": true,

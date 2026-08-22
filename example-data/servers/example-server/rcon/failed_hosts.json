@@ -1,9 +1,0 @@
-{
-  "example_failed_ip_hash": {
-    "first_seen": "2026-01-01T00:00:00Z",
-    "last_seen": "2026-01-01T00:00:00Z",
-    "successful_connections": 0,
-    "failed_attempts": 1,
-    "players_seen_on_ip": []
-  }
-}

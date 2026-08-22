@@ -1,0 +1,411 @@
+{
+  "version": 1,
+  "description": "JTWP systemd service/timer resource. Consolidated from supplied unit files and service definitions. Duplicate units were merged.",
+  "defaults": {
+    "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+    "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+    "python": "/home/steam/jtwp-collector/venv/bin/python3",
+    "config": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json",
+    "active_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json",
+    "standard_output": "journal",
+    "standard_error": "journal"
+  },
+  "services": {
+    "jtwp-admin-monitor.service": {
+      "description": "JTWP Admin Session and Moderation Alert Monitor",
+      "category": "moderation",
+      "purpose": "Monitors admin sessions and moderation-related alert state.",
+      "unit": {
+        "after": [
+          "network-online.target",
+          "jtwp-rcon-loop.service"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/admin_monitor.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json",
+          "-a",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json"
+        ],
+        "restart": "always",
+        "restart_sec": 5,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-collector.service": {
+      "description": "JTWP Pavlov Data Collector",
+      "category": "collector",
+      "purpose": "Runs the main Pavlov data collection/indexing job.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "oneshot",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/collector.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {}
+    },
+    "jtwp-connection-watcher.service": {
+      "description": "JTWP Pavlov Connection Watcher",
+      "category": "connections",
+      "purpose": "Watches Pavlov connection/RCON log activity and live connection state.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/connection_watcher.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "restart": "always",
+        "restart_sec": 5,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-ddos-watcher.service": {
+      "description": "JTWP DDoS / Network Abuse Watcher",
+      "category": "network_security",
+      "purpose": "Runs packet/network abuse monitoring. Runs as root because the current watcher launches tcpdump directly.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "root",
+        "group": "root",
+        "requires_root": true,
+        "root_reason": "Direct tcpdump packet capture.",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/ddos_watcher.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "restart": "always",
+        "restart_sec": 5,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-discord-bot.service": {
+      "description": "JTWP Discord Administration Bot",
+      "category": "discord",
+      "purpose": "Runs the JTWP Discord administration/slash-command bot.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/discord_bot.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json",
+          "-a",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json"
+        ],
+        "restart": "always",
+        "restart_sec": 5,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-failed-ip-lookup-repair.service": {
+      "description": "JTWP Failed IP Lookup Repair",
+      "category": "network_enrichment",
+      "purpose": "Retries previously failed IP enrichment/lookups.",
+      "source_note": "Service name inferred from the supplied unit description because the original filename was not shown.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "oneshot",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/scripts/retry-failed-ip-lookups.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json",
+          "--limit",
+          "10"
+        ]
+      },
+      "install": {}
+    },
+    "jtwp-rcon-loop.service": {
+      "description": "JTWP RCON ServerInfo + InspectAll Loop Watcher",
+      "category": "rcon",
+      "purpose": "Runs the RCON ServerInfo/InspectAll loop using config.json and active.json.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/rcon_loop.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json",
+          "-a",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/active.json"
+        ],
+        "restart": "always",
+        "restart_sec": 5,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-rcon-player-loop.service": {
+      "description": "JTWP RCON Player InspectAll Loop",
+      "category": "rcon",
+      "purpose": "Runs the standalone RCON InspectAll player loop.",
+      "source_note": "Added from the service definition pasted in the message.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment": {
+          "PYTHONUNBUFFERED": "1"
+        },
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/rcon_player_loop.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "restart": "always",
+        "restart_sec": 3
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-rcon-trigger-watcher.service": {
+      "description": "JTWP Pavlov RCON Trigger Watcher",
+      "category": "rcon",
+      "purpose": "Watches file-triggered RCON requests and writes responses.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/rcon_trigger_watcher.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "restart": "always",
+        "restart_sec": 3,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    },
+    "jtwp-ssh-watcher.service": {
+      "description": "JTWP SSH Failed Login Watcher",
+      "category": "network_security",
+      "purpose": "Watches SSH failed-login activity and records security events.",
+      "unit": {
+        "after": [
+          "network-online.target"
+        ],
+        "wants": [
+          "network-online.target"
+        ]
+      },
+      "service": {
+        "type": "simple",
+        "user": "steam",
+        "group": "steam",
+        "working_directory": "/home/steam/jtwp-collector/Pavlov-Data-Collector-",
+        "environment_file": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/.env",
+        "executable": "/home/steam/jtwp-collector/venv/bin/python3",
+        "script": "/home/steam/jtwp-collector/Pavlov-Data-Collector-/ssh_watcher.py",
+        "arguments": [
+          "-c",
+          "/home/steam/jtwp-collector/Pavlov-Data-Collector-/config.json"
+        ],
+        "restart": "always",
+        "restart_sec": 3,
+        "standard_output": "journal",
+        "standard_error": "journal"
+      },
+      "install": {
+        "wanted_by": [
+          "multi-user.target"
+        ]
+      }
+    }
+  },
+  "timers": {
+    "jtwp-collector.timer": {
+      "description": "Run JTWP Pavlov Data Collector nightly",
+      "category": "scheduler",
+      "unit": {},
+      "timer": {
+        "on_calendar": "*-*-* 03:00:00",
+        "persistent": true,
+        "unit": "jtwp-collector.service"
+      },
+      "install": {
+        "wanted_by": [
+          "timers.target"
+        ]
+      }
+    }
+  },
+  "service_groups": {
+    "core": [
+      "jtwp-collector.service",
+      "jtwp-connection-watcher.service",
+      "jtwp-discord-bot.service"
+    ],
+    "rcon": [
+      "jtwp-rcon-loop.service",
+      "jtwp-rcon-player-loop.service",
+      "jtwp-rcon-trigger-watcher.service"
+    ],
+    "security": [
+      "jtwp-ddos-watcher.service",
+      "jtwp-ssh-watcher.service"
+    ],
+    "moderation": [
+      "jtwp-admin-monitor.service"
+    ],
+    "maintenance": [
+      "jtwp-failed-ip-lookup-repair.service"
+    ]
+  },
+  "notes": [
+    "Duplicate copies of jtwp-admin-monitor.service and jtwp-rcon-loop.service were merged.",
+    "The supplied collector service has no [Install] section; it is intended to be triggered by jtwp-collector.timer.",
+    "jtwp-failed-ip-lookup-repair.service is represented from the pasted unit text, but its exact original unit filename was not supplied.",
+    "jtwp-rcon-player-loop.service was added from the pasted service definition even though it was not among the uploaded unit files.",
+    "The uploaded jtwp-discord-bot.service includes '-a active.json'; the earlier pasted text omitted that argument, so the uploaded unit was treated as authoritative.",
+    "The uploaded jtwp-connection-watcher.service uses RestartSec=5; the earlier pasted text showed 3 seconds, so the uploaded unit was treated as authoritative."
+  ]
+}

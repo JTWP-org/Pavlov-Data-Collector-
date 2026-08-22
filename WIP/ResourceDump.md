@@ -1,1 +1,0 @@
-there will be a way to download all files in the resource folder to the modkit that can be triggered from the modkit (by placing a json in the RCON folder) so u dont need to GET request them and u have them 

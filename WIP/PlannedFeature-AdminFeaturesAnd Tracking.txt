@@ -1,9 +1,0 @@
-* planned feature for the bot using a discord cmd admins will be able to attach notes to players and issue temp bans
------ the notes can be used to keep a record of actions in the server that will be added to the player log file permanently. 
-* admin ban logging all player bans and kick must be issued via discord so a record can be made of the kick/ban that enplanes why they player was kicked/banned
-* admins will also be able to ban a player for a set time and it will unban the player when the timer expires this will be logged to the player and stay after ban is lifted 
------both player logs and temp bans will be counted on the admin log file to show admin activity
-* admin time in the game will be tracked and used to rank admins      
-* there will be events that trigger a web hook that gives info on the event and pings an admin to try and get one in the server to check on player activity if an admin joins within 15 mins
------ of an admin ping that will be counted and added to the admins log ... events that trigger an admin ping are score below 0 , 2 team kills in a short period of time , rcon cmd spam
------if a lot of rcon cmds are issued in a short period of time 

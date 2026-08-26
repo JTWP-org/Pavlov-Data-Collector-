@@ -1,7 +1,4 @@
 {
-  // ============================================================
-  // JTWP DATA / STORAGE
-  // ============================================================
   "data_path": "/home/steam/jtwp-collector-data",
   "archive_path": "/home/steam/jtwp-log-archive",
   "old_archive_paths": [
@@ -9,28 +6,16 @@
   ],
   "request_timeout_seconds": 8,
 
-  // ============================================================
-  // COLLECTOR / LOG PROCESSING
-  // ============================================================
   "rotate_active_logs": true,
   "count_unverified_player_kills": true,
   "ip_lookup_cache_ttl_days": 30,
 
-  // ============================================================
-  // MOD.IO
-  // ============================================================
   "modio_game_id": 3959,
   "modio_cache_ttl_hours": 24,
 
-  // ============================================================
-  // PAVLOV PUBLIC API
-  // ============================================================
   "pavlov_api_enabled": true,
   "pavlov_api_host_cache_ttl_days": 30,
 
-  // ============================================================
-  // PAVLOV SERVERS
-  // ============================================================
   "servers": [
     {
       "log_path": "/home/steam/pavlovserver/Pavlov/Saved/Logs/",
@@ -64,9 +49,6 @@
     }
   ],
 
-  // ============================================================
-  // CONNECTION WATCHER
-  // ============================================================
   "connection_watcher": {
     "poll_interval_seconds": 0.5,
     "start_at_end": true,
@@ -75,9 +57,6 @@
     "webhook_retries": 2
   },
 
-  // ============================================================
-  // RCON INSPECT LOOP
-  // ============================================================
   "rcon_inspect_loop": {
     "enabled": true,
     "minimum_players": 0,
@@ -86,9 +65,6 @@
     "record_ping_samples": true
   },
 
-  // ============================================================
-  // RCON PLAYER LOOP
-  // ============================================================
   "rcon_player_loop": {
     "enabled": true,
     "minimum_players": 2,
@@ -98,9 +74,6 @@
     "debug": true
   },
 
-  // ============================================================
-  // RCON FILE BRIDGE / RESOURCE UPDATER
-  // ============================================================
   "rcon_bridge": {
     "enabled": true,
     "poll_interval_seconds": 0.25,
@@ -122,9 +95,6 @@
     "rcon_resource_timeout_seconds": 30
   },
 
-  // ============================================================
-  // GENERAL RCON LOOP CONTROL
-  // ============================================================
   "rcon_loop": {
     "enabled": true,
     "poll_interval_seconds": 0.5,
@@ -134,9 +104,6 @@
     "max_loop_seconds": 3600
   },
 
-  // ============================================================
-  // RCON SECURITY / ABUSE DETECTION
-  // ============================================================
   "rcon_security": {
     "enabled": true,
     "rate_window_seconds": 60,
@@ -157,9 +124,6 @@
     ]
   },
 
-  // ============================================================
-  // SSH WATCHER
-  // ============================================================
   "ssh_watcher": {
     "units": [
       "ssh.service",
@@ -176,9 +140,6 @@
     "auto_block_private_ips": false
   },
 
-  // ============================================================
-  // DDoS WATCHER
-  // ============================================================
   "ddos_watcher": {
     "enabled": true,
     "interface": "any",
@@ -195,9 +156,6 @@
     "tcpdump_path": "/usr/bin/tcpdump"
   },
 
-  // ============================================================
-  // ADMIN NOTIFICATIONS
-  // ============================================================
   "admin_notifications": {
     "enabled": true,
     "role_id": "1539038732810854480",
@@ -210,9 +168,6 @@
     "response_window_seconds": 900
   },
 
-  // ============================================================
-  // DISCORD BOT
-  // ============================================================
   "discord_bot": {
     "enabled": true,
     "prefix": "!",
@@ -227,7 +182,7 @@
     "admin_allowed_rcon_commands": [
       "banlist",
       "clearemptyvehicles",
-      "disconnect",    
+      "disconnect",
       "enablecompmode",
       "gag",
       "giveall",
@@ -266,10 +221,7 @@
       "tttgivecredits",
       "tttpausetimer",
       "tttsetkarma",
-      "tttsetrole",
-      "tttsetrole",
-      "tttsetkarma"
-
+      "tttsetrole"
     ],
     "systemctl_actions": [
       "status",
@@ -284,9 +236,6 @@
     "token_env": "JTWP_DISCORD_BOT_TOKEN"
   },
 
-  // ============================================================
-  // DATA TOOLS / EXPORTS / LEADERBOARDS
-  // ============================================================
   "data_tools": {
     "output_root": "/home/steam/jtwp-collector-output",
     "backup_dir": "/home/steam/jtwp-collector-output/backups",
@@ -297,9 +246,6 @@
     "leaderboard_cache_ttl_seconds": 300
   },
 
-  // ============================================================
-  // MODERATION
-  // ============================================================
   "moderation": {
     "enabled": true,
     "admin_channel_id": "1336837076066504808",
@@ -313,8 +259,5 @@
     }
   },
 
-  // ============================================================
-  // MISC / SHARED STATE
-  // ============================================================
   "active_file": "active.json"
 }

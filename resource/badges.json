@@ -1,0 +1,497 @@
+{
+  "version": 1,
+  "badges": {
+    "DISCORD BADGE #001": {
+      "id": 1,
+      "name": "DISCORD_BADGE_#001",
+      "url": "",
+      "description": "Discord account linked to a JTWP player account.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "discord_link"
+      }
+    },
+    "Vpn Connection #002": {
+      "id": 2,
+      "name": "Vpn_Connection_#002",
+      "url": "",
+      "description": "Set when a VPN or proxy connection is detected for the player.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "vpn_or_proxy"
+      }
+    },
+    "TeamKiller #003": {
+      "id": 3,
+      "name": "TeamKiller_#003",
+      "url": "",
+      "description": "Set for getting 3 teamkills in a single match.",
+      "automatic": false,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "single_match_teamkills",
+        "threshold": 3
+      }
+    },
+    "1000 Kills #004": {
+      "id": 4,
+      "name": "1000_Kills_#004",
+      "url": "",
+      "description": "Awarded for reaching 1,000 lifetime kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "kills",
+        "threshold": 1000
+      }
+    },
+    "5000 Kills #005": {
+      "id": 5,
+      "name": "5000_Kills_#005",
+      "url": "",
+      "description": "Awarded for reaching 5,000 lifetime kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "kills",
+        "threshold": 5000
+      }
+    },
+    "10000 Kills #006": {
+      "id": 6,
+      "name": "10000_Kills_#006",
+      "url": "",
+      "description": "Awarded for reaching 10,000 lifetime kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "kills",
+        "threshold": 10000
+      }
+    },
+    "100 Headshots #007": {
+      "id": 7,
+      "name": "100_Headshots_#007",
+      "url": "",
+      "description": "Awarded for reaching 100 lifetime headshots.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "headshots",
+        "threshold": 100
+      }
+    },
+    "1000 Headshots #008": {
+      "id": 8,
+      "name": "1000_Headshots_#008",
+      "url": "",
+      "description": "Awarded for reaching 1,000 lifetime headshots.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "headshots",
+        "threshold": 1000
+      }
+    },
+    "100 Connections #009": {
+      "id": 9,
+      "name": "100_Connections_#009",
+      "url": "",
+      "description": "Awarded for connecting to JTWP servers 100 times.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "times_connected",
+        "threshold": 100
+      }
+    },
+    "1000 Connections #010": {
+      "id": 10,
+      "name": "1000_Connections_#010",
+      "url": "",
+      "description": "Awarded for connecting to JTWP servers 1,000 times.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "times_connected",
+        "threshold": 1000
+      }
+    },
+    "Veteran #011": {
+      "id": 11,
+      "name": "Veteran_#011",
+      "url": "",
+      "description": "Awarded to players first seen at least 365 days ago.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "account_age_days",
+        "threshold": 365
+      }
+    },
+    "Clean Player #012": {
+      "id": 12,
+      "name": "Clean_Player_#012",
+      "url": "",
+      "description": "Reserved for future clean-player/reputation criteria.",
+      "automatic": false,
+      "flag": false,
+      "criteria": {
+        "type": "manual"
+      }
+    },
+    "JTWP Staff #013": {
+      "id": 13,
+      "name": "JTWP_Staff_#013",
+      "url": "",
+      "description": "Awarded to JTWP staff/admin player profiles.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "player_admin"
+      }
+    },
+    "Special Recognition #014": {
+      "id": 14,
+      "name": "Special_Recognition_#014",
+      "url": "",
+      "description": "Manual badge for special recognition.",
+      "automatic": false,
+      "flag": false,
+      "criteria": {
+        "type": "manual"
+      }
+    },
+    "Negative K/D #015": {
+      "id": 15,
+      "name": "Negative_K/D_#015",
+      "url": "",
+      "description": "Set when lifetime deaths exceed lifetime kills.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "negative_kd"
+      }
+    },
+    "Network Traveler #016": {
+      "id": 16,
+      "name": "Network_Traveler_#016",
+      "url": "",
+      "description": "Set when more than 3 unique IP hashes have been recorded.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "ip_hash_count_gt",
+        "threshold": 3
+      }
+    },
+    "Bot Slayer #017": {
+      "id": 17,
+      "name": "Bot_Slayer_#017",
+      "url": "",
+      "description": "Awarded for reaching 1,000 lifetime bot kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "bot_kills",
+        "threshold": 1000
+      }
+    },
+    "Alias Collector #018": {
+      "id": 18,
+      "name": "Alias_Collector_#018",
+      "url": "",
+      "description": "Set when more than one player name has been recorded.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "name_count_gt",
+        "threshold": 1
+      }
+    },
+    "Ban History #019": {
+      "id": 19,
+      "name": "Ban_History_#019",
+      "url": "",
+      "description": "Set if the player is currently banned or has a recorded JTWP ban history.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "banned_history"
+      }
+    },
+    "SHACK Player #020": {
+      "id": 20,
+      "name": "SHACK_Player_#020",
+      "url": "",
+      "description": "Awarded to players recorded on the SHACK platform.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "platform_is",
+        "platform": "SHACK"
+      }
+    },
+    "PCVR Player #021": {
+      "id": 21,
+      "name": "PCVR_Player_#021",
+      "url": "",
+      "description": "Awarded to players recorded on the PCVR platform.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "platform_is",
+        "platform": "PCVR"
+      }
+    },
+    "Server Hopper #022": {
+      "id": 22,
+      "name": "Server_Hopper_#022",
+      "url": "",
+      "description": "Awarded after connecting to every currently configured active JTWP server.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "all_active_servers"
+      }
+    },
+    "Snowball Fighter #023": {
+      "id": 23,
+      "name": "Snowball_Fighter_#023",
+      "url": "",
+      "description": "Awarded for 25 Snowball kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "snowball"
+        ],
+        "threshold": 25
+      }
+    },
+    "Bayonet Veteran #024": {
+      "id": 24,
+      "name": "Bayonet_Veteran_#024",
+      "url": "",
+      "description": "Awarded for 100 combined bayonet kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "bayonet_held",
+          "bayonet_charge"
+        ],
+        "threshold": 100
+      }
+    },
+    "C4 Expert #025": {
+      "id": 25,
+      "name": "C4_Expert_#025",
+      "url": "",
+      "description": "Awarded for 100 TTT C4 kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "tttc4"
+        ],
+        "threshold": 100
+      }
+    },
+    "Tank Commander #026": {
+      "id": 26,
+      "name": "Tank_Commander_#026",
+      "url": "",
+      "description": "Awarded for 100 combined tank turret and tank MG kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "tankturret",
+          "tankmg"
+        ],
+        "threshold": 100
+      }
+    },
+    "Road Warrior #027": {
+      "id": 27,
+      "name": "Road_Warrior_#027",
+      "url": "",
+      "description": "Awarded for 50 roadkill/runover kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "runover"
+        ],
+        "threshold": 50
+      }
+    },
+    "Knife Master #028": {
+      "id": 28,
+      "name": "Knife_Master_#028",
+      "url": "",
+      "description": "Awarded for 100 combined modern and WW2 knife kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "Knife",
+          "ww2knife"
+        ],
+        "threshold": 100
+      }
+    },
+    "Flare Gunner #029": {
+      "id": 29,
+      "name": "Flare_Gunner_#029",
+      "url": "",
+      "description": "Awarded for 50 Flare Gun kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_kills_sum_gte",
+        "weapons": [
+          "flaregun"
+        ],
+        "threshold": 50
+      }
+    },
+    "Bot Exterminator #030": {
+      "id": 30,
+      "name": "Bot_Exterminator_#030",
+      "url": "",
+      "description": "Awarded for reaching 5,000 lifetime bot kills.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "bot_kills",
+        "threshold": 5000
+      }
+    },
+    "Headshot Legend #031": {
+      "id": 31,
+      "name": "Headshot_Legend_#031",
+      "url": "",
+      "description": "Awarded for reaching 5,000 lifetime headshots.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "headshots",
+        "threshold": 5000
+      }
+    },
+    "Century Club #032": {
+      "id": 32,
+      "name": "Century_Club_#032",
+      "url": "",
+      "description": "Awarded for 100 hours of recorded JTWP playtime.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "total_time_online_gte",
+        "seconds": 360000
+      }
+    },
+    "Day One Grinder #033": {
+      "id": 33,
+      "name": "Day_One_Grinder_#033",
+      "url": "",
+      "description": "Awarded for 24 hours of recorded JTWP playtime.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "total_time_online_gte",
+        "seconds": 86400
+      }
+    },
+    "Arsenal Master #034": {
+      "id": 34,
+      "name": "Arsenal_Master_#034",
+      "url": "",
+      "description": "Awarded for recording at least one kill with 20 different weapons.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_types_gte",
+        "threshold": 20,
+        "minimum_kills_each": 1
+      }
+    },
+    "Multi-Weapon Veteran #035": {
+      "id": 35,
+      "name": "Multi-Weapon_Veteran_#035",
+      "url": "",
+      "description": "Awarded for 100+ kills with at least 5 different weapons.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "weapon_types_gte",
+        "threshold": 5,
+        "minimum_kills_each": 100
+      }
+    },
+    "Name Changer #036": {
+      "id": 36,
+      "name": "Name_Changer_#036",
+      "url": "",
+      "description": "Set when 5 or more names have been recorded.",
+      "automatic": true,
+      "flag": true,
+      "remove_after_days": 0,
+      "criteria": {
+        "type": "name_count_gte",
+        "threshold": 5
+      }
+    },
+    "Ancient Veteran #037": {
+      "id": 37,
+      "name": "Ancient_Veteran_#037",
+      "url": "",
+      "description": "Awarded to players first seen at least 1,000 days ago.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "account_age_days",
+        "threshold": 1000
+      }
+    },
+    "10K Connections #038": {
+      "id": 38,
+      "name": "10K_Connections_#038",
+      "url": "",
+      "description": "Awarded for 10,000 recorded JTWP connections.",
+      "automatic": true,
+      "flag": false,
+      "criteria": {
+        "type": "stat_gte",
+        "stat": "times_connected",
+        "threshold": 10000
+      }
+    }
+  }
+}

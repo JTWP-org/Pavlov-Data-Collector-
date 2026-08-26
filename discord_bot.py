@@ -33,6 +33,17 @@ ANSI_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 RCON_COMMANDS = ['AddMapRotation', 'AddMod', 'Banlist', 'ClearEmptyVehicles', 'Disconnect', 'EnableCompMode', 'EnableVerboseLogging', 'EnableWhitelist', 'Gag', 'GiveAll', 'GiveCash', 'GiveItem', 'GiveTeamCash', 'Help', 'InspectAll', 'InspectPlayer', 'InspectTeam', 'ItemList', 'Kick', 'Kill', 'MapList', 'ModeratorList', 'PauseMatch', 'RefreshList', 'RemoveMapRotation', 'RemoveMod', 'ResetSND', 'RotateMap', 'ServerInfo', 'SetBalanceTableURL', 'SetBotsEnabled', 'SetCash', 'SetLimitedAmmoType', 'SetMaxPlayers', 'SetPin', 'SetPlayerSkin', 'SetTimeLimit', 'ShowNametags', 'ShutdownServer', 'Slap', 'SwitchMap', 'SwitchTeam', 'Teleport', 'TTTAlwaysEnableSkinMenu', 'TTTEndRound', 'TTTFlushKarma', 'TTTGiveCredits', 'TTTPauseTimer', 'TTTSetKarma', 'TTTSetRole', 'Unban', 'UpdateServerName', 'UGCAddMod', 'UGCClearModList', 'UGCModList', 'UGCRemoveMod', 'Notify', 'DropItems', 'DisablePickup', 'MovementSpeed', 'CleanUp', 'Godmode', 'Warp', 'AddBot', 'RemoveBot', 'Ignite', 'DisableItems', 'Detonate', 'GameSpeed', 'SetGravity', 'EnableProne', 'FallDamage', 'EnableBuyMenu', 'NoClip', 'Supply', 'Visibility', 'Revive', 'DisableVoting', 'AttachmentMode', 'UtilityTrails', 'KillFeedback', 'SetTeamSkin', 'SpawnLootCrate', 'SpawnChickens', 'SpawnZombies', 'RemoveZombies', 'SetVitality', 'TeamSwitching']
 RCON_BLOCKED_COMMANDS = {"ban"}
 
+# Badges that should be treated as account flags for admin join alerts.
+ACCOUNT_FLAG_BADGES = {
+    "Vpn Connection #002",
+    "TeamKiller #003",
+    "Negative K/D #015",
+    "Network Traveler #016",
+    "Alias Collector #018",
+    "Ban History #019",
+    "Name Changer #036",
+}
+
 
 BADGE_DISCORD_LINK = "DISCORD BADGE #001"
 BADGE_VPN_CONNECTION = "Vpn Connection #002"
@@ -813,6 +824,36 @@ class JTWPBot(commands.Bot):
         except (TypeError, ValueError):
             self.account_link_admin_role_id = self.admin_role_id or 0
 
+        # Flagged-player join alerts. When a player with active account flags
+        # joins a JTWP server, post an embed to the configured admin alert webhook.
+        self.flagged_join_alert_enabled = bool(
+            admin_notifications_cfg.get("flagged_player_join_alerts", True)
+        )
+        self.flagged_join_alert_webhook_env = str(
+            admin_notifications_cfg.get("webhook_env")
+            or "JTWP_ADMIN_WEBHOOK_URL"
+        ).strip()
+        self.flagged_join_alert_webhook_url = os.getenv(
+            self.flagged_join_alert_webhook_env,
+            "",
+        ).strip()
+        try:
+            self.flagged_join_alert_role_id = int(
+                admin_notifications_cfg.get("role_id")
+                or admin_notifications_cfg.get("admin_role_id")
+                or self.admin_role_id
+                or 0
+            )
+        except (TypeError, ValueError):
+            self.flagged_join_alert_role_id = self.admin_role_id or 0
+
+        self.flagged_join_events_path = (
+            self.data_root / "global" / "connections" / "events.jsonl"
+        )
+        self.flagged_join_state_path = (
+            self.data_root / "global" / "discord" / "flagged_join_alert_state.json"
+        )
+
         self.steam_api_key = os.getenv("STEAM_WEB_API_KEY", "").strip()
         self.command_log_tailer = JsonlWebhookTailer(
             bot=self,
@@ -851,6 +892,221 @@ class JTWPBot(commands.Bot):
 
         self.moderation = ModerationSystem(self)
 
+
+    def active_account_flags(self, product_id: str) -> list[str]:
+        """Return awarded badges that are classified as account flags."""
+        badge_data = self.load_player_badges(str(product_id))
+        owned = badge_data.get("badges", {})
+        if not isinstance(owned, dict):
+            return []
+
+        # Match case-insensitively but return the canonical flag names above.
+        owned_names = {str(name).strip().casefold() for name in owned.keys()}
+        return [
+            flag_name
+            for flag_name in ACCOUNT_FLAG_BADGES
+            if flag_name.casefold() in owned_names
+        ]
+
+    def post_flagged_join_alert(self, event: dict[str, Any], flags: list[str]) -> None:
+        if not self.flagged_join_alert_webhook_url or not flags:
+            return
+
+        product_id = str(event.get("product_id") or "Unknown")
+        player_doc = load_json(self.player_path(product_id), {})
+        if not isinstance(player_doc, dict):
+            player_doc = {}
+
+        player_name = str(
+            event.get("player_name")
+            or event.get("name")
+            or player_doc.get("current_name")
+            or player_doc.get("name")
+            or "Unknown"
+        )
+        platform = str(event.get("platform") or player_doc.get("platform") or "Unknown")
+        server_id = str(event.get("server_id") or "Unknown")
+        joined_at = str(event.get("at") or event.get("timestamp") or event.get("joined_at") or now_iso())
+
+        linked = player_doc.get("linked_accounts", {})
+        discord_link = linked.get("discord") if isinstance(linked, dict) else None
+        discord_id = ""
+        account_slot = ""
+        if isinstance(discord_link, dict):
+            discord_id = str(discord_link.get("user_id") or "").strip()
+            account_slot = str(discord_link.get("account_slot") or "").strip()
+
+        fields: list[dict[str, Any]] = [
+            {
+                "name": "👤 Player",
+                "value": f"`{clip(player_name, 200)}`",
+                "inline": True,
+            },
+            {
+                "name": "🖥️ Server",
+                "value": f"`{clip(server_id, 120)}`",
+                "inline": True,
+            },
+            {
+                "name": "🎮 Platform",
+                "value": f"`{clip(platform, 80)}`",
+                "inline": True,
+            },
+            {
+                "name": "🆔 Product ID",
+                "value": f"`{clip(product_id, 160)}`",
+                "inline": False,
+            },
+            {
+                "name": "🚩 Account Flags",
+                "value": "\n".join(f"• **{clip(flag, 180)}**" for flag in flags)[:1000],
+                "inline": False,
+            },
+        ]
+
+        if discord_id:
+            fields.append({
+                "name": "🔗 Linked Discord",
+                "value": f"<@{discord_id}> (`{discord_id}`)",
+                "inline": True,
+            })
+        if account_slot:
+            fields.append({
+                "name": "👥 Account Slot",
+                "value": f"`{clip(account_slot, 40)}`",
+                "inline": True,
+            })
+
+        embed = {
+            "title": "🚩 Flagged Player Joined Server",
+            "description": (
+                "A player with account flags has connected to a JTWP server.\n"
+                "Review the flags before taking moderation action."
+            ),
+            "color": 15105570,
+            "fields": fields[:25],
+            "footer": {"text": f"JTWP Admin Alerts • {joined_at}"},
+            "timestamp": now_iso(),
+        }
+
+        role_id = int(self.flagged_join_alert_role_id or 0)
+        payload: dict[str, Any] = {
+            "content": f"<@&{role_id}>" if role_id else "",
+            "embeds": [embed],
+            "allowed_mentions": {
+                "parse": [],
+                "roles": [str(role_id)] if role_id else [],
+            },
+        }
+
+        response = requests.post(
+            self.flagged_join_alert_webhook_url,
+            json=payload,
+            timeout=10,
+        )
+        if response.status_code not in {200, 204}:
+            raise RuntimeError(
+                f"Admin alert webhook HTTP {response.status_code}: {response.text[:300]}"
+            )
+
+    async def process_flagged_join_alerts_once(self) -> None:
+        if not self.flagged_join_alert_enabled:
+            return
+        if not self.flagged_join_alert_webhook_url:
+            return
+        if not self.flagged_join_events_path.is_file():
+            return
+
+        state = load_json(self.flagged_join_state_path, {})
+        if not isinstance(state, dict):
+            state = {}
+
+        size = self.flagged_join_events_path.stat().st_size
+        if not state.get("initialized"):
+            atomic_write_json(
+                self.flagged_join_state_path,
+                {
+                    "initialized": True,
+                    "offset": size,
+                    "source": str(self.flagged_join_events_path),
+                    "updated_at": now_iso(),
+                },
+            )
+            print(
+                f"Flagged join alerts initialized at offset {size}; old join events skipped.",
+                flush=True,
+            )
+            return
+
+        try:
+            offset = max(0, int(state.get("offset", 0)))
+        except (TypeError, ValueError):
+            offset = 0
+        if offset > size:
+            offset = 0
+
+        with self.flagged_join_events_path.open("rb") as handle:
+            handle.seek(offset)
+            while True:
+                start = handle.tell()
+                raw = handle.readline()
+                if not raw:
+                    break
+                if not raw.endswith(b"\n"):
+                    handle.seek(start)
+                    break
+
+                next_offset = handle.tell()
+                try:
+                    event = json.loads(raw.decode("utf-8", errors="replace"))
+                except json.JSONDecodeError:
+                    event = None
+
+                if isinstance(event, dict):
+                    event_type = str(event.get("type") or event.get("event") or "").casefold()
+                    if event_type in {"player_joined", "player_join", "joined"}:
+                        product_id = str(event.get("product_id") or "").strip()
+                        if product_id:
+                            flags = self.active_account_flags(product_id)
+                            if flags:
+                                try:
+                                    await asyncio.to_thread(
+                                        self.post_flagged_join_alert,
+                                        event,
+                                        flags,
+                                    )
+                                    print(
+                                        f"FLAGGED JOIN ALERT: product_id={product_id} "
+                                        f"server={event.get('server_id')} flags={flags!r}",
+                                        flush=True,
+                                    )
+                                except Exception as exc:
+                                    print(
+                                        f"Flagged join alert error: {type(exc).__name__}: {exc}",
+                                        flush=True,
+                                    )
+                                    # Do not advance past this event; retry next loop.
+                                    handle.seek(start)
+                                    break
+
+                offset = next_offset
+                atomic_write_json(
+                    self.flagged_join_state_path,
+                    {
+                        "initialized": True,
+                        "offset": offset,
+                        "source": str(self.flagged_join_events_path),
+                        "updated_at": now_iso(),
+                    },
+                )
+
+    @tasks.loop(seconds=2)
+    async def flagged_join_alert_loop(self) -> None:
+        await self.process_flagged_join_alerts_once()
+
+    @flagged_join_alert_loop.before_loop
+    async def before_flagged_join_alert_loop(self) -> None:
+        await self.wait_until_ready()
 
     @tasks.loop(minutes=15)
     async def daily_leaderboard_loop(self):
@@ -908,6 +1164,12 @@ class JTWPBot(commands.Bot):
             self.moderation.webhook_tailer.loop.start()
         if self.ddos_status_channel_id and not self.ddos_status_loop.is_running():
             self.ddos_status_loop.start()
+        if (
+            self.flagged_join_alert_enabled
+            and self.flagged_join_alert_webhook_url
+            and not self.flagged_join_alert_loop.is_running()
+        ):
+            self.flagged_join_alert_loop.start()
 
     async def close(self) -> None:
         if self.moderation.expiry_loop.is_running():
@@ -918,6 +1180,8 @@ class JTWPBot(commands.Bot):
             self.moderation.webhook_tailer.loop.cancel()
         if self.ddos_status_loop.is_running():
             self.ddos_status_loop.cancel()
+        if self.flagged_join_alert_loop.is_running():
+            self.flagged_join_alert_loop.cancel()
         await super().close()
 
     def role_ids(self, member: discord.Member) -> set[int]:
@@ -1204,26 +1468,90 @@ class JTWPBot(commands.Bot):
     def save_player(self, product_id: str, player: dict[str, Any]) -> None:
         atomic_write_json(self.player_path(product_id), player)
 
+    def account_slot_for_player(self, player: dict[str, Any]) -> str | None:
+        """Return the Discord account slot for a player record: oculus or steam."""
+        linked = player.get("linked_accounts", {})
+        if isinstance(linked, dict):
+            discord_link = linked.get("discord")
+            if isinstance(discord_link, dict):
+                slot = str(discord_link.get("account_slot") or "").strip().casefold()
+                if slot in {"oculus", "steam"}:
+                    return slot
+            profile_link = linked.get("profile_link")
+            if isinstance(profile_link, dict):
+                slot = str(profile_link.get("account_slot") or "").strip().casefold()
+                if slot in {"oculus", "steam"}:
+                    return slot
+
+        platform = str(player.get("platform") or "").strip().upper()
+        if platform in {"SHACK", "OCULUS", "QUEST", "META"}:
+            return "oculus"
+        if platform in {"PCVR", "STEAM", "STEAMVR", "PC"}:
+            return "steam"
+
+        unique_id = str(player.get("unique_id") or "").strip()
+        if unique_id.isdigit() and len(unique_id) == 17:
+            return "steam"
+        return None
+
     def rebuild_link_indexes(self) -> None:
+        """Rebuild Discord/Steam link indexes with one Oculus and one Steam slot."""
         records = self.data_root / "players" / "records"
         by_discord: dict[str, str] = {}
+        by_discord_accounts: dict[str, dict[str, Any]] = {}
         by_steam: dict[str, str] = {}
+
         for path in records.glob("*/player.json"):
             player = load_json(path, {})
             if not isinstance(player, dict):
                 continue
+
             pid = str(player.get("product_id") or path.parent.name)
             linked = player.get("linked_accounts", {})
             if not isinstance(linked, dict):
                 continue
-            d = linked.get("discord")
-            s = linked.get("steam")
-            if isinstance(d, dict) and d.get("user_id"):
-                by_discord[str(d["user_id"])] = pid
-            if isinstance(s, dict) and s.get("steam_id"):
-                by_steam[str(s["steam_id"])] = pid
+
+            discord_link = linked.get("discord")
+            steam_link = linked.get("steam")
+
+            if isinstance(steam_link, dict) and steam_link.get("steam_id"):
+                by_steam[str(steam_link["steam_id"])] = pid
+
+            if not isinstance(discord_link, dict) or not discord_link.get("user_id"):
+                continue
+
+            discord_id = str(discord_link["user_id"])
+            slot = self.account_slot_for_player(player)
+            if slot not in {"oculus", "steam"}:
+                continue
+
+            profile_link = linked.get("profile_link", {})
+            verified = bool(
+                isinstance(profile_link, dict)
+                and profile_link.get("verified")
+            )
+
+            entry = by_discord_accounts.setdefault(discord_id, {})
+            entry[slot] = {
+                "product_id": pid,
+                "verified": verified,
+                "player_name": player.get("current_name") or player.get("name"),
+                "platform": player.get("platform"),
+            }
+
+        # Legacy one-account index remains for older bot features. Oculus is
+        # preferred when both are linked; otherwise Steam is used.
+        for discord_id, accounts in by_discord_accounts.items():
+            chosen = accounts.get("oculus") or accounts.get("steam")
+            if isinstance(chosen, dict) and chosen.get("product_id"):
+                by_discord[discord_id] = str(chosen["product_id"])
+
         index = self.data_root / "players" / "index"
         atomic_write_json(index / "by_discord_id.json", dict(sorted(by_discord.items())))
+        atomic_write_json(
+            index / "by_discord_accounts.json",
+            dict(sorted(by_discord_accounts.items())),
+        )
         atomic_write_json(index / "by_steam_id.json", dict(sorted(by_steam.items())))
 
     def steam_summary(self, steam_id: str) -> dict[str, Any]:
@@ -2626,38 +2954,73 @@ class JTWPBot(commands.Bot):
             ephemeral=ephemeral,
         )
 
-    def linked_product_id_for_discord(
+    def linked_accounts_for_discord(
         self,
         discord_user_id: int | str,
-    ) -> str | None:
-        """Resolve a Discord user to the linked JTWP ProductID."""
+    ) -> dict[str, str]:
+        """Return linked Oculus/Steam ProductIDs for a Discord user."""
+        discord_id = str(discord_user_id)
+        account_index = load_json(
+            self.data_root / "players" / "index" / "by_discord_accounts.json",
+            {},
+        )
+        result: dict[str, str] = {}
+
+        if isinstance(account_index, dict):
+            raw = account_index.get(discord_id)
+            if isinstance(raw, dict):
+                for slot in ("oculus", "steam"):
+                    value = raw.get(slot)
+                    if isinstance(value, dict):
+                        value = value.get("product_id") or value.get("id")
+                    if value:
+                        pid = str(value)
+                        if (self.data_root / "players" / "records" / pid).is_dir():
+                            result[slot] = pid
+
+        if result:
+            return result
+
+        # Backward compatibility with the original one-account index.
         by_discord = load_json(
-            self.data_root
-            / "players"
-            / "index"
-            / "by_discord_id.json",
+            self.data_root / "players" / "index" / "by_discord_id.json",
             {},
         )
         if not isinstance(by_discord, dict):
-            return None
+            return result
 
-        value = by_discord.get(str(discord_user_id))
+        value = by_discord.get(discord_id)
         if isinstance(value, dict):
             value = value.get("product_id") or value.get("id")
-
         if not value:
-            return None
+            return result
 
-        product_id = str(value)
-        if not (
-            self.data_root
-            / "players"
-            / "records"
-            / product_id
-        ).is_dir():
-            return None
+        pid = str(value)
+        player = load_json(self.player_path(pid), {})
+        if isinstance(player, dict):
+            slot = self.account_slot_for_player(player)
+            if slot in {"oculus", "steam"}:
+                result[slot] = pid
+        return result
 
-        return product_id
+    def linked_product_ids_for_discord(
+        self,
+        discord_user_id: int | str,
+    ) -> list[str]:
+        accounts = self.linked_accounts_for_discord(discord_user_id)
+        return [accounts[s] for s in ("oculus", "steam") if s in accounts]
+
+    def linked_product_id_for_discord(
+        self,
+        discord_user_id: int | str,
+        account: str | None = None,
+    ) -> str | None:
+        """Resolve a Discord user to one linked ProductID."""
+        accounts = self.linked_accounts_for_discord(discord_user_id)
+        requested = str(account or "").strip().casefold()
+        if requested in {"oculus", "steam"}:
+            return accounts.get(requested)
+        return accounts.get("oculus") or accounts.get("steam")
 
     def dashboard_embed(self) -> discord.Embed:
         embed = discord.Embed(
@@ -6563,17 +6926,17 @@ def register_slash_commands(
         for sid in sorted(configured_server_ids)[:25]
     ]
 
-    def linked_product_id(interaction: discord.Interaction) -> str | None:
-        index = load_json(
-            bot.data_root / "players" / "index" / "by_discord_id.json",
-            {},
-        )
-        if not isinstance(index, dict):
-            return None
-        value = index.get(str(interaction.user.id))
-        if isinstance(value, list):
-            return str(value[0]) if value else None
-        return str(value) if value else None
+    def linked_accounts(interaction: discord.Interaction) -> dict[str, str]:
+        return bot.linked_accounts_for_discord(interaction.user.id)
+
+    def linked_product_id(
+        interaction: discord.Interaction,
+        account: str | None = None,
+    ) -> str | None:
+        return bot.linked_product_id_for_discord(interaction.user.id, account)
+
+    def linked_product_ids(interaction: discord.Interaction) -> list[str]:
+        return bot.linked_product_ids_for_discord(interaction.user.id)
 
     # --------------------------------------------------------
     # /report
@@ -6614,6 +6977,42 @@ def register_slash_commands(
         )
 
     bot.tree.add_command(report)
+
+    @bot.tree.error
+    async def on_app_command_error(
+        interaction: discord.Interaction,
+        error: app_commands.AppCommandError,
+    ):
+        print(
+            f"SLASH COMMAND ERROR: "
+            f"command={getattr(interaction.command, 'qualified_name', 'unknown')} "
+            f"user={interaction.user} "
+            f"error={type(error).__name__}: {error}",
+            flush=True,
+        )
+
+        original = getattr(error, "original", None)
+
+        if original is not None:
+            print(
+                f"SLASH COMMAND ORIGINAL ERROR: "
+                f"{type(original).__name__}: {original}",
+                flush=True,
+            )
+
+        try:
+            await respond(
+                interaction,
+                f"❌ Command failed: `{type(original or error).__name__}: "
+                f"{clip(str(original or error), 1200)}`",
+                ephemeral=True,
+            )
+        except Exception as response_error:
+            print(
+                f"SLASH COMMAND ERROR RESPONSE FAILED: "
+               f"{type(response_error).__name__}: {response_error}",
+                flush=True,
+            )
 
     # --------------------------------------------------------
     # /moderation
@@ -8074,6 +8473,7 @@ def register_slash_commands(
     async def badges(
         interaction: discord.Interaction,
         player: str | None = None,
+        account: Literal["oculus", "steam", "all"] = "all",
     ):
         if interaction.guild is None:
             await respond(
@@ -8094,50 +8494,33 @@ def register_slash_commands(
                 )
                 return
         else:
-            index = load_json(
-                bot.data_root
-                / "players"
-                / "index"
-                / "by_discord_id.json",
-                {},
-            )
-            pid = (
-                index.get(str(interaction.user.id))
-                if isinstance(index, dict)
-                else None
-            )
-            if isinstance(pid, list):
-                pid = pid[0] if pid else None
+            accounts = bot.linked_accounts_for_discord(interaction.user.id)
+            if account == "all":
+                selected = [accounts[s] for s in ("oculus", "steam") if s in accounts]
+            else:
+                selected = [accounts[account]] if account in accounts else []
 
-            if not pid:
+            if not selected:
                 await respond(
                     interaction,
-                    "❌ Your Discord account is not linked. "
+                    f"❌ No linked `{account}` account was found. "
                     "Provide a player name/Product ID or use `/account link`.",
                     ephemeral=True,
                 )
                 return
 
-            target = bot.resolve_player(str(pid))
-
-        product_id = str(target.get("product_id"))
-        player_doc = load_json(
-            bot.player_path(product_id),
-            {},
-        )
-        if not isinstance(player_doc, dict):
-            await respond(
-                interaction,
-                "❌ Player record not found.",
-                ephemeral=True,
-            )
+            for pid in selected:
+                player_doc = load_json(bot.player_path(str(pid)), {})
+                if isinstance(player_doc, dict):
+                    await send_badges_public(interaction, str(pid), player_doc)
             return
 
-        await send_badges_public(
-            interaction,
-            product_id,
-            player_doc,
-        )
+        product_id = str(target.get("product_id"))
+        player_doc = load_json(bot.player_path(product_id), {})
+        if not isinstance(player_doc, dict):
+            await respond(interaction, "❌ Player record not found.", ephemeral=True)
+            return
+        await send_badges_public(interaction, product_id, player_doc)
 
     badge_group = app_commands.Group(
         name="badge",
@@ -8406,199 +8789,448 @@ def register_slash_commands(
 
     account_group = app_commands.Group(
         name="account",
-        description="Link Discord/Steam information to a JTWP player profile",
+        description="Link Oculus/SHACK and Steam/PCVR JTWP accounts",
     )
 
-    @account_group.command(name="link", description="Link your Discord account to a JTWP player profile")
+    def account_payload(discord_user_id: int | str) -> dict[str, Any]:
+        accounts = bot.linked_accounts_for_discord(discord_user_id)
+        payload: dict[str, Any] = {
+            "discord_user_id": str(discord_user_id),
+            "accounts": {},
+        }
+        for slot in ("oculus", "steam"):
+            pid = accounts.get(slot)
+            if not pid:
+                payload["accounts"][slot] = None
+                continue
+            player_doc = load_json(bot.player_path(pid), {})
+            payload["accounts"][slot] = {
+                "product_id": pid,
+                "player_name": (
+                    player_doc.get("current_name") or player_doc.get("name")
+                    if isinstance(player_doc, dict) else None
+                ),
+                "platform": player_doc.get("platform") if isinstance(player_doc, dict) else None,
+                "unique_id": player_doc.get("unique_id") if isinstance(player_doc, dict) else None,
+                "linked_accounts": player_doc.get("linked_accounts") if isinstance(player_doc, dict) else None,
+            }
+        return payload
+
+    @account_group.command(name="link", description="Link an Oculus/SHACK or Steam/PCVR JTWP player")
     async def account_link(
         interaction: discord.Interaction,
         player: str,
+        account: Literal["auto", "oculus", "steam"] = "auto",
         steam_id: str | None = None,
     ):
+        print(
+            f"ACCOUNT LINK CALLED user={interaction.user} player={player!r} "
+            f"account={account} steam_id={steam_id!r}",
+            flush=True,
+        )
         if interaction.guild is None:
             await respond(interaction, "⛔ Use this inside the JTWP Discord server.", ephemeral=True)
             return
-        target = bot.resolve_player(player)
-        if not target.get("resolved"):
-            await respond(interaction, "❌ Could not resolve exactly one player. Use the exact Product ID.", ephemeral=True)
-            return
-        pid = str(target["product_id"])
-        by_discord = load_json(bot.data_root / "players" / "index" / "by_discord_id.json", {})
-        existing = by_discord.get(str(interaction.user.id)) if isinstance(by_discord, dict) else None
-        if existing and str(existing) != pid:
-            await respond(interaction, f"❌ Your Discord account is already linked to `{existing}`.", ephemeral=True)
-            return
-        player_doc = load_json(bot.player_path(pid), {})
-        linked = player_doc.setdefault("linked_accounts", {})
-        linked["discord"] = {
-            "user_id": str(interaction.user.id),
-            "username": str(interaction.user),
-            "display_name": getattr(interaction.user, "display_name", str(interaction.user)),
-            "linked_at": now_iso(),
-            "verified_discord_identity": True,
-        }
-        chosen_steam = (steam_id or "").strip()
-        if not chosen_steam and str(player_doc.get("platform", "")).upper() == "PCVR":
-            uid = str(player_doc.get("unique_id") or "")
-            if uid.isdigit() and len(uid) == 17:
-                chosen_steam = uid
-        steam_error = None
-        if chosen_steam:
-            try:
-                linked["steam"] = await asyncio.to_thread(bot.steam_summary, chosen_steam)
-                linked["steam"]["linked_at"] = now_iso()
-            except Exception as exc:
-                steam_error = f"{type(exc).__name__}: {exc}"
-        request_id = "LINK-" + uuid.uuid4().hex[:8].upper()
-        linked["profile_link"] = {
-            "request_id": request_id,
-            "status": "pending_admin_review",
-            "verified": False,
-            "requested_at": now_iso(),
-            "requested_by_discord_id": str(interaction.user.id),
-            "requested_by": str(interaction.user),
-        }
-        bot.save_player(pid, player_doc)
-        bot.rebuild_link_indexes()
 
-        # Badge #001 is earned immediately when Discord is linked.
-        # This is idempotent, so a repeated link cannot duplicate the badge.
-        discord_badge_new = bot.ensure_discord_link_badge(pid, player_doc)
-
-        bot.log_account_event(
-            "account_link_requested",
-            pid,
-            interaction.user,
-            request_id=request_id,
-            steam_id=chosen_steam or None,
-            steam_error=steam_error,
-            discord_badge_awarded=discord_badge_new,
-        )
-        await asyncio.to_thread(
-            bot.post_account_link_pending_webhook,
-            request_id=request_id,
-            product_id=pid,
-            player_doc=player_doc,
-            requester=interaction.user,
-            steam_id=chosen_steam or None,
-            steam_error=steam_error,
-        )
-        msg = (
-            f"✅ Account information linked to `{pid}` and marked **pending admin review**.\n"
-            f"Request ID: `{request_id}`"
-        )
-        if steam_error:
-            msg += f"\n⚠️ Steam lookup: `{clip(steam_error, 500)}`"
-        await respond(interaction, msg, ephemeral=True)
-
-    @account_group.command(name="steam", description="Add or refresh Steam info on your linked JTWP profile")
-    async def account_steam(interaction: discord.Interaction, steam_id: str):
-        index = load_json(bot.data_root / "players" / "index" / "by_discord_id.json", {})
-        pid = index.get(str(interaction.user.id)) if isinstance(index, dict) else None
-        if not pid:
-            await respond(interaction, "❌ Link your JTWP profile first with `/account link`.", ephemeral=True)
-            return
         await defer(interaction, ephemeral=True)
+
+        try:
+            target = bot.resolve_player(player)
+            if not target.get("resolved"):
+                await interaction.followup.send(
+                    "❌ Could not resolve exactly one player. Use the exact Product ID.",
+                    ephemeral=True,
+                )
+                return
+
+            pid = str(target["product_id"])
+            player_doc = load_json(bot.player_path(pid), {})
+            if not isinstance(player_doc, dict):
+                await interaction.followup.send("❌ Player record not found.", ephemeral=True)
+                return
+
+            detected_slot = bot.account_slot_for_player(player_doc)
+            slot = account if account in {"oculus", "steam"} else detected_slot
+            if slot not in {"oculus", "steam"}:
+                await interaction.followup.send(
+                    "❌ I could not determine whether this is Oculus/SHACK or Steam/PCVR. "
+                    "Run the command again and set `account` explicitly.",
+                    ephemeral=True,
+                )
+                return
+
+            if detected_slot and account != "auto" and detected_slot != slot:
+                await interaction.followup.send(
+                    f"❌ This player record is `{detected_slot}`, not `{slot}`.",
+                    ephemeral=True,
+                )
+                return
+
+            accounts = bot.linked_accounts_for_discord(interaction.user.id)
+            existing = accounts.get(slot)
+            if existing and existing != pid:
+                await interaction.followup.send(
+                    f"❌ Your `{slot}` slot is already linked to `{existing}`. "
+                    f"Use `/account unlink account:{slot}` first.",
+                    ephemeral=True,
+                )
+                return
+
+            # Prevent the same ProductID from being assigned to the opposite slot.
+            other_slot = "steam" if slot == "oculus" else "oculus"
+            if accounts.get(other_slot) == pid:
+                await interaction.followup.send(
+                    f"❌ `{pid}` is already linked as your `{other_slot}` account.",
+                    ephemeral=True,
+                )
+                return
+
+            linked = player_doc.setdefault("linked_accounts", {})
+            linked_at = now_iso()
+            linked["discord"] = {
+                "user_id": str(interaction.user.id),
+                "username": str(interaction.user),
+                "display_name": getattr(interaction.user, "display_name", str(interaction.user)),
+                "linked_at": linked_at,
+                "verified_discord_identity": True,
+                "account_slot": slot,
+            }
+
+            steam_error = None
+            chosen_steam = ""
+            if slot == "oculus":
+                linked["oculus"] = {
+                    "product_id": pid,
+                    "unique_id": player_doc.get("unique_id"),
+                    "username": player_doc.get("current_name") or player_doc.get("name"),
+                    "platform": player_doc.get("platform"),
+                    "linked_at": linked_at,
+                    "verified": False,
+                }
+                # A Steam profile belongs on the Steam/PCVR player record, not
+                # on the Oculus/SHACK record. Remove old accidental cross-links.
+                if isinstance(linked.get("steam"), dict) and linked.get("steam", {}).get("product_id") != pid:
+                    linked.pop("steam", None)
+            else:
+                chosen_steam = (steam_id or "").strip()
+                if not chosen_steam:
+                    uid = str(player_doc.get("unique_id") or "").strip()
+                    if uid.isdigit() and len(uid) == 17:
+                        chosen_steam = uid
+
+                steam_record: dict[str, Any] = {
+                    "product_id": pid,
+                    "steam_id": chosen_steam or None,
+                    "linked_at": linked_at,
+                    "verified": False,
+                }
+                if chosen_steam:
+                    try:
+                        summary = await asyncio.to_thread(bot.steam_summary, chosen_steam)
+                        steam_record.update(summary)
+                        steam_record["product_id"] = pid
+                        steam_record["linked_at"] = linked_at
+                        steam_record["verified"] = False
+                    except Exception as exc:
+                        steam_error = f"{type(exc).__name__}: {exc}"
+                linked["steam"] = steam_record
+
+            request_id = "LINK-" + uuid.uuid4().hex[:8].upper()
+            linked["profile_link"] = {
+                "request_id": request_id,
+                "status": "pending_admin_review",
+                "verified": False,
+                "requested_at": linked_at,
+                "requested_by_discord_id": str(interaction.user.id),
+                "requested_by": str(interaction.user),
+                "account_slot": slot,
+            }
+
+            bot.save_player(pid, player_doc)
+            bot.rebuild_link_indexes()
+            discord_badge_new = bot.ensure_discord_link_badge(pid, player_doc)
+            bot.log_account_event(
+                "account_link_requested",
+                pid,
+                interaction.user,
+                request_id=request_id,
+                account_slot=slot,
+                steam_id=chosen_steam or None,
+                steam_error=steam_error,
+                discord_badge_awarded=discord_badge_new,
+            )
+
+            await asyncio.to_thread(
+                bot.post_account_link_pending_webhook,
+                request_id=request_id,
+                product_id=pid,
+                player_doc=player_doc,
+                requester=interaction.user,
+                steam_id=chosen_steam or None,
+                steam_error=steam_error,
+            )
+
+            msg = (
+                f"✅ `{slot}` account linked to `{pid}` and marked **pending admin review**.\n"
+                f"Request ID: `{request_id}`"
+            )
+            if steam_error:
+                msg += f"\n⚠️ Steam profile lookup: `{clip(steam_error, 500)}`"
+            await interaction.followup.send(msg, ephemeral=True)
+            print(f"ACCOUNT LINK SUCCESS user={interaction.user.id} slot={slot} pid={pid}", flush=True)
+        except Exception as exc:
+            print(f"ACCOUNT LINK ERROR: {type(exc).__name__}: {exc}", flush=True)
+            await interaction.followup.send(
+                f"❌ Account link failed: `{type(exc).__name__}: {clip(exc, 1000)}`",
+                ephemeral=True,
+            )
+
+    @account_group.command(name="steam", description="Add or refresh Steam profile info for your Steam/PCVR account")
+    async def account_steam(interaction: discord.Interaction, steam_id: str):
+        print(f"ACCOUNT STEAM CALLED user={interaction.user} steam_id={steam_id!r}", flush=True)
+        await defer(interaction, ephemeral=True)
+        pid = linked_product_id(interaction, "steam")
+        if not pid:
+            await interaction.followup.send(
+                "❌ Your Steam/PCVR JTWP account is not linked. Use `/account link` first.",
+                ephemeral=True,
+            )
+            return
         try:
             summary = await asyncio.to_thread(bot.steam_summary, steam_id)
-            player_doc = load_json(bot.player_path(str(pid)), {})
+            player_doc = load_json(bot.player_path(pid), {})
             linked = player_doc.setdefault("linked_accounts", {})
-            summary["linked_at"] = now_iso()
+            previous = linked.get("steam", {})
+            verified = bool(previous.get("verified")) if isinstance(previous, dict) else False
+            summary.update({
+                "product_id": pid,
+                "linked_at": now_iso(),
+                "verified": verified,
+            })
             linked["steam"] = summary
-            bot.save_player(str(pid), player_doc)
+            bot.save_player(pid, player_doc)
             bot.rebuild_link_indexes()
-            bot.log_account_event("steam_account_linked", str(pid), interaction.user, steam_id=steam_id, steam_username=summary.get("username"))
-            await interaction.followup.send(f"✅ Steam profile **{summary.get('username') or steam_id}** linked to `{pid}`.", ephemeral=True)
+            bot.log_account_event(
+                "steam_account_linked",
+                pid,
+                interaction.user,
+                account_slot="steam",
+                steam_id=steam_id,
+                steam_username=summary.get("username"),
+            )
+            await interaction.followup.send(
+                f"✅ Steam profile **{summary.get('username') or steam_id}** linked to `{pid}`.",
+                ephemeral=True,
+            )
         except Exception as exc:
-            await interaction.followup.send(f"❌ Steam lookup failed: `{type(exc).__name__}: {exc}`", ephemeral=True)
+            print(f"ACCOUNT STEAM ERROR: {type(exc).__name__}: {exc}", flush=True)
+            await interaction.followup.send(
+                f"❌ Steam lookup failed: `{type(exc).__name__}: {clip(exc, 1000)}`",
+                ephemeral=True,
+            )
 
-    @account_group.command(name="info", description="Show your linked JTWP account information")
+    @account_group.command(name="info", description="Show both linked JTWP accounts")
     async def account_info(interaction: discord.Interaction):
-        index = load_json(bot.data_root / "players" / "index" / "by_discord_id.json", {})
-        pid = index.get(str(interaction.user.id)) if isinstance(index, dict) else None
-        if not pid:
+        print(f"ACCOUNT INFO CALLED user={interaction.user}", flush=True)
+        accounts = bot.linked_accounts_for_discord(interaction.user.id)
+        if not accounts:
             await respond(interaction, "❌ Your Discord account is not linked.", ephemeral=True)
             return
-        player_doc = load_json(bot.player_path(str(pid)), {})
-        await bot.send_json(interaction, "🔗 Linked Account", {"product_id": pid, "linked_accounts": player_doc.get("linked_accounts")}, "linked-account.json", ephemeral=True)
+        await bot.send_json(
+            interaction,
+            "🔗 Linked Accounts",
+            account_payload(interaction.user.id),
+            "linked-accounts.json",
+            ephemeral=True,
+        )
 
-    @account_group.command(name="approve", description="Approve a pending player/account link")
+    @account_group.command(name="approve", description="Approve a pending Oculus or Steam player/account link")
     async def account_approve(interaction: discord.Interaction, product_id: str):
-        if not await bot.require(interaction, admin=True):
-            return
-        player_doc = load_json(bot.player_path(product_id), None)
-        if not isinstance(player_doc, dict):
-            await respond(interaction, "❌ Player record not found.", ephemeral=True)
-            return
-        linked = player_doc.setdefault("linked_accounts", {})
-        profile_link = linked.setdefault("profile_link", {})
-        profile_link.update({
-            "status": "verified",
-            "verified": True,
-            "verified_at": now_iso(),
-            "verified_by_discord_id": str(interaction.user.id),
-            "verified_by": str(interaction.user),
-        })
-        bot.save_player(product_id, player_doc)
-        bot.rebuild_link_indexes()
-        bot.log_account_event("account_link_approved", product_id, interaction.user)
-        await respond(interaction, f"✅ Account link for `{product_id}` approved.", ephemeral=True)
+        product_id = str(product_id).strip()
+        print(f"ACCOUNT APPROVE CALLED user={interaction.user} product_id={product_id}", flush=True)
+        await defer(interaction, ephemeral=True)
 
-    @account_group.command(name="unlink", description="Remove your Discord/Steam links from your JTWP profile")
-    async def account_unlink(interaction: discord.Interaction):
-        index = load_json(bot.data_root / "players" / "index" / "by_discord_id.json", {})
-        pid = index.get(str(interaction.user.id)) if isinstance(index, dict) else None
-        if not pid:
-            await respond(interaction, "❌ Your Discord account is not linked.", ephemeral=True)
-            return
-        player_doc = load_json(bot.player_path(str(pid)), {})
-        player_doc["linked_accounts"] = {"discord": None, "steam": None, "profile_link": None}
-        bot.save_player(str(pid), player_doc)
-        bot.rebuild_link_indexes()
-        bot.log_account_event("account_unlinked", str(pid), interaction.user)
-        await respond(interaction, f"✅ Account links removed from `{pid}`.", ephemeral=True)
-
-    @account_group.command(name="data", description="Show your own JTWP lifetime player data")
-    async def account_data(interaction: discord.Interaction):
-        pid = linked_product_id(interaction)
-        if not pid:
-            await respond(interaction, "❌ Your Discord account is not linked.", ephemeral=True)
+        level = bot.permission_level(interaction.user)
+        allowed = level in {"ADMIN", "OWNER"} or bot.is_senior(interaction.user)
+        print(f"ACCOUNT APPROVE PERMISSION level={level} allowed={allowed}", flush=True)
+        if not allowed:
+            await interaction.followup.send(
+                "⛔ You do not have permission to approve account links.",
+                ephemeral=True,
+            )
             return
 
-        directory = bot.data_root / "players" / "records" / pid
-        payload = {"product_id": pid, "data": {}}
+        try:
+            player_doc = load_json(bot.player_path(product_id), None)
+            print(
+                f"ACCOUNT APPROVE LOOKUP product_id={product_id} found={isinstance(player_doc, dict)}",
+                flush=True,
+            )
+            if not isinstance(player_doc, dict):
+                await interaction.followup.send("❌ Player record not found.", ephemeral=True)
+                return
 
-        for filename in (
-            "player.json",
-            "profile.json",
-            "stats.json",
-            "weapons.json",
-            "names.json",
-            "awards.json",
-            "flags.json",
-        ):
-            path = directory / filename
-            if path.is_file():
-                payload["data"][filename] = load_json(path, None)
+            linked = player_doc.setdefault("linked_accounts", {})
+            profile_link = linked.setdefault("profile_link", {})
+            slot = str(
+                profile_link.get("account_slot")
+                or bot.account_slot_for_player(player_doc)
+                or ""
+            ).casefold()
+            if slot not in {"oculus", "steam"}:
+                await interaction.followup.send(
+                    "❌ This pending link does not have a valid Oculus/Steam account slot.",
+                    ephemeral=True,
+                )
+                return
 
-        # ips.json and private/global network data are intentionally excluded.
+            verified_at = now_iso()
+            profile_link.update({
+                "status": "verified",
+                "verified": True,
+                "account_slot": slot,
+                "verified_at": verified_at,
+                "verified_by_discord_id": str(interaction.user.id),
+                "verified_by": str(interaction.user),
+            })
+            slot_doc = linked.get(slot)
+            if not isinstance(slot_doc, dict):
+                slot_doc = {"product_id": product_id}
+                linked[slot] = slot_doc
+            slot_doc.update({
+                "product_id": product_id,
+                "verified": True,
+                "verified_at": verified_at,
+                "verified_by_discord_id": str(interaction.user.id),
+                "verified_by": str(interaction.user),
+            })
+
+            bot.save_player(product_id, player_doc)
+            bot.rebuild_link_indexes()
+            bot.log_account_event(
+                "account_link_approved",
+                product_id,
+                interaction.user,
+                account_slot=slot,
+            )
+            await interaction.followup.send(
+                f"✅ `{slot}` account link for `{product_id}` approved.",
+                ephemeral=True,
+            )
+            print(f"ACCOUNT APPROVE SUCCESS slot={slot} product_id={product_id}", flush=True)
+        except Exception as exc:
+            print(f"ACCOUNT APPROVE ERROR: {type(exc).__name__}: {exc}", flush=True)
+            await interaction.followup.send(
+                f"❌ Approval failed: `{type(exc).__name__}: {clip(exc, 1000)}`",
+                ephemeral=True,
+            )
+
+    @account_group.command(name="unlink", description="Remove one or all linked JTWP accounts")
+    async def account_unlink(
+        interaction: discord.Interaction,
+        account: Literal["oculus", "steam", "all"] = "all",
+    ):
+        print(f"ACCOUNT UNLINK CALLED user={interaction.user} account={account}", flush=True)
+        await defer(interaction, ephemeral=True)
+        try:
+            accounts = bot.linked_accounts_for_discord(interaction.user.id)
+            if not accounts:
+                await interaction.followup.send("❌ Your Discord account is not linked.", ephemeral=True)
+                return
+
+            targets = list(accounts.items()) if account == "all" else [(account, accounts.get(account))]
+            removed: list[str] = []
+            for slot, pid in targets:
+                if not pid:
+                    continue
+                player_doc = load_json(bot.player_path(pid), {})
+                if not isinstance(player_doc, dict):
+                    continue
+                linked = player_doc.get("linked_accounts", {})
+                if not isinstance(linked, dict):
+                    linked = {}
+                    player_doc["linked_accounts"] = linked
+                linked["discord"] = None
+                linked["profile_link"] = None
+                linked[slot] = None
+                bot.save_player(pid, player_doc)
+                bot.log_account_event(
+                    "account_unlinked",
+                    pid,
+                    interaction.user,
+                    account_slot=slot,
+                )
+                removed.append(f"{slot}: `{pid}`")
+
+            bot.rebuild_link_indexes()
+            if not removed:
+                await interaction.followup.send(
+                    f"❌ No `{account}` account is currently linked.",
+                    ephemeral=True,
+                )
+                return
+            await interaction.followup.send(
+                "✅ Removed account link(s):\n" + "\n".join(removed),
+                ephemeral=True,
+            )
+        except Exception as exc:
+            print(f"ACCOUNT UNLINK ERROR: {type(exc).__name__}: {exc}", flush=True)
+            await interaction.followup.send(
+                f"❌ Unlink failed: `{type(exc).__name__}: {clip(exc, 1000)}`",
+                ephemeral=True,
+            )
+
+    @account_group.command(name="data", description="Show JTWP lifetime data for one or both linked accounts")
+    async def account_data(
+        interaction: discord.Interaction,
+        account: Literal["oculus", "steam", "all"] = "all",
+    ):
+        accounts = linked_accounts(interaction)
+        selected = accounts if account == "all" else ({account: accounts[account]} if account in accounts else {})
+        if not selected:
+            await respond(interaction, f"❌ No linked `{account}` account was found.", ephemeral=True)
+            return
+
+        payload: dict[str, Any] = {"accounts": {}}
+        for slot, pid in selected.items():
+            directory = bot.data_root / "players" / "records" / pid
+            account_data_doc: dict[str, Any] = {"product_id": pid, "data": {}}
+            for filename in (
+                "player.json",
+                "profile.json",
+                "stats.json",
+                "weapons.json",
+                "names.json",
+                "awards.json",
+                "flags.json",
+            ):
+                path = directory / filename
+                if path.is_file():
+                    account_data_doc["data"][filename] = load_json(path, None)
+            payload["accounts"][slot] = account_data_doc
+
         await bot.send_json(
             interaction,
             "📊 Your JTWP Data",
             payload,
-            f"{pid}-account-data.json",
+            f"{interaction.user.id}-account-data.json",
             ephemeral=True,
         )
 
-    @account_group.command(name="sessions", description="Show your last 10 JTWP play sessions")
-    async def account_sessions(interaction: discord.Interaction):
-        pid = linked_product_id(interaction)
-        if not pid:
-            await respond(interaction, "❌ Your Discord account is not linked.", ephemeral=True)
+    @account_group.command(name="sessions", description="Show recent sessions for one or both linked accounts")
+    async def account_sessions(
+        interaction: discord.Interaction,
+        account: Literal["oculus", "steam", "all"] = "all",
+    ):
+        accounts = linked_accounts(interaction)
+        selected = accounts if account == "all" else ({account: accounts[account]} if account in accounts else {})
+        if not selected:
+            await respond(interaction, f"❌ No linked `{account}` account was found.", ephemeral=True)
             return
 
         events_path = bot.data_root / "global" / "connections" / "events.jsonl"
-        sessions = []
+        sessions_by_slot: dict[str, list[dict[str, Any]]] = {slot: [] for slot in selected}
+        pid_to_slot = {pid: slot for slot, pid in selected.items()}
 
         if events_path.is_file():
             with events_path.open("r", encoding="utf-8", errors="replace") as handle:
@@ -8607,11 +9239,11 @@ def register_slash_commands(
                         event = json.loads(line)
                     except Exception:
                         continue
-                    if str(event.get("product_id") or "") != pid:
+                    pid = str(event.get("product_id") or "")
+                    slot = pid_to_slot.get(pid)
+                    if not slot or event.get("type") != "player_left":
                         continue
-                    if event.get("type") != "player_left":
-                        continue
-                    sessions.append({
+                    sessions_by_slot[slot].append({
                         key: event.get(key)
                         for key in (
                             "server_id",
@@ -8626,19 +9258,46 @@ def register_slash_commands(
                         )
                     })
 
+        payload = {
+            "accounts": {
+                slot: {
+                    "product_id": pid,
+                    "sessions": sessions_by_slot[slot][-10:][::-1],
+                }
+                for slot, pid in selected.items()
+            }
+        }
         await bot.send_json(
             interaction,
             "🕒 Your Recent JTWP Sessions",
-            {"product_id": pid, "sessions": sessions[-10:][::-1]},
-            f"{pid}-recent-sessions.json",
+            payload,
+            f"{interaction.user.id}-recent-sessions.json",
             ephemeral=True,
         )
+
+    @account_group.command(name="rebuild", description="Rebuild Discord/Oculus/Steam account indexes")
+    async def account_rebuild(interaction: discord.Interaction):
+        if not await bot.require(interaction, admin=True):
+            return
+        await defer(interaction, ephemeral=True)
+        try:
+            await asyncio.to_thread(bot.rebuild_link_indexes)
+            index = load_json(bot.data_root / "players" / "index" / "by_discord_accounts.json", {})
+            count = len(index) if isinstance(index, dict) else 0
+            await interaction.followup.send(
+                f"✅ Dual-account indexes rebuilt for `{count:,}` Discord users.",
+                ephemeral=True,
+            )
+        except Exception as exc:
+            await interaction.followup.send(
+                f"❌ Rebuild failed: `{type(exc).__name__}: {clip(exc, 1000)}`",
+                ephemeral=True,
+            )
 
     bot.tree.add_command(account_group)
 
     # --------------------------------------------------------
-    # /network
-    # --------------------------------------------------------
+
 
     network_group = app_commands.Group(
         name="network",
@@ -9406,148 +10065,96 @@ async def async_main() -> None:
     badge_text_cooldown_seconds = 10.0
 
     async def reply_with_member_badges(message: discord.Message) -> None:
-        discord_id = str(message.author.id)
-
-        by_discord = load_json(
-            bot.data_root / "players" / "index" / "by_discord_id.json",
-            {},
-        )
-
-        product_id = None
-        if isinstance(by_discord, dict):
-            value = by_discord.get(discord_id)
-            if isinstance(value, dict):
-                product_id = (
-                    value.get("product_id")
-                    or value.get("id")
-                )
-            elif value:
-                product_id = value
-
-        if not product_id:
+        accounts = bot.linked_accounts_for_discord(message.author.id)
+        if not accounts:
             await message.reply(
                 "❌ Your Discord account is not linked to a JTWP player.",
                 mention_author=False,
             )
             return
 
-        product_id = str(product_id)
-        player_dir = (
-            bot.data_root
-            / "players"
-            / "records"
-            / product_id
-        )
-
-        player_doc = load_json(
-            player_dir / "player.json",
-            load_json(player_dir / "profile.json", {}),
-        )
-        if not isinstance(player_doc, dict):
-            player_doc = {}
-
-        # Ensure linked users receive Discord Badge #001 before display.
-        bot.ensure_discord_link_badge(product_id, player_doc)
-
         registry = bot.load_badge_registry()
         definitions = registry.get("badges", {})
         if not isinstance(definitions, dict):
             definitions = {}
 
-        owned_doc = bot.load_player_badges(product_id)
-        owned = owned_doc.get("badges", {})
-        if not isinstance(owned, dict):
-            owned = {}
-
-        player_name = str(
-            player_doc.get("current_name")
-            or player_doc.get("name")
-            or message.author.display_name
-        )
-
-        if not owned:
-            await message.reply(
-                f"🏆 **{player_name}** has not earned any badges yet.",
-                mention_author=False,
+        sent_any = False
+        for slot in ("oculus", "steam"):
+            product_id = accounts.get(slot)
+            if not product_id:
+                continue
+            player_dir = bot.data_root / "players" / "records" / product_id
+            player_doc = load_json(
+                player_dir / "player.json",
+                load_json(player_dir / "profile.json", {}),
             )
-            return
+            if not isinstance(player_doc, dict):
+                player_doc = {}
 
-        badge_rows: list[
-            tuple[str, dict[str, Any], dict[str, Any]]
-        ] = []
+            bot.ensure_discord_link_badge(product_id, player_doc)
+            owned_doc = bot.load_player_badges(product_id)
+            owned = owned_doc.get("badges", {})
+            if not isinstance(owned, dict):
+                owned = {}
 
-        for badge_name, award in sorted(
-            owned.items(),
-            key=lambda kv: (
-                int(
-                    definitions.get(kv[0], {}).get("id", 999999)
-                    if isinstance(definitions.get(kv[0]), dict)
-                    else 999999
+            player_name = str(
+                player_doc.get("current_name")
+                or player_doc.get("name")
+                or message.author.display_name
+            )
+            badge_rows: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+            for badge_name, award in sorted(
+                owned.items(),
+                key=lambda kv: (
+                    int(
+                        definitions.get(kv[0], {}).get("id", 999999)
+                        if isinstance(definitions.get(kv[0]), dict) else 999999
+                    ),
+                    str(kv[0]).casefold(),
                 ),
-                str(kv[0]).casefold(),
-            ),
-        ):
-            definition = definitions.get(badge_name, {})
-            if not isinstance(definition, dict):
-                definition = {}
-            if not isinstance(award, dict):
-                award = {}
-            badge_rows.append(
-                (str(badge_name), definition, award)
+            ):
+                definition = definitions.get(badge_name, {})
+                if not isinstance(definition, dict):
+                    definition = {}
+                if not isinstance(award, dict):
+                    award = {}
+                badge_rows.append((str(badge_name), definition, award))
+
+            badge_images = await asyncio.to_thread(bot.build_badge_strip_images, badge_rows)
+            embed = discord.Embed(
+                title=f"🏆 {clip(player_name, 180)} — {slot.title()} Badges",
+                description=(
+                    f"**ProductID:** `{product_id}`\n"
+                    f"**Badges Earned:** `{len(owned)}`"
+                ),
+                color=3618621,
             )
+            embed.set_footer(text=f"JTWP Player Badges • {slot.title()}")
 
-        badge_images = await asyncio.to_thread(
-            bot.build_badge_strip_images,
-            badge_rows,
-        )
+            if not badge_images:
+                await message.reply(embed=embed, mention_author=False)
+                sent_any = True
+                continue
 
-        embed = discord.Embed(
-            title=f"🏆 {clip(player_name, 180)} — Badges",
-            description=(
-                f"**Badges Earned:** `{len(owned)}`"
-            ),
-            color=3618621,
-        )
-        embed.set_footer(text="JTWP Player Badges")
-
-        if not badge_images:
-            await message.reply(
-                embed=embed,
-                mention_author=False,
-            )
-            return
-
-        embeds: list[discord.Embed] = []
-        files: list[discord.File] = []
-
-        for index, image in enumerate(badge_images[:10]):
-            first_badge = index * bot.badges_per_image + 1
-            last_badge = min(
-                first_badge + bot.badges_per_image - 1,
-                len(owned),
-            )
-            filename = f"{product_id}-badges-{index + 1}.png"
-            files.append(discord.File(image, filename=filename))
-
-            if index == 0:
-                row_embed = embed
-            else:
-                row_embed = discord.Embed(
-                    title=f"🏆 Badges {first_badge}–{last_badge}",
+            embeds: list[discord.Embed] = []
+            files: list[discord.File] = []
+            for index, image in enumerate(badge_images[:10]):
+                filename = f"{product_id}-{slot}-badges-{index + 1}.png"
+                files.append(discord.File(image, filename=filename))
+                row_embed = embed if index == 0 else discord.Embed(
+                    title=f"🏆 {slot.title()} Badges",
                     color=3618621,
                 )
-                row_embed.set_footer(text="JTWP Player Badges")
+                row_embed.set_image(url=f"attachment://{filename}")
+                embeds.append(row_embed)
+            await message.reply(embeds=embeds, files=files, mention_author=False)
+            sent_any = True
 
-            row_embed.set_image(
-                url=f"attachment://{filename}"
+        if not sent_any:
+            await message.reply(
+                "❌ No linked player records could be loaded.",
+                mention_author=False,
             )
-            embeds.append(row_embed)
-
-        await message.reply(
-            embeds=embeds,
-            files=files,
-            mention_author=False,
-        )
 
     @bot.event
     async def on_message(message: discord.Message):

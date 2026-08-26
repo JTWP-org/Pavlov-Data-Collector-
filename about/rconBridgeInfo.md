@@ -1,3 +1,8 @@
+this can be enabled/disabled via slash cmd
+
+the purpose of this is being able to trigger rcon from map logic 
+-----------------
+
 🌉 JTWP RCON Bridge — Detailed Breakdown
 
 The RCON Bridge is basically a translator between your Pavlov mod/server-side JSON files and Pavlov's RCON system.
